@@ -1,38 +1,316 @@
-.App {
-  text-align: center;
-}
+/* Custom styles to enhance Bootstrap */
 
-.App-logo {
-  height: 40vmin;
-  pointer-events: none;
-}
-
-@media (prefers-reduced-motion: no-preference) {
-  .App-logo {
-    animation: App-logo-spin infinite 20s linear;
-  }
-}
-
-.App-header {
-  background-color: #282c34;
+body {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   min-height: 100vh;
+}
+
+/* Layout Components */
+.min-vh-75 {
+  min-height: 75vh;
+}
+
+/* Header Styles */
+.navbar-brand:hover {
+  transform: scale(1.05);
+  transition: transform 0.2s ease;
+}
+
+.nav-link.active {
+  font-weight: 600;
+}
+
+.hover-bg-light:hover {
+  background-color: rgba(0, 0, 0, 0.05) !important;
+  transition: background-color 0.2s ease;
+}
+
+.hover-text-white:hover {
+  color: white !important;
+  transition: color 0.2s ease;
+}
+
+/* Hero Section */
+.hero-section {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  position: relative;
+  overflow: hidden;
+}
+
+.hero-section::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.1);
+  z-index: 1;
+}
+
+.hero-section .container {
+  position: relative;
+  z-index: 2;
+}
+
+.bg-gradient-primary {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
+}
+
+/* Cards and Components */
+.main-container {
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(10px);
+  border-radius: 20px;
+  box-shadow: 0 8px 32px rgba(31, 38, 135, 0.37);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+}
+
+.quiz-card {
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(10px);
+  border-radius: 15px;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+  border: none;
+}
+
+.hover-card {
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.hover-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+}
+
+.feature-icon {
+  width: 80px;
+  height: 80px;
   display: flex;
-  flex-direction: column;
   align-items: center;
   justify-content: center;
-  font-size: calc(10px + 2vmin);
+}
+
+/* Step Numbers */
+.step-number {
+  background: linear-gradient(45deg, #007bff, #0056b3);
   color: white;
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: bold;
+  font-size: 18px;
+  margin: 0 auto;
 }
 
-.App-link {
-  color: #61dafb;
+/* Buttons */
+.btn-gradient-primary {
+  background: linear-gradient(45deg, #007bff, #0056b3);
+  border: none;
+  transition: all 0.3s ease;
 }
 
-@keyframes App-logo-spin {
+.btn-gradient-primary:hover {
+  background: linear-gradient(45deg, #0056b3, #004085);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 15px rgba(0, 123, 255, 0.4);
+}
+
+.btn-gradient-success {
+  background: linear-gradient(45deg, #28a745, #20c997);
+  border: none;
+  transition: all 0.3s ease;
+}
+
+.btn-gradient-success:hover {
+  background: linear-gradient(45deg, #20c997, #17a2b8);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 15px rgba(40, 167, 69, 0.4);
+}
+
+.btn-gradient-purple {
+  background: linear-gradient(45deg, #6f42c1, #d63384);
+  border: none;
+  transition: all 0.3s ease;
+}
+
+.btn-gradient-purple:hover {
+  background: linear-gradient(45deg, #5a2d91, #b02a5b);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 15px rgba(111, 66, 193, 0.4);
+}
+
+/* Form Controls */
+.form-control:focus {
+  border-color: #007bff;
+  box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
+}
+
+/* Progress Bar */
+.progress-bar {
+  background: linear-gradient(45deg, #007bff, #0056b3);
+}
+
+/* Quiz Results */
+.result-correct {
+  background: linear-gradient(45deg, #d4edda, #c3e6cb);
+  border-left: 4px solid #28a745;
+}
+
+.result-incorrect {
+  background: linear-gradient(45deg, #f8d7da, #f5c6cb);
+  border-left: 4px solid #dc3545;
+}
+
+/* Example and Info Boxes */
+.example-box {
+  background: linear-gradient(45deg, #f8f9fa, #e9ecef);
+  border-left: 4px solid #007bff;
+}
+
+.instructions-box {
+  background: linear-gradient(45deg, #f1f3f4, #e8eaed);
+  border: 1px solid #dee2e6;
+}
+
+/* Timeline */
+.timeline-item {
+  position: relative;
+}
+
+.timeline-item:not(:last-child)::after {
+  content: '';
+  position: absolute;
+  left: 24px;
+  top: 50px;
+  bottom: -20px;
+  width: 2px;
+  background: linear-gradient(to bottom, #007bff, transparent);
+}
+
+.timeline-marker {
+  background: linear-gradient(45deg, #007bff, #0056b3) !important;
+}
+
+/* Help Page */
+.help-content h2 {
+  color: #333;
+  border-bottom: 3px solid #007bff;
+  padding-bottom: 10px;
+  margin-bottom: 30px;
+}
+
+/* Footer */
+footer a:hover {
+  color: white !important;
+  transition: color 0.2s ease;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .display-4 {
+    font-size: 2rem;
+  }
+  
+  .feature-icon {
+    width: 60px;
+    height: 60px;
+  }
+  
+  .step-number {
+    width: 50px;
+    height: 50px;
+    font-size: 16px;
+  }
+}
+
+/* Animation */
+@keyframes fadeIn {
   from {
-    transform: rotate(0deg);
+    opacity: 0;
+    transform: translateY(20px);
   }
   to {
-    transform: rotate(360deg);
+    opacity: 1;
+    transform: translateY(0);
   }
+}
+
+.fade-in {
+  animation: fadeIn 0.6s ease;
+}
+
+/* Modal Styles */
+.modal-dialog {
+  max-width: 600px !important;
+  margin: 1.75rem auto !important;
+}
+
+.modal-content {
+  border-radius: 10px !important;
+  border: none !important;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2) !important;
+}
+
+.modal-header {
+  border-bottom: 1px solid #dee2e6 !important;
+  border-radius: 10px 10px 0 0 !important;
+}
+
+.modal-footer {
+  border-top: 1px solid #dee2e6 !important;
+  border-radius: 0 0 10px 10px !important;
+}
+
+/* Button Outline Purple */
+.btn-outline-purple {
+  border-color: #6f42c1 !important;
+  color: #6f42c1 !important;
+}
+
+.btn-outline-purple:hover {
+  background-color: #6f42c1 !important;
+  border-color: #6f42c1 !important;
+  color: white !important;
+}
+
+.btn-outline-purple:focus {
+  box-shadow: 0 0 0 0.2rem rgba(111, 66, 193, 0.25) !important;
+}
+
+/* Quiz Selection Buttons */
+.btn-outline-primary:hover,
+.btn-outline-success:hover,
+.btn-outline-purple:hover {
+  transform: translateY(-2px);
+  transition: all 0.3s ease;
+}
+
+/* Make modal full height on mobile */
+@media (max-width: 768px) {
+  .modal-dialog {
+    max-width: 95% !important;
+    margin: 0.5rem auto !important;
+  }
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #f1f1f1;
+}
+
+::-webkit-scrollbar-thumb {
+  background: linear-gradient(45deg, #007bff, #0056b3);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(45deg, #0056b3, #004085);
 }
