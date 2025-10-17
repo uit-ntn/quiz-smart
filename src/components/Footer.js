@@ -3,56 +3,56 @@ import { Link } from 'react-router-dom';
 
 const Footer = () => {
   return (
-    <footer className="bg-dark text-white mt-auto">
-      <div className="container py-5">
-        <div className="row g-4">
+    <footer className="bg-gray-900 text-white mt-auto">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
           {/* Brand and description */}
-          <div className="col-lg-4">
-            <div className="d-flex align-items-center mb-3">
-              <i className="bi bi-mortarboard-fill fs-3 text-primary me-3"></i>
-              <h5 className="mb-0 text-white">QuizSmart</h5>
+          <div className="lg:col-span-1">
+            <div className="flex items-center mb-4">
+              <div className="text-2xl mr-3">🎓</div>
+              <h5 className="text-xl font-semibold text-white">QuizSmart</h5>
             </div>
-            <p className="text-muted mb-3">
+            <p className="text-gray-400 mb-4 leading-relaxed">
               Ứng dụng học từ vựng thông minh với nhiều chế độ quiz đa dạng, 
               giúp bạn nâng cao vốn từ vựng một cách hiệu quả.
             </p>
-            <div className="d-flex gap-3">
-              <a href="#" className="text-white">
-                <i className="bi bi-facebook fs-5"></i>
+            <div className="flex space-x-4">
+              <a href="#" className="text-gray-400 hover:text-white transition-colors">
+                📘
               </a>
-              <a href="#" className="text-white">
-                <i className="bi bi-twitter fs-5"></i>
+              <a href="#" className="text-gray-400 hover:text-white transition-colors">
+                🐦
               </a>
-              <a href="#" className="text-white">
-                <i className="bi bi-instagram fs-5"></i>
+              <a href="#" className="text-gray-400 hover:text-white transition-colors">
+                📷
               </a>
-              <a href="#" className="text-white">
-                <i className="bi bi-youtube fs-5"></i>
+              <a href="#" className="text-gray-400 hover:text-white transition-colors">
+                🎬
               </a>
             </div>
           </div>
 
           {/* Quick links */}
-          <div className="col-lg-2 col-md-6">
-            <h6 className="text-white mb-3">Liên kết nhanh</h6>
-            <ul className="list-unstyled">
-              <li className="mb-2">
-                <Link to="/" className="text-muted text-decoration-none hover-text-white">
+          <div>
+            <h6 className="text-white font-semibold mb-4">Liên kết nhanh</h6>
+            <ul className="space-y-3">
+              <li>
+                <Link to="/" className="text-gray-400 hover:text-white transition-colors">
                   Trang chủ
                 </Link>
               </li>
-              <li className="mb-2">
-                <Link to="/quiz" className="text-muted text-decoration-none hover-text-white">
-                  Làm Quiz
+              <li>
+                <Link to="/topics" className="text-gray-400 hover:text-white transition-colors">
+                  Chủ đề
                 </Link>
               </li>
-              <li className="mb-2">
-                <Link to="/about" className="text-muted text-decoration-none hover-text-white">
+              <li>
+                <Link to="/about" className="text-gray-400 hover:text-white transition-colors">
                   Giới thiệu
                 </Link>
               </li>
-              <li className="mb-2">
-                <Link to="/help" className="text-muted text-decoration-none hover-text-white">
+              <li>
+                <Link to="/help" className="text-gray-400 hover:text-white transition-colors">
                   Hướng dẫn
                 </Link>
               </li>
@@ -60,57 +60,57 @@ const Footer = () => {
           </div>
 
           {/* Features */}
-          <div className="col-lg-3 col-md-6">
-            <h6 className="text-white mb-3">Tính năng</h6>
-            <ul className="list-unstyled">
-              <li className="mb-2">
-                <span className="text-muted">
-                  <i className="bi bi-check-circle text-success me-2"></i>
-                  Quiz từ vựng
-                </span>
+          <div>
+            <h6 className="text-white font-semibold mb-4">Tính năng</h6>
+            <ul className="space-y-3">
+              <li className="flex items-center text-gray-400">
+                <span className="text-green-400 mr-2">✓</span>
+                Tự luận từ vựng
               </li>
-              <li className="mb-2">
-                <span className="text-muted">
-                  <i className="bi bi-check-circle text-success me-2"></i>
-                  Quiz nghĩa
-                </span>
+              <li className="flex items-center text-gray-400">
+                <span className="text-green-400 mr-2">✓</span>
+                Tự luận ngữ pháp
               </li>
-              <li className="mb-2">
-                <span className="text-muted">
-                  <i className="bi bi-check-circle text-success me-2"></i>
-                  Quiz nghe
-                </span>
+              <li className="flex items-center text-gray-400">
+                <span className="text-green-400 mr-2">✓</span>
+                Trắc nghiệm
               </li>
-              <li className="mb-2">
-                <span className="text-muted">
-                  <i className="bi bi-check-circle text-success me-2"></i>
-                  Cài đặt giọng đọc
-                </span>
+              <li className="flex items-center text-gray-400">
+                <span className="text-green-400 mr-2">✓</span>
+                Thống kê chi tiết
               </li>
             </ul>
           </div>
 
           {/* Developer Info */}
-          <div className="col-lg-3">
-            <h6 className="text-white mb-3">Tác giả</h6>
-            <div className="text-muted">
-              <div className="mb-2">
-                <i className="bi bi-person-fill me-2"></i>
+          <div>
+            <h6 className="text-white font-semibold mb-4">Tác giả</h6>
+            <div className="text-gray-400 space-y-3">
+              <div className="flex items-center">
+                <span className="mr-2">👤</span>
                 <strong>Nguyễn Thanh Nhân</strong>
               </div>
-              <div className="mb-2">
-                <i className="bi bi-mortarboard me-2"></i>
+              <div className="flex items-center">
+                <span className="mr-2">🎓</span>
                 Sinh viên DHCNTT
               </div>
-              <div className="mb-2">
-                <i className="bi bi-envelope me-2"></i>
-                <a href="mailto:npthanhnhan2003@gmail.com" className="text-muted text-decoration-none hover-text-white">
+              <div className="flex items-center">
+                <span className="mr-2">📧</span>
+                <a 
+                  href="mailto:npthanhnhan2003@gmail.com" 
+                  className="text-gray-400 hover:text-white transition-colors"
+                >
                   npthanhnhan2003@gmail.com
                 </a>
               </div>
-              <div className="mb-3">
-                <i className="bi bi-github me-2"></i>
-                <a href="https://github.com/npthanhnhan2003" target="_blank" rel="noopener noreferrer" className="text-muted text-decoration-none hover-text-white">
+              <div className="flex items-center">
+                <span className="mr-2">💻</span>
+                <a 
+                  href="https://github.com/npthanhnhan2003" 
+                  target="_blank" 
+                  rel="noopener noreferrer" 
+                  className="text-gray-400 hover:text-white transition-colors"
+                >
                   github.com/npthanhnhan2003
                 </a>
               </div>
@@ -120,19 +120,17 @@ const Footer = () => {
       </div>
 
       {/* Copyright */}
-      <div className="border-top border-secondary">
-        <div className="container py-3">
-          <div className="row align-items-center">
-            <div className="col-md-6">
-              <p className="text-muted mb-0">
-                © 2025 QuizSmart. Phát triển bởi <strong>Nguyễn Thanh Nhân</strong>.
-              </p>
-            </div>
-            <div className="col-md-6 text-md-end">
-              <Link to="/privacy" className="text-muted text-decoration-none me-3">
+      <div className="border-t border-gray-800">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+          <div className="flex flex-col md:flex-row justify-between items-center">
+            <p className="text-gray-400 text-sm mb-4 md:mb-0">
+              © 2025 QuizSmart. Phát triển bởi <strong className="text-white">Nguyễn Thanh Nhân</strong>.
+            </p>
+            <div className="flex space-x-6">
+              <Link to="/privacy" className="text-gray-400 hover:text-white text-sm transition-colors">
                 Chính sách bảo mật
               </Link>
-              <Link to="/terms" className="text-muted text-decoration-none">
+              <Link to="/terms" className="text-gray-400 hover:text-white text-sm transition-colors">
                 Điều khoản sử dụng
               </Link>
             </div>

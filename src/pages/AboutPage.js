@@ -17,12 +17,12 @@ const AboutPage = () => {
     {
       year: '2025',
       title: 'Ý tưởng khởi nguồn',
-      description: 'Sinh viên Nguyễn Thanh Nhân bắt đầu phát triển ứng dụng học từ vựng thông minh'
+      description: 'Sinh viên Nguyễn Thanh Nhân bắt đầu phát triển ứng dụng quizz thông minh'
     },
     {
       year: '2025',
       title: 'Phát triển MVP',
-      description: 'Hoàn thành phiên bản đầu tiên với tính năng quiz đa dạng và phát âm AI'
+      description: 'Hoàn thành phiên bản đầu tiên với tính năng quizz đa dạng và phát âm AI'
     },
     {
       year: '2025',
@@ -37,163 +37,151 @@ const AboutPage = () => {
   ];
 
   return (
-    <div>
+    <div className="min-h-screen bg-gray-50">
       {/* Hero Section */}
-      <section className="bg-primary text-white py-5">
-        <div className="container">
-          <div className="row align-items-center">
-            <div className="col-lg-6">
-              <h1 className="display-4 fw-bold mb-4">
+      <section className="bg-blue-600 text-white py-20">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="grid lg:grid-cols-2 gap-12 items-center">
+            <div>
+              <h1 className="text-5xl font-bold mb-6">
                 Về QuizSmart
               </h1>
-              <p className="lead mb-4">
+              <p className="text-xl mb-8 text-blue-100">
                 Chúng tôi tin rằng việc học từ vựng không cần phải nhàm chán. 
                 QuizSmart được tạo ra để biến việc học thành một trải nghiệm thú vị và hiệu quả.
               </p>
-              <div className="d-flex gap-3">
+              <div className="flex gap-8">
                 <div className="text-center">
-                  <h3 className="fw-bold">2024</h3>
-                  <small>Năm thành lập</small>
+                  <h3 className="text-3xl font-bold">2025</h3>
+                  <small className="text-blue-200">Năm thành lập</small>
                 </div>
                 <div className="text-center">
-                  <h3 className="fw-bold">500+</h3>
-                  <small>Người dùng</small>
+                  <h3 className="text-3xl font-bold">500+</h3>
+                  <small className="text-blue-200">Người dùng</small>
                 </div>
                 <div className="text-center">
-                  <h3 className="fw-bold">3</h3>
-                  <small>Chế độ quiz</small>
+                  <h3 className="text-3xl font-bold">3</h3>
+                  <small className="text-blue-200">Chế độ quiz</small>
                 </div>
               </div>
             </div>
-            <div className="col-lg-6 text-center">
-              <i className="bi bi-people-fill display-1 text-warning"></i>
+            <div className="text-center">
+              <div className="text-8xl text-yellow-400">👥</div>
             </div>
           </div>
         </div>
       </section>
 
       {/* Mission Section */}
-      <section className="py-5 bg-light">
-        <div className="container">
-          <div className="row g-5">
-            <div className="col-lg-4">
-              <div className="text-center">
-                <div className="bg-primary bg-opacity-10 rounded-circle mx-auto mb-3 d-flex align-items-center justify-content-center" style={{width: '80px', height: '80px'}}>
-                  <i className="bi bi-target fs-1 text-primary"></i>
-                </div>
-                <h4 className="fw-bold">Sứ mệnh</h4>
-                <p className="text-muted">
-                  Làm cho việc học từ vựng trở nên dễ dàng, thú vị và hiệu quả 
-                  cho mọi người, mọi lúc, mọi nơi.
-                </p>
+      <section className="py-20 bg-white">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="grid lg:grid-cols-3 gap-12">
+            <div className="text-center">
+              <div className="w-20 h-20 bg-blue-100 rounded-full mx-auto mb-6 flex items-center justify-center">
+                <div className="text-3xl text-blue-600">🎯</div>
               </div>
+              <h4 className="text-xl font-bold mb-4">Sứ mệnh</h4>
+              <p className="text-gray-600">
+                Làm cho việc học từ vựng trở nên dễ dàng, thú vị và hiệu quả 
+                cho mọi người, mọi lúc, mọi nơi.
+              </p>
             </div>
-            <div className="col-lg-4">
-              <div className="text-center">
-                <div className="bg-success bg-opacity-10 rounded-circle mx-auto mb-3 d-flex align-items-center justify-content-center" style={{width: '80px', height: '80px'}}>
-                  <i className="bi bi-eye fs-1 text-success"></i>
-                </div>
-                <h4 className="fw-bold">Tầm nhìn</h4>
-                <p className="text-muted">
-                  Trở thành nền tảng học từ vựng hàng đầu Việt Nam, 
-                  hỗ trợ hàng triệu người cải thiện khả năng ngôn ngữ.
-                </p>
+            <div className="text-center">
+              <div className="w-20 h-20 bg-green-100 rounded-full mx-auto mb-6 flex items-center justify-center">
+                <div className="text-3xl text-green-600">👁️</div>
               </div>
+              <h4 className="text-xl font-bold mb-4">Tầm nhìn</h4>
+              <p className="text-gray-600">
+                Trở thành nền tảng học từ vựng hàng đầu Việt Nam, 
+                hỗ trợ hàng triệu người cải thiện khả năng ngôn ngữ.
+              </p>
             </div>
-            <div className="col-lg-4">
-              <div className="text-center">
-                <div className="bg-warning bg-opacity-10 rounded-circle mx-auto mb-3 d-flex align-items-center justify-content-center" style={{width: '80px', height: '80px'}}>
-                  <i className="bi bi-heart fs-1 text-warning"></i>
-                </div>
-                <h4 className="fw-bold">Giá trị</h4>
-                <p className="text-muted">
-                  Đổi mới, chất lượng, tính cộng đồng và sự phát triển bền vững 
-                  trong giáo dục.
-                </p>
+            <div className="text-center">
+              <div className="w-20 h-20 bg-yellow-100 rounded-full mx-auto mb-6 flex items-center justify-center">
+                <div className="text-3xl text-yellow-600">❤️</div>
               </div>
+              <h4 className="text-xl font-bold mb-4">Giá trị</h4>
+              <p className="text-gray-600">
+                Đổi mới, chất lượng, tính cộng đồng và sự phát triển bền vững 
+                trong giáo dục.
+              </p>
             </div>
           </div>
         </div>
       </section>
 
       {/* Timeline Section */}
-      <section className="py-5">
-        <div className="container">
-          <div className="text-center mb-5">
-            <h2 className="display-5 fw-bold text-dark mb-3">
+      <section className="py-20 bg-gray-50">
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-16">
+            <h2 className="text-4xl font-bold text-gray-900 mb-4">
               Hành trình phát triển
             </h2>
-            <p className="lead text-muted">
+            <p className="text-xl text-gray-600">
               Những cột mốc quan trọng trong sự phát triển của QuizSmart
             </p>
           </div>
           
-          <div className="row">
-            <div className="col-lg-8 mx-auto">
-              <div className="timeline">
-                {milestones.map((milestone, index) => (
-                  <div key={index} className="timeline-item d-flex mb-4">
-                    <div className="timeline-marker bg-primary text-white rounded-circle d-flex align-items-center justify-content-center me-3" style={{width: '50px', height: '50px', minWidth: '50px'}}>
-                      <strong>{milestone.year}</strong>
-                    </div>
-                    <div className="timeline-content">
-                      <h5 className="fw-bold">{milestone.title}</h5>
-                      <p className="text-muted mb-0">{milestone.description}</p>
-                    </div>
-                  </div>
-                ))}
+          <div className="space-y-8">
+            {milestones.map((milestone, index) => (
+              <div key={index} className="flex items-start">
+                <div className="flex-shrink-0 w-12 h-12 bg-blue-600 text-white rounded-full flex items-center justify-center font-bold mr-6">
+                  {milestone.year}
+                </div>
+                <div className="flex-grow">
+                  <h5 className="text-xl font-bold text-gray-900 mb-2">{milestone.title}</h5>
+                  <p className="text-gray-600">{milestone.description}</p>
+                </div>
               </div>
-            </div>
+            ))}
           </div>
         </div>
       </section>
 
       {/* Team Section */}
-      <section className="py-5 bg-light">
-        <div className="container">
-          <div className="text-center mb-5">
-            <h2 className="display-5 fw-bold text-dark mb-3">
+      <section className="py-20 bg-gray-50">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-16">
+            <h2 className="text-4xl font-bold text-gray-900 mb-4">
               Đội ngũ của chúng tôi
             </h2>
-            <p className="lead text-muted">
+            <p className="text-xl text-gray-600">
               Những con người tài năng đằng sau QuizSmart
             </p>
           </div>
           
-          <div className="row g-4">
+          <div className="grid lg:grid-cols-3 md:grid-cols-2 gap-8">
             {teamMembers.map((member, index) => (
-              <div key={index} className="col-lg-4 col-md-6">
-                <div className="card border-0 shadow-sm text-center h-100">
-                  <div className="card-body p-4">
-                    <div className="avatar-placeholder bg-primary bg-opacity-10 rounded-circle mx-auto mb-3 d-flex align-items-center justify-content-center" style={{width: '100px', height: '100px'}}>
-                      <i className="bi bi-person-fill fs-1 text-primary"></i>
-                    </div>
-                    <h5 className="card-title fw-bold">{member.name}</h5>
-                    <p className="text-primary fw-medium">{member.role}</p>
-                    <p className="card-text text-muted small">{member.description}</p>
-                    
-                    {/* Contact Links */}
-                    <div className="d-flex justify-content-center gap-2 mt-3">
-                      <a href={`mailto:${member.email}`} 
-                         className="btn btn-outline-primary btn-sm" 
-                         title="Email">
-                        <i className="bi bi-envelope"></i>
-                      </a>
-                      <a href={member.github} 
-                         target="_blank" 
-                         rel="noopener noreferrer"
-                         className="btn btn-outline-dark btn-sm" 
-                         title="GitHub">
-                        <i className="bi bi-github"></i>
-                      </a>
-                      <a href={member.linkedin} 
-                         target="_blank" 
-                         rel="noopener noreferrer"
-                         className="btn btn-outline-info btn-sm" 
-                         title="LinkedIn">
-                        <i className="bi bi-linkedin"></i>
-                      </a>
-                    </div>
+              <div key={index} className="bg-white rounded-xl shadow-lg text-center h-full">
+                <div className="p-8">
+                  <div className="w-24 h-24 bg-blue-100 rounded-full mx-auto mb-6 flex items-center justify-center">
+                    <span className="text-4xl text-blue-600">👤</span>
+                  </div>
+                  <h5 className="text-xl font-bold text-gray-900 mb-2">{member.name}</h5>
+                  <p className="text-blue-600 font-medium mb-4">{member.role}</p>
+                  <p className="text-gray-600 text-sm mb-6">{member.description}</p>
+                  
+                  {/* Contact Links */}
+                  <div className="flex justify-center gap-3">
+                    <a href={`mailto:${member.email}`} 
+                       className="w-10 h-10 bg-blue-100 hover:bg-blue-200 rounded-full flex items-center justify-center text-blue-600 transition-colors duration-200" 
+                       title="Email">
+                      📧
+                    </a>
+                    <a href={member.github} 
+                       target="_blank" 
+                       rel="noopener noreferrer"
+                       className="w-10 h-10 bg-gray-100 hover:bg-gray-200 rounded-full flex items-center justify-center text-gray-600 transition-colors duration-200" 
+                       title="GitHub">
+                      🐙
+                    </a>
+                    <a href={member.linkedin} 
+                       target="_blank" 
+                       rel="noopener noreferrer"
+                       className="w-10 h-10 bg-blue-100 hover:bg-blue-200 rounded-full flex items-center justify-center text-blue-600 transition-colors duration-200" 
+                       title="LinkedIn">
+                      💼
+                    </a>
                   </div>
                 </div>
               </div>
@@ -203,29 +191,29 @@ const AboutPage = () => {
       </section>
 
       {/* Contact Section */}
-      <section className="py-5 bg-primary text-white">
-        <div className="container text-center">
-          <h2 className="display-6 fw-bold mb-3">
+      <section className="py-20 bg-blue-600 text-white">
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+          <h2 className="text-4xl font-bold mb-4">
             Kết nối với chúng tôi
           </h2>
-          <p className="lead mb-4">
+          <p className="text-xl mb-12 text-blue-100">
             Có câu hỏi hay góp ý? Chúng tôi luôn sẵn sàng lắng nghe!
           </p>
-          <div className="row g-4 justify-content-center">
-            <div className="col-md-4">
-              <i className="bi bi-envelope-fill fs-1 mb-3"></i>
-              <h5>Email</h5>
-              <p>support@quizsmart.com</p>
+          <div className="grid md:grid-cols-3 gap-8">
+            <div className="text-center">
+              <div className="text-5xl mb-4">📧</div>
+              <h5 className="text-xl font-semibold mb-2">Email</h5>
+              <p className="text-blue-100">support@quizsmart.com</p>
             </div>
-            <div className="col-md-4">
-              <i className="bi bi-telephone-fill fs-1 mb-3"></i>
-              <h5>Điện thoại</h5>
-              <p>+84 123 456 789</p>
+            <div className="text-center">
+              <div className="text-5xl mb-4">📞</div>
+              <h5 className="text-xl font-semibold mb-2">Điện thoại</h5>
+              <p className="text-blue-100">+84 123 456 789</p>
             </div>
-            <div className="col-md-4">
-              <i className="bi bi-geo-alt-fill fs-1 mb-3"></i>
-              <h5>Địa chỉ</h5>
-              <p>Hà Nội, Việt Nam</p>
+            <div className="text-center">
+              <div className="text-5xl mb-4">📍</div>
+              <h5 className="text-xl font-semibold mb-2">Địa chỉ</h5>
+              <p className="text-blue-100">Hà Nội, Việt Nam</p>
             </div>
           </div>
         </div>

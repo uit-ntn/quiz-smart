@@ -41,56 +41,62 @@ const HelpPage = () => {
   return (
     <div>
       {/* Hero Section */}
-      <section className="bg-primary text-white py-5">
-        <div className="container">
-          <div className="row align-items-center">
-            <div className="col-lg-8">
-              <h1 className="display-4 fw-bold mb-4">
-                <i className="bi bi-question-circle-fill me-3"></i>
+      <section className="bg-blue-600 text-white py-16">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="grid lg:grid-cols-3 gap-8 items-center">
+            <div className="lg:col-span-2">
+              <h1 className="text-5xl font-bold mb-6">
+                <span className="mr-4">❓</span>
                 Trung tâm trợ giúp
               </h1>
-              <p className="lead mb-4">
+              <p className="text-xl mb-8 text-blue-100">
                 Tìm hiểu cách sử dụng QuizSmart một cách hiệu quả nhất
               </p>
               {/* Search Box */}
-              <div className="input-group input-group-lg">
+              <div className="flex">
                 <input 
                   type="text" 
-                  className="form-control" 
+                  className="flex-1 px-4 py-3 text-gray-900 rounded-l-lg focus:outline-none focus:ring-2 focus:ring-blue-300" 
                   placeholder="Tìm kiếm câu hỏi..."
                 />
-                <button className="btn btn-light" type="button">
-                  <i className="bi bi-search"></i>
+                <button className="px-6 py-3 bg-white text-blue-600 rounded-r-lg hover:bg-gray-100 transition-colors duration-200">
+                  🔍
                 </button>
               </div>
             </div>
-            <div className="col-lg-4 text-center">
-              <i className="bi bi-headset display-1 text-warning"></i>
+            <div className="text-center">
+              <div className="text-8xl text-yellow-400">🎧</div>
             </div>
           </div>
         </div>
       </section>
 
       {/* Main Content */}
-      <section className="py-5">
-        <div className="container">
-          <div className="row">
+      <section className="py-16">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="grid lg:grid-cols-4 gap-8">
             {/* Sidebar */}
-            <div className="col-lg-3 mb-4">
-              <div className="card border-0 shadow-sm">
-                <div className="card-header bg-light">
-                  <h6 className="mb-0 fw-bold">Danh mục</h6>
+            <div className="lg:col-span-1">
+              <div className="bg-white rounded-xl shadow-lg overflow-hidden">
+                <div className="bg-gray-50 px-6 py-4">
+                  <h6 className="font-bold text-gray-900">Danh mục</h6>
                 </div>
-                <div className="list-group list-group-flush">
+                <div className="divide-y divide-gray-200">
                   {sections.map((section) => (
                     <button
                       key={section.id}
-                      className={`list-group-item list-group-item-action d-flex align-items-center ${
-                        activeSection === section.id ? 'active' : ''
+                      className={`w-full px-6 py-4 text-left flex items-center hover:bg-gray-50 transition-colors duration-200 ${
+                        activeSection === section.id ? 'bg-blue-50 text-blue-600 border-r-4 border-blue-600' : 'text-gray-700'
                       }`}
                       onClick={() => setActiveSection(section.id)}
                     >
-                      <i className={`${section.icon} me-3`}></i>
+                      <span className="mr-3 text-lg">
+                        {section.icon === 'bi-play-circle' && '▶️'}
+                        {section.icon === 'bi-list-ul' && '📝'}
+                        {section.icon === 'bi-volume-up' && '🔊'}
+                        {section.icon === 'bi-lightbulb' && '💡'}
+                        {section.icon === 'bi-question-circle' && '❓'}
+                      </span>
                       {section.title}
                     </button>
                   ))}
@@ -99,89 +105,73 @@ const HelpPage = () => {
             </div>
 
             {/* Content */}
-            <div className="col-lg-9">
+            <div className="lg:col-span-3">
               {activeSection === 'getting-started' && (
                 <div className="help-content">
-                  <h2 className="fw-bold mb-4">Bắt đầu với QuizSmart</h2>
+                  <h2 className="text-3xl font-bold mb-8 text-gray-900">Bắt đầu với QuizSmart</h2>
                   
-                  <div className="row g-4">
-                    <div className="col-md-6">
-                      <div className="card border-0 shadow-sm h-100">
-                        <div className="card-body">
-                          <h5 className="card-title">
-                            <i className="bi bi-1-circle-fill text-primary me-2"></i>
-                            Nhập từ vựng
-                          </h5>
-                          <p className="card-text">
-                            Nhập hoặc copy-paste danh sách từ vựng theo định dạng: 
-                            <code>từ vựng : nghĩa</code>
-                          </p>
-                          <div className="bg-light p-3 rounded">
-                            <small className="font-monospace">
-                              hello : xin chào<br/>
-                              world : thế giới<br/>
-                              study : học tập
-                            </small>
-                          </div>
+                  <div className="grid md:grid-cols-2 gap-6">
+                    <div className="bg-white rounded-xl shadow-lg p-6 h-full">
+                      <h5 className="text-xl font-semibold mb-4 flex items-center">
+                        <span className="text-2xl text-blue-600 mr-3">1️⃣</span>
+                        Nhập từ vựng
+                      </h5>
+                      <p className="text-gray-600 mb-4">
+                        Nhập hoặc copy-paste danh sách từ vựng theo định dạng: 
+                        <code className="bg-gray-100 px-2 py-1 rounded text-sm">từ vựng : nghĩa</code>
+                      </p>
+                      <div className="bg-gray-50 p-4 rounded-lg">
+                        <div className="font-mono text-sm text-gray-700">
+                          hello : xin chào<br/>
+                          world : thế giới<br/>
+                          study : học tập
                         </div>
                       </div>
                     </div>
                     
-                    <div className="col-md-6">
-                      <div className="card border-0 shadow-sm h-100">
-                        <div className="card-body">
-                          <h5 className="card-title">
-                            <i className="bi bi-2-circle-fill text-success me-2"></i>
-                            Chọn chế độ
-                          </h5>
-                          <p className="card-text">
-                            Chọn một trong 3 chế độ quiz phù hợp với mục tiêu học tập
-                          </p>
-                          <ul className="list-unstyled">
-                            <li><i className="bi bi-check text-success me-2"></i>Quiz từ vựng</li>
-                            <li><i className="bi bi-check text-success me-2"></i>Quiz nghĩa</li>
-                            <li><i className="bi bi-check text-success me-2"></i>Quiz nghe</li>
-                          </ul>
+                    <div className="bg-white rounded-xl shadow-lg p-6 h-full">
+                      <h5 className="text-xl font-semibold mb-4 flex items-center">
+                        <span className="text-2xl text-green-600 mr-3">2️⃣</span>
+                        Chọn chế độ
+                      </h5>
+                      <p className="text-gray-600 mb-4">
+                        Chọn một trong 3 chế độ quiz phù hợp với mục tiêu học tập
+                      </p>
+                      <ul className="space-y-2">
+                        <li className="flex items-center"><span className="text-green-500 mr-2">✅</span>Quiz từ vựng</li>
+                        <li className="flex items-center"><span className="text-green-500 mr-2">✅</span>Quiz nghĩa</li>
+                        <li className="flex items-center"><span className="text-green-500 mr-2">✅</span>Quiz nghe</li>
+                      </ul>
+                    </div>
+                    
+                    <div className="bg-white rounded-xl shadow-lg p-6 h-full">
+                      <h5 className="text-xl font-semibold mb-4 flex items-center">
+                        <span className="text-2xl text-yellow-600 mr-3">3️⃣</span>
+                        Làm quiz
+                      </h5>
+                      <p className="text-gray-600 mb-4">
+                        Trả lời các câu hỏi và nhận feedback ngay lập tức
+                      </p>
+                      <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
+                        <div className="text-sm text-blue-800">
+                          <span className="mr-2">ℹ️</span>
+                          Nhấn Enter để tiếp tục nhanh chóng
                         </div>
                       </div>
                     </div>
                     
-                    <div className="col-md-6">
-                      <div className="card border-0 shadow-sm h-100">
-                        <div className="card-body">
-                          <h5 className="card-title">
-                            <i className="bi bi-3-circle-fill text-warning me-2"></i>
-                            Làm quiz
-                          </h5>
-                          <p className="card-text">
-                            Trả lời các câu hỏi và nhận feedback ngay lập tức
-                          </p>
-                          <div className="alert alert-info">
-                            <small>
-                              <i className="bi bi-info-circle me-2"></i>
-                              Nhấn Enter để tiếp tục nhanh chóng
-                            </small>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                    
-                    <div className="col-md-6">
-                      <div className="card border-0 shadow-sm h-100">
-                        <div className="card-body">
-                          <h5 className="card-title">
-                            <i className="bi bi-4-circle-fill text-danger me-2"></i>
-                            Xem kết quả
-                          </h5>
-                          <p className="card-text">
-                            Kiểm tra điểm số và xem chi tiết các câu trả lời
-                          </p>
-                          <div className="d-flex gap-2">
-                            <span className="badge bg-success">Đúng</span>
-                            <span className="badge bg-danger">Sai</span>
-                            <span className="badge bg-primary">Điểm số</span>
-                          </div>
-                        </div>
+                    <div className="bg-white rounded-xl shadow-lg p-6 h-full">
+                      <h5 className="text-xl font-semibold mb-4 flex items-center">
+                        <span className="text-2xl text-red-600 mr-3">4️⃣</span>
+                        Xem kết quả
+                      </h5>
+                      <p className="text-gray-600 mb-4">
+                        Kiểm tra điểm số và xem chi tiết các câu trả lời
+                      </p>
+                      <div className="flex gap-2">
+                        <span className="px-3 py-1 bg-green-100 text-green-800 rounded-full text-sm">Đúng</span>
+                        <span className="px-3 py-1 bg-red-100 text-red-800 rounded-full text-sm">Sai</span>
+                        <span className="px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-sm">Điểm số</span>
                       </div>
                     </div>
                   </div>
@@ -190,72 +180,66 @@ const HelpPage = () => {
 
               {activeSection === 'quiz-modes' && (
                 <div className="help-content">
-                  <h2 className="fw-bold mb-4">Các chế độ Quiz</h2>
+                  <h2 className="text-3xl font-bold mb-8 text-gray-900">Các chế độ Quiz</h2>
                   
-                  <div className="accordion" id="quizModeAccordion">
-                    <div className="accordion-item">
-                      <h2 className="accordion-header">
-                        <button className="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#vocabulary-mode">
-                          <i className="bi bi-book-fill text-primary me-3"></i>
+                  <div className="space-y-4">
+                    <div className="bg-white rounded-xl shadow-lg overflow-hidden">
+                      <div className="bg-blue-50 px-6 py-4 border-l-4 border-blue-500">
+                        <h3 className="text-xl font-semibold text-blue-800 flex items-center">
+                          <span className="text-2xl mr-3">📚</span>
                           Quiz từ vựng
-                        </button>
-                      </h2>
-                      <div id="vocabulary-mode" className="accordion-collapse collapse show" data-bs-parent="#quizModeAccordion">
-                        <div className="accordion-body">
-                          <p>Chế độ này hiển thị nghĩa của từ và bạn cần điền từ vựng tương ứng.</p>
-                          <div className="bg-light p-3 rounded">
-                            <strong>Ví dụ:</strong><br/>
-                            <span className="text-muted">Nghĩa:</span> xin chào<br/>
-                            <span className="text-muted">Bạn điền:</span> hello
-                          </div>
-                          <p className="mt-3">
-                            <strong>Phù hợp cho:</strong> Kiểm tra khả năng nhớ từ vựng từ nghĩa tiếng Việt.
-                          </p>
+                        </h3>
+                      </div>
+                      <div className="p-6">
+                        <p className="text-gray-600 mb-4">Chế độ này hiển thị nghĩa của từ và bạn cần điền từ vựng tương ứng.</p>
+                        <div className="bg-gray-50 p-4 rounded-lg mb-4">
+                          <div className="font-semibold mb-2">Ví dụ:</div>
+                          <div className="text-gray-600">Nghĩa: xin chào</div>
+                          <div className="text-gray-600">Bạn điền: hello</div>
                         </div>
+                        <p className="text-gray-700">
+                          <span className="font-semibold">Phù hợp cho:</span> Kiểm tra khả năng nhớ từ vựng từ nghĩa tiếng Việt.
+                        </p>
                       </div>
                     </div>
                     
-                    <div className="accordion-item">
-                      <h2 className="accordion-header">
-                        <button className="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#meaning-mode">
-                          <i className="bi bi-translate text-success me-3"></i>
+                    <div className="bg-white rounded-xl shadow-lg overflow-hidden">
+                      <div className="bg-green-50 px-6 py-4 border-l-4 border-green-500">
+                        <h3 className="text-xl font-semibold text-green-800 flex items-center">
+                          <span className="text-2xl mr-3">🌐</span>
                           Quiz nghĩa
-                        </button>
-                      </h2>
-                      <div id="meaning-mode" className="accordion-collapse collapse" data-bs-parent="#quizModeAccordion">
-                        <div className="accordion-body">
-                          <p>Chế độ này hiển thị từ vựng tiếng Anh và bạn cần điền nghĩa tiếng Việt.</p>
-                          <div className="bg-light p-3 rounded">
-                            <strong>Ví dụ:</strong><br/>
-                            <span className="text-muted">Từ vựng:</span> hello<br/>
-                            <span className="text-muted">Bạn điền:</span> xin chào
-                          </div>
-                          <p className="mt-3">
-                            <strong>Phù hợp cho:</strong> Hiểu sâu về ý nghĩa và cách sử dụng từ.
-                          </p>
+                        </h3>
+                      </div>
+                      <div className="p-6">
+                        <p className="text-gray-600 mb-4">Chế độ này hiển thị từ vựng tiếng Anh và bạn cần điền nghĩa tiếng Việt.</p>
+                        <div className="bg-gray-50 p-4 rounded-lg mb-4">
+                          <div className="font-semibold mb-2">Ví dụ:</div>
+                          <div className="text-gray-600">Từ vựng: hello</div>
+                          <div className="text-gray-600">Bạn điền: xin chào</div>
                         </div>
+                        <p className="text-gray-700">
+                          <span className="font-semibold">Phù hợp cho:</span> Hiểu sâu về ý nghĩa và cách sử dụng từ.
+                        </p>
                       </div>
                     </div>
                     
-                    <div className="accordion-item">
-                      <h2 className="accordion-header">
-                        <button className="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#listening-mode">
-                          <i className="bi bi-volume-up-fill text-warning me-3"></i>
+                    <div className="bg-white rounded-xl shadow-lg overflow-hidden">
+                      <div className="bg-yellow-50 px-6 py-4 border-l-4 border-yellow-500">
+                        <h3 className="text-xl font-semibold text-yellow-800 flex items-center">
+                          <span className="text-2xl mr-3">🔊</span>
                           Quiz nghe
-                        </button>
-                      </h2>
-                      <div id="listening-mode" className="accordion-collapse collapse" data-bs-parent="#quizModeAccordion">
-                        <div className="accordion-body">
-                          <p>Chế độ này phát âm từ vựng và bạn cần điền từ bạn nghe được.</p>
-                          <div className="bg-light p-3 rounded">
-                            <strong>Ví dụ:</strong><br/>
-                            <span className="text-muted">Bạn nghe:</span> 🔊 hello<br/>
-                            <span className="text-muted">Bạn điền:</span> hello
-                          </div>
-                          <p className="mt-3">
-                            <strong>Phù hợp cho:</strong> Cải thiện khả năng nghe và phát âm.
-                          </p>
+                        </h3>
+                      </div>
+                      <div className="p-6">
+                        <p className="text-gray-600 mb-4">Chế độ này phát âm từ vựng và bạn cần điền từ bạn nghe được.</p>
+                        <div className="bg-gray-50 p-4 rounded-lg mb-4">
+                          <div className="font-semibold mb-2">Ví dụ:</div>
+                          <div className="text-gray-600">Bạn nghe: 🔊 hello</div>
+                          <div className="text-gray-600">Bạn điền: hello</div>
                         </div>
+                        <p className="text-gray-700">
+                          <span className="font-semibold">Phù hợp cho:</span> Cải thiện khả năng nghe và phát âm.
+                        </p>
                       </div>
                     </div>
                   </div>

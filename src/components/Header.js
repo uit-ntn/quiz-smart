@@ -1,114 +1,149 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 
 const Header = () => {
   const location = useLocation();
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
 
   const navItems = [
-    { path: '/', label: 'Trang chủ', icon: 'bi-house-fill' },
-    { path: '/quiz', label: 'Làm Quiz', icon: 'bi-play-circle-fill' },
-    { path: '/about', label: 'Giới thiệu', icon: 'bi-info-circle-fill' },
-    { path: '/help', label: 'Hướng dẫn', icon: 'bi-question-circle-fill' }
+    { path: '/', label: 'Trang chủ', icon: '🏠' },
+    { path: '/topics', label: 'Chủ đề', icon: '📚' },
+    { path: '/about', label: 'Giới thiệu', icon: 'ℹ️' },
+    { path: '/help', label: 'Hướng dẫn', icon: '❓' }
   ];
 
   return (
-    <header className="bg-white shadow-sm border-bottom sticky-top">
-      <nav className="navbar navbar-expand-lg navbar-light">
-        <div className="container">
+    <header className="bg-white shadow-sm border-b border-gray-200 sticky top-0 z-50">
+      <nav className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="flex justify-between items-center h-16">
           {/* Brand */}
-          <Link className="navbar-brand d-flex align-items-center" to="/">
-            <div className="brand-icon me-3">
-              <i className="bi bi-mortarboard-fill fs-2 text-primary"></i>
-            </div>
+          <Link className="flex items-center space-x-3" to="/">
+            <div className="text-2xl">🎓</div>
             <div>
-              <h4 className="mb-0 fw-bold text-primary">QuizSmart</h4>
-              <small className="text-muted">Học từ vựng thông minh</small>
+              <h4 className="text-xl font-bold text-blue-600">QuizSmart</h4>
+              <small className="text-gray-500 text-sm">Học từ vựng thông minh</small>
             </div>
           </Link>
 
-          {/* Mobile toggle */}
-          <button 
-            className="navbar-toggler" 
-            type="button" 
-            data-bs-toggle="collapse" 
-            data-bs-target="#navbarNav"
-          >
-            <span className="navbar-toggler-icon"></span>
-          </button>
+          {/* Desktop Navigation */}
+          <div className="hidden md:flex items-center space-x-1">
+            {navItems.map((item) => (
+              <Link 
+                key={item.path}
+                className={`px-4 py-2 rounded-full text-sm font-medium transition-colors duration-200 ${
+                  location.pathname === item.path 
+                    ? 'bg-blue-600 text-white' 
+                    : 'text-gray-700 hover:bg-gray-100 hover:text-blue-600'
+                }`}
+                to={item.path}
+              >
+                <span className="mr-2">{item.icon}</span>
+                {item.label}
+              </Link>
+            ))}
+          </div>
 
-          {/* Navigation */}
-          <div className="collapse navbar-collapse" id="navbarNav">
-            <ul className="navbar-nav ms-auto">
-              {navItems.map((item) => (
-                <li className="nav-item" key={item.path}>
+          {/* User Menu & Mobile Toggle */}
+          <div className="flex items-center space-x-4">
+            {/* User Menu */}
+            <div className="relative">
+              <button 
+                className="flex items-center px-3 py-2 border border-blue-300 rounded-lg text-blue-600 hover:bg-blue-50 transition-colors duration-200"
+                onClick={() => setIsUserMenuOpen(!isUserMenuOpen)}
+              >
+                <span className="mr-2">👤</span>
+                Tài khoản
+                <svg className={`ml-2 h-4 w-4 transition-transform duration-200 ${isUserMenuOpen ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                </svg>
+              </button>
+              
+              {isUserMenuOpen && (
+                <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-200 py-1 z-50">
                   <Link 
-                    className={`nav-link px-3 py-2 rounded-pill mx-1 ${
-                      location.pathname === item.path 
-                        ? 'active bg-primary text-white' 
-                        : 'text-dark hover-bg-light'
-                    }`}
-                    to={item.path}
+                    className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                    to="/profile"
+                    onClick={() => setIsUserMenuOpen(false)}
                   >
-                    <i className={`${item.icon} me-2`}></i>
-                    {item.label}
+                    <span className="mr-3">👤</span>
+                    Hồ sơ
                   </Link>
-                </li>
-              ))}
-            </ul>
-
-            {/* User actions */}
-            <div className="d-flex align-items-center ms-3">
-              <div className="dropdown">
-                <button 
-                  className="btn btn-outline-primary dropdown-toggle" 
-                  type="button" 
-                  data-bs-toggle="dropdown"
-                >
-                  <i className="bi bi-person-circle me-2"></i>
-                  Tài khoản
-                </button>
-                <ul className="dropdown-menu dropdown-menu-end">
-                  <li>
-                    <Link className="dropdown-item" to="/profile">
-                      <i className="bi bi-person me-2"></i>
-                      Hồ sơ
-                    </Link>
-                  </li>
-                  <li>
-                    <Link className="dropdown-item" to="/settings">
-                      <i className="bi bi-gear me-2"></i>
-                      Cài đặt
-                    </Link>
-                  </li>
-                  <li><hr className="dropdown-divider" /></li>
-                  <li>
-                    <Link className="dropdown-item" to="/logout">
-                      <i className="bi bi-box-arrow-right me-2"></i>
-                      Đăng xuất
-                    </Link>
-                  </li>
-                </ul>
-              </div>
+                  <Link 
+                    className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                    to="/settings"
+                    onClick={() => setIsUserMenuOpen(false)}
+                  >
+                    <span className="mr-3">⚙️</span>
+                    Cài đặt
+                  </Link>
+                  <hr className="my-1 border-gray-200" />
+                  <Link 
+                    className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                    to="/logout"
+                    onClick={() => setIsUserMenuOpen(false)}
+                  >
+                    <span className="mr-3">🚪</span>
+                    Đăng xuất
+                  </Link>
+                </div>
+              )}
             </div>
+
+            {/* Mobile menu button */}
+            <button 
+              className="md:hidden p-2 rounded-lg text-gray-600 hover:bg-gray-100"
+              onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+            >
+              <svg className="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+              </svg>
+            </button>
           </div>
         </div>
+
+        {/* Mobile Navigation */}
+        {isMobileMenuOpen && (
+          <div className="md:hidden border-t border-gray-200 py-3">
+            <div className="space-y-1">
+              {navItems.map((item) => (
+                <Link 
+                  key={item.path}
+                  className={`block px-4 py-2 rounded-lg text-sm font-medium transition-colors duration-200 ${
+                    location.pathname === item.path 
+                      ? 'bg-blue-600 text-white' 
+                      : 'text-gray-700 hover:bg-gray-100'
+                  }`}
+                  to={item.path}
+                  onClick={() => setIsMobileMenuOpen(false)}
+                >
+                  <span className="mr-3">{item.icon}</span>
+                  {item.label}
+                </Link>
+              ))}
+            </div>
+          </div>
+        )}
       </nav>
 
       {/* Breadcrumb */}
-      <div className="bg-light border-top">
-        <div className="container">
-          <nav aria-label="breadcrumb">
-            <ol className="breadcrumb py-2 mb-0">
-              <li className="breadcrumb-item">
-                <Link to="/" className="text-decoration-none">
-                  <i className="bi bi-house me-1"></i>
+      <div className="bg-gray-50 border-t border-gray-200">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <nav aria-label="breadcrumb" className="py-2">
+            <ol className="flex items-center space-x-2 text-sm">
+              <li>
+                <Link to="/" className="text-gray-500 hover:text-blue-600 transition-colors duration-200">
+                  <span className="mr-1">🏠</span>
                   Trang chủ
                 </Link>
               </li>
               {location.pathname !== '/' && (
-                <li className="breadcrumb-item active">
-                  {navItems.find(item => item.path === location.pathname)?.label || 'Trang hiện tại'}
-                </li>
+                <>
+                  <span className="text-gray-400">/</span>
+                  <li className="text-gray-700 font-medium">
+                    {navItems.find(item => item.path === location.pathname)?.label || 'Trang hiện tại'}
+                  </li>
+                </>
               )}
             </ol>
           </nav>

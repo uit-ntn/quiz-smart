@@ -3,14 +3,13 @@ import { BrowserRouter as Router } from 'react-router-dom';
 import Header from './components/Header';
 import Footer from './components/Footer';
 import AppRoutes from './routes/AppRoutes';
-import './App.css';
 
 function App() {
   return (
     <Router>
-      <div className="d-flex flex-column min-vh-100">
+      <div className="flex flex-col min-h-screen">
         <Header />
-        <main className="flex-grow-1">
+        <main className="flex-grow">
           <AppRoutes />
         </main>
         <Footer />
