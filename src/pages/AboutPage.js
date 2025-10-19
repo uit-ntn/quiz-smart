@@ -1,12 +1,15 @@
 import React from 'react';
+import { SiGmail, SiGithub, SiLinkedin } from "react-icons/si";
+
+
 
 const AboutPage = () => {
   const teamMembers = [
     {
       name: 'Nguyễn Thanh Nhân',
-      role: 'Founder & Developer',
+      role: 'Web Developer',
       image: 'https://via.placeholder.com/150',
-      description: 'Sinh viên Đại học Công nghệ Thông tin, đam mê phát triển ứng dụng web và AI.',
+      description: 'Sinh viên Đại học Công nghệ Thông tin, đam mê phát triển ứng dụng web và cloud.',
       email: 'npthanhnhan2003@gmail.com',
       github: 'https://github.com/npthanhnhan2003',
       linkedin: 'https://linkedin.com/in/npthanhnhan2003'
@@ -47,7 +50,7 @@ const AboutPage = () => {
                 Về QuizSmart
               </h1>
               <p className="text-xl mb-8 text-blue-100">
-                Chúng tôi tin rằng việc học từ vựng không cần phải nhàm chán. 
+                Chúng tôi tin rằng việc học từ vựng không cần phải nhàm chán.
                 QuizSmart được tạo ra để biến việc học thành một trải nghiệm thú vị và hiệu quả.
               </p>
               <div className="flex gap-8">
@@ -82,7 +85,7 @@ const AboutPage = () => {
               </div>
               <h4 className="text-xl font-bold mb-4">Sứ mệnh</h4>
               <p className="text-gray-600">
-                Làm cho việc học từ vựng trở nên dễ dàng, thú vị và hiệu quả 
+                Làm cho việc học từ vựng trở nên dễ dàng, thú vị và hiệu quả
                 cho mọi người, mọi lúc, mọi nơi.
               </p>
             </div>
@@ -92,7 +95,7 @@ const AboutPage = () => {
               </div>
               <h4 className="text-xl font-bold mb-4">Tầm nhìn</h4>
               <p className="text-gray-600">
-                Trở thành nền tảng học từ vựng hàng đầu Việt Nam, 
+                Trở thành nền tảng học từ vựng hàng đầu Việt Nam,
                 hỗ trợ hàng triệu người cải thiện khả năng ngôn ngữ.
               </p>
             </div>
@@ -102,7 +105,7 @@ const AboutPage = () => {
               </div>
               <h4 className="text-xl font-bold mb-4">Giá trị</h4>
               <p className="text-gray-600">
-                Đổi mới, chất lượng, tính cộng đồng và sự phát triển bền vững 
+                Đổi mới, chất lượng, tính cộng đồng và sự phát triển bền vững
                 trong giáo dục.
               </p>
             </div>
@@ -121,7 +124,7 @@ const AboutPage = () => {
               Những cột mốc quan trọng trong sự phát triển của QuizSmart
             </p>
           </div>
-          
+
           <div className="space-y-8">
             {milestones.map((milestone, index) => (
               <div key={index} className="flex items-start">
@@ -149,7 +152,8 @@ const AboutPage = () => {
               Những con người tài năng đằng sau QuizSmart
             </p>
           </div>
-          
+
+
           <div className="grid lg:grid-cols-3 md:grid-cols-2 gap-8">
             {teamMembers.map((member, index) => (
               <div key={index} className="bg-white rounded-xl shadow-lg text-center h-full">
@@ -157,65 +161,49 @@ const AboutPage = () => {
                   <div className="w-24 h-24 bg-blue-100 rounded-full mx-auto mb-6 flex items-center justify-center">
                     <span className="text-4xl text-blue-600">👤</span>
                   </div>
+
                   <h5 className="text-xl font-bold text-gray-900 mb-2">{member.name}</h5>
                   <p className="text-blue-600 font-medium mb-4">{member.role}</p>
                   <p className="text-gray-600 text-sm mb-6">{member.description}</p>
-                  
+
                   {/* Contact Links */}
                   <div className="flex justify-center gap-3">
-                    <a href={`mailto:${member.email}`} 
-                       className="w-10 h-10 bg-blue-100 hover:bg-blue-200 rounded-full flex items-center justify-center text-blue-600 transition-colors duration-200" 
-                       title="Email">
-                      📧
+                    {/* Gmail */}
+                    <a
+                      href={`mailto:${member.email}`}
+                      className="w-10 h-10 bg-blue-50 hover:bg-blue-100 rounded-full flex items-center justify-center transition-colors duration-200"
+                      title="Email"
+                    >
+                      <SiGmail size={20} className="text-[#EA4335]" /> {/* đỏ Gmail */}
                     </a>
-                    <a href={member.github} 
-                       target="_blank" 
-                       rel="noopener noreferrer"
-                       className="w-10 h-10 bg-gray-100 hover:bg-gray-200 rounded-full flex items-center justify-center text-gray-600 transition-colors duration-200" 
-                       title="GitHub">
-                      🐙
+
+                    {/* GitHub */}
+                    <a
+                      href={member.github}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="w-10 h-10 bg-gray-50 hover:bg-gray-100 rounded-full flex items-center justify-center transition-colors duration-200"
+                      title="GitHub"
+                    >
+                      <SiGithub size={20} className="text-[#181717]" /> {/* đen GitHub */}
                     </a>
-                    <a href={member.linkedin} 
-                       target="_blank" 
-                       rel="noopener noreferrer"
-                       className="w-10 h-10 bg-blue-100 hover:bg-blue-200 rounded-full flex items-center justify-center text-blue-600 transition-colors duration-200" 
-                       title="LinkedIn">
-                      💼
+
+                    {/* LinkedIn */}
+                    <a
+                      href={member.linkedin}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="w-10 h-10 bg-blue-50 hover:bg-blue-100 rounded-full flex items-center justify-center transition-colors duration-200"
+                      title="LinkedIn"
+                    >
+                      <SiLinkedin size={20} className="text-[#0A66C2]" /> {/* xanh LinkedIn */}
                     </a>
                   </div>
                 </div>
               </div>
             ))}
           </div>
-        </div>
-      </section>
 
-      {/* Contact Section */}
-      <section className="py-20 bg-blue-600 text-white">
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <h2 className="text-4xl font-bold mb-4">
-            Kết nối với chúng tôi
-          </h2>
-          <p className="text-xl mb-12 text-blue-100">
-            Có câu hỏi hay góp ý? Chúng tôi luôn sẵn sàng lắng nghe!
-          </p>
-          <div className="grid md:grid-cols-3 gap-8">
-            <div className="text-center">
-              <div className="text-5xl mb-4">📧</div>
-              <h5 className="text-xl font-semibold mb-2">Email</h5>
-              <p className="text-blue-100">support@quizsmart.com</p>
-            </div>
-            <div className="text-center">
-              <div className="text-5xl mb-4">📞</div>
-              <h5 className="text-xl font-semibold mb-2">Điện thoại</h5>
-              <p className="text-blue-100">+84 123 456 789</p>
-            </div>
-            <div className="text-center">
-              <div className="text-5xl mb-4">📍</div>
-              <h5 className="text-xl font-semibold mb-2">Địa chỉ</h5>
-              <p className="text-blue-100">Hà Nội, Việt Nam</p>
-            </div>
-          </div>
         </div>
       </section>
     </div>

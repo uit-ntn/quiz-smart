@@ -8,7 +8,9 @@ const Header = () => {
 
   const navItems = [
     { path: '/', label: 'Trang chủ', icon: '🏠' },
-    { path: '/topics', label: 'Chủ đề', icon: '📚' },
+    { path: '/multiple-choice/topics', label: 'Trắc nghiệm', icon: '📝' },
+    { path: '/grammar', label: 'Ngữ pháp tiếng Anh', icon: '📇' },
+    { path: '/vocabulary', label: 'Từ vựng', icon: '🃏' },
     { path: '/about', label: 'Giới thiệu', icon: 'ℹ️' },
     { path: '/help', label: 'Hướng dẫn', icon: '❓' }
   ];
@@ -22,7 +24,7 @@ const Header = () => {
             <div className="text-2xl">🎓</div>
             <div>
               <h4 className="text-xl font-bold text-blue-600">QuizSmart</h4>
-              <small className="text-gray-500 text-sm">Học từ vựng thông minh</small>
+              <small className="text-gray-500 text-sm">Quizz thông minh</small>
             </div>
           </Link>
 
@@ -125,30 +127,6 @@ const Header = () => {
           </div>
         )}
       </nav>
-
-      {/* Breadcrumb */}
-      <div className="bg-gray-50 border-t border-gray-200">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <nav aria-label="breadcrumb" className="py-2">
-            <ol className="flex items-center space-x-2 text-sm">
-              <li>
-                <Link to="/" className="text-gray-500 hover:text-blue-600 transition-colors duration-200">
-                  <span className="mr-1">🏠</span>
-                  Trang chủ
-                </Link>
-              </li>
-              {location.pathname !== '/' && (
-                <>
-                  <span className="text-gray-400">/</span>
-                  <li className="text-gray-700 font-medium">
-                    {navItems.find(item => item.path === location.pathname)?.label || 'Trang hiện tại'}
-                  </li>
-                </>
-              )}
-            </ol>
-          </nav>
-        </div>
-      </div>
     </header>
   );
 };

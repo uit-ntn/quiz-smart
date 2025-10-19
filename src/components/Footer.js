@@ -16,20 +16,6 @@ const Footer = () => {
               Ứng dụng học từ vựng thông minh với nhiều chế độ quiz đa dạng, 
               giúp bạn nâng cao vốn từ vựng một cách hiệu quả.
             </p>
-            <div className="flex space-x-4">
-              <a href="#" className="text-gray-400 hover:text-white transition-colors">
-                📘
-              </a>
-              <a href="#" className="text-gray-400 hover:text-white transition-colors">
-                🐦
-              </a>
-              <a href="#" className="text-gray-400 hover:text-white transition-colors">
-                📷
-              </a>
-              <a href="#" className="text-gray-400 hover:text-white transition-colors">
-                🎬
-              </a>
-            </div>
           </div>
 
           {/* Quick links */}

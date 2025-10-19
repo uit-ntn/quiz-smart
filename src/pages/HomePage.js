@@ -75,27 +75,27 @@ const HomePage = () => {
   ];
 
   const statsDisplay = [
-    { 
-      number: loading ? '...' : stats.totalTopics, 
-      label: 'Chủ đề', 
+    {
+      number: loading ? '...' : stats.totalTopics,
+      label: 'Chủ đề',
       icon: 'fas fa-folder-open',
       color: 'primary'
     },
-    { 
-      number: loading ? '...' : stats.totalQuestions, 
-      label: 'Câu hỏi', 
+    {
+      number: loading ? '...' : stats.totalQuestions,
+      label: 'Câu hỏi',
       icon: 'fas fa-question-circle',
       color: 'success'
     },
-    { 
-      number: loading ? '...' : `${stats.totalUsers}+`, 
-      label: 'Người dùng', 
+    {
+      number: loading ? '...' : `${stats.totalUsers}+`,
+      label: 'Người dùng',
       icon: 'fas fa-users',
       color: 'info'
     },
-    { 
-      number: loading ? '...' : `${Math.floor(stats.completedTests/1000)}k+`, 
-      label: 'Tests hoàn thành', 
+    {
+      number: loading ? '...' : `${Math.floor(stats.completedTests / 1000)}k+`,
+      label: 'Tests hoàn thành',
       icon: 'fas fa-trophy',
       color: 'warning'
     }
@@ -110,7 +110,7 @@ const HomePage = () => {
           <div className="grid lg:grid-cols-2 gap-12 items-center min-h-[70vh]">
             <div className="text-center lg:text-left">
               <div className="inline-block bg-yellow-400 text-black text-sm font-semibold px-4 py-2 rounded-full mb-6">
-                🚀 Nền tảng học tập AI #1 Việt Nam
+                Nền tảng giúp bạn học tập hiệu quả hơn
               </div>
               <h1 className="text-5xl lg:text-6xl font-bold mb-6 text-white leading-tight">
                 Học thông minh với
@@ -119,24 +119,34 @@ const HomePage = () => {
                 </span>
               </h1>
               <p className="text-xl mb-8 text-white opacity-90 leading-relaxed">
-                Khám phá phương pháp học tập hiện đại với AI, 
-                từ TOEIC, IELTS đến AWS và các kỹ năng chuyên môn khác.
+                Khám phá phương pháp học tập hiện đại
+                từ TOEIC, IELTS đến AWS, Azure,... và các kỹ năng chuyên môn khác.
               </p>
               <div className="flex flex-col sm:flex-row gap-4 mb-8">
-                <Link 
-                  to="/topics" 
+                <Link
+                  to="/tests/topics"
                   className="bg-yellow-400 text-black px-8 py-4 rounded-lg text-lg font-semibold hover:bg-yellow-500 transition-colors shadow-lg hover:shadow-xl transform hover:-translate-y-1"
                 >
                   <span className="mr-2">📚</span>
-                  Chọn chủ đề
+                  Chọn chủ đề trắc nghiệm
                 </Link>
-                <Link 
-                  to="/topics" 
-                  className="border-2 border-white text-white px-8 py-4 rounded-lg text-lg font-semibold hover:bg-white hover:text-purple-600 transition-colors"
+
+                <Link
+                  to="/vocabulary"
+                  className="bg-purple-500 text-white px-8 py-4 rounded-lg text-lg font-semibold hover:bg-purple-600 transition-colors shadow-lg hover:shadow-xl transform hover:-translate-y-1"
                 >
-                  <span className="mr-2">▶️</span>
-                  Luyện tập
+                  <span className="mr-2">🧠</span>
+                  Luyện tập từ vựng tiếng Anh
                 </Link>
+
+                <Link
+                  to="/grammar"
+                  className="bg-blue-500 text-white px-8 py-4 rounded-lg text-lg font-semibold hover:bg-blue-600 transition-colors shadow-lg hover:shadow-xl transform hover:-translate-y-1"
+                >
+                  <span className="mr-2">📖</span>
+                  Luyện tập ngữ pháp tiếng Anh
+                </Link>
+
               </div>
               <div className="grid grid-cols-2 gap-4 max-w-sm mx-auto lg:mx-0">
                 {statsDisplay.slice(0, 2).map((stat, index) => (
@@ -156,11 +166,11 @@ const HomePage = () => {
                   <div className="text-2xl text-blue-600 mb-2">🧠</div>
                   <div className="font-semibold">AI Learning</div>
                 </div>
-                <div className="absolute top-20 right-8 bg-white bg-opacity-90 backdrop-blur-sm p-4 rounded-xl shadow-lg animate-bounce" style={{animationDelay: '2s'}}>
+                <div className="absolute top-20 right-8 bg-white bg-opacity-90 backdrop-blur-sm p-4 rounded-xl shadow-lg animate-bounce" style={{ animationDelay: '2s' }}>
                   <div className="text-2xl text-yellow-600 mb-2">🏆</div>
                   <div className="font-semibold">Achievements</div>
                 </div>
-                <div className="absolute bottom-20 left-1/3 bg-white bg-opacity-90 backdrop-blur-sm p-4 rounded-xl shadow-lg animate-bounce" style={{animationDelay: '4s'}}>
+                <div className="absolute bottom-20 left-1/3 bg-white bg-opacity-90 backdrop-blur-sm p-4 rounded-xl shadow-lg animate-bounce" style={{ animationDelay: '4s' }}>
                   <div className="text-2xl text-green-600 mb-2">📈</div>
                   <div className="font-semibold">Progress</div>
                 </div>
@@ -184,21 +194,21 @@ const HomePage = () => {
               Nền tảng học tập hiện đại với công nghệ AI, giúp bạn học nhanh hơn và hiệu quả hơn
             </p>
           </div>
-          
+
           <div className="grid lg:grid-cols-3 md:grid-cols-2 gap-8">
             {features.map((feature, index) => (
               <div key={index} className="group">
                 <div className="bg-white p-8 rounded-2xl shadow-sm border border-gray-200 h-full text-center hover:shadow-xl transition-all duration-300 hover:-translate-y-2">
-                  <div 
+                  <div
                     className="w-20 h-20 mx-auto mb-6 rounded-full flex items-center justify-center text-white text-2xl"
-                    style={{background: feature.gradient}}
+                    style={{ background: feature.gradient }}
                   >
                     {feature.icon === 'fas fa-brain' ? '🧠' : feature.icon === 'fas fa-chart-line' ? '📈' : '👥'}
                   </div>
                   <h4 className="text-xl font-bold mb-4 text-gray-900">{feature.title}</h4>
                   <p className="text-gray-600 mb-6 leading-relaxed">{feature.description}</p>
-                  <Link 
-                    to="/topics" 
+                  <Link
+                    to="/topics"
                     className="inline-flex items-center text-blue-600 font-semibold hover:text-blue-700 transition-colors group-hover:translate-x-1"
                   >
                     Khám phá ngay
@@ -219,59 +229,15 @@ const HomePage = () => {
               <div key={index} className="group">
                 <div className="text-white hover:scale-105 transition-transform duration-300">
                   <div className="text-4xl mb-4">
-                    {stat.icon === 'fas fa-folder-open' ? '📁' : 
-                     stat.icon === 'fas fa-question-circle' ? '❓' :
-                     stat.icon === 'fas fa-users' ? '👥' : '🏆'}
+                    {stat.icon === 'fas fa-folder-open' ? '📁' :
+                      stat.icon === 'fas fa-question-circle' ? '❓' :
+                        stat.icon === 'fas fa-users' ? '👥' : '🏆'}
                   </div>
                   <h3 className="text-3xl lg:text-4xl font-bold text-white mb-2">{stat.number}</h3>
                   <p className="text-white opacity-75">{stat.label}</p>
                 </div>
               </div>
             ))}
-          </div>
-        </div>
-      </section>
-
-      {/* How it works */}
-      <section className="py-20 bg-white">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-16">
-            <h2 className="text-4xl lg:text-5xl font-bold text-gray-900 mb-6">
-              Cách sử dụng
-            </h2>
-            <p className="text-xl text-gray-600">
-              3 bước đơn giản để bắt đầu học từ vựng
-            </p>
-          </div>
-          
-          <div className="grid lg:grid-cols-3 gap-12">
-            <div className="text-center group">
-              <div className="w-16 h-16 bg-blue-600 text-white rounded-full flex items-center justify-center text-2xl font-bold mx-auto mb-6 group-hover:bg-blue-700 transition-colors">
-                1
-              </div>
-              <h5 className="text-xl font-bold mb-4">Chọn chủ đề</h5>
-              <p className="text-gray-600 leading-relaxed">
-                Chọn từ các chủ đề đa dạng như TOEIC, IELTS, từ vựng chuyên ngành
-              </p>
-            </div>
-            <div className="text-center group">
-              <div className="w-16 h-16 bg-blue-600 text-white rounded-full flex items-center justify-center text-2xl font-bold mx-auto mb-6 group-hover:bg-blue-700 transition-colors">
-                2
-              </div>
-              <h5 className="text-xl font-bold mb-4">Chọn chế độ</h5>
-              <p className="text-gray-600 leading-relaxed">
-                Lựa chọn giữa tự luận và trắc nghiệm phù hợp với phong cách học của bạn
-              </p>
-            </div>
-            <div className="text-center group">
-              <div className="w-16 h-16 bg-blue-600 text-white rounded-full flex items-center justify-center text-2xl font-bold mx-auto mb-6 group-hover:bg-blue-700 transition-colors">
-                3
-              </div>
-              <h5 className="text-xl font-bold mb-4">Bắt đầu học</h5>
-              <p className="text-gray-600 leading-relaxed">
-                Hoàn thành bài test và xem kết quả chi tiết để cải thiện
-              </p>
-            </div>
           </div>
         </div>
       </section>
@@ -290,31 +256,30 @@ const HomePage = () => {
                 </div>
               </div>
               <h4 className="text-2xl font-bold text-gray-900 mb-2">Nguyễn Thanh Nhân</h4>
-              <p className="text-gray-600 mb-4">Sinh viên Đại học Công nghệ Thông tin</p>
+              <p className="text-gray-600 mb-4">Sinh viên Trường Đại học Công nghệ Thông tin, Đại học Quốc gia TP.HCM</p>
               <p className="text-lg text-gray-700 mb-8 leading-relaxed max-w-2xl mx-auto">
-                Đam mê phát triển ứng dụng web hiện đại và công nghệ AI. 
-                QuizSmart được tạo ra với mục tiêu giúp mọi người học từ vựng hiệu quả hơn.
+                QuizSmart được tạo ra với mục tiêu giúp mọi người học tập hiệu quả hơn.
               </p>
               <div className="flex flex-col sm:flex-row justify-center gap-4">
-                <a 
-                  href="mailto:npthanhnhan2003@gmail.com" 
+                <a
+                  href="mailto:npthanhnhan2003@gmail.com"
                   className="inline-flex items-center justify-center px-6 py-3 border border-blue-600 text-blue-600 rounded-lg hover:bg-blue-600 hover:text-white transition-colors"
                 >
                   <span className="mr-2">📧</span>
                   Email
                 </a>
-                <a 
-                  href="https://github.com/npthanhnhan2003" 
-                  target="_blank" 
+                <a
+                  href="https://github.com/npthanhnhan2003"
+                  target="_blank"
                   rel="noopener noreferrer"
                   className="inline-flex items-center justify-center px-6 py-3 border border-gray-900 text-gray-900 rounded-lg hover:bg-gray-900 hover:text-white transition-colors"
                 >
                   <span className="mr-2">💻</span>
                   GitHub
                 </a>
-                <a 
-                  href="https://linkedin.com/in/npthanhnhan2003" 
-                  target="_blank" 
+                <a
+                  href="https://linkedin.com/in/npthanhnhan2003"
+                  target="_blank"
                   rel="noopener noreferrer"
                   className="inline-flex items-center justify-center px-6 py-3 border border-blue-500 text-blue-500 rounded-lg hover:bg-blue-500 hover:text-white transition-colors"
                 >
@@ -338,25 +303,34 @@ const HomePage = () => {
             Tham gia cùng hàng nghìn người học đã thành công với QuizSmart
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Link 
-              to="/topics" 
+            <Link
+              to="/multiple-choice"
               className="bg-yellow-400 text-black px-8 py-4 rounded-lg text-lg font-semibold hover:bg-yellow-500 transition-colors shadow-lg hover:shadow-xl transform hover:-translate-y-1"
             >
               <span className="mr-2">📚</span>
-              Chọn chủ đề học
+              Trắc nghiệm ngay
             </Link>
-            <Link 
-              to="/topics" 
-              className="border-2 border-white text-white px-8 py-4 rounded-lg text-lg font-semibold hover:bg-white hover:text-blue-600 transition-colors"
+
+            <Link
+              to="/grammar"
+              className="bg-green-500 text-white px-8 py-4 rounded-lg text-lg font-semibold hover:bg-green-600 transition-colors shadow-lg hover:shadow-xl transform hover:-translate-y-1"
             >
-              <span className="mr-2">🚀</span>
-              Luyện tập
+              <span className="mr-2">📖</span>
+              Luyện tập ngữ pháp ngay
+            </Link>
+
+            <Link
+              to="/vocabulary"
+              className="bg-blue-500 text-white px-8 py-4 rounded-lg text-lg font-semibold hover:bg-blue-600 transition-colors shadow-lg hover:shadow-xl transform hover:-translate-y-1"
+            >
+              <span className="mr-2">🧠</span>
+              Luyện tập từ vựng ngay
             </Link>
           </div>
         </div>
       </section>
 
-  {/* Footer is provided globally by App.js */}
+      {/* Footer is provided globally by App.js */}
     </div>
   );
 };

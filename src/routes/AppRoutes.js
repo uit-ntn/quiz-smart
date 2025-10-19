@@ -3,6 +3,12 @@ import { Routes, Route } from 'react-router-dom';
 import HomePage from '../pages/HomePage';
 import AboutPage from '../pages/AboutPage';
 import HelpPage from '../pages/HelpPage';
+import MultipleChoiceListTopic from '../pages/MultipleChoiceListTopic';
+import MultipleChoiceTopicDetail from '../pages/MultipleChoiceTopicDetail';
+import MultipleChoiceTestList from '../pages/MultipleChoiceTestList';
+import MultipleChoiceTestSettings from '../pages/MultipleChoiceTestSettings';
+import MultipleChoiceTestTake from '../pages/MultipleChoiceTestTake';
+import MultipleChoiceTestReview from '../pages/MultipleChoiceTestReview';
 
 
 const AppRoutes = () => {
@@ -11,6 +17,15 @@ const AppRoutes = () => {
       <Route path="/" element={<HomePage />} />
       <Route path="/about" element={<AboutPage />} />
       <Route path="/help" element={<HelpPage />} />
+      
+      {/* Multiple Choice Routes */}
+      <Route path="/multiple-choice/topics" element={<MultipleChoiceListTopic />} />
+      <Route path="/multiple-choice/topic/:mainTopic" element={<MultipleChoiceTopicDetail />} />
+      <Route path="/multiple-choice/tests/:mainTopic/:subTopic" element={<MultipleChoiceTestList />} />
+      <Route path="/multiple-choice/test/:testId/settings" element={<MultipleChoiceTestSettings />} />
+      <Route path="/multiple-choice/test/:testId/take" element={<MultipleChoiceTestTake />} />
+      <Route path="/multiple-choice/test/:testId/review" element={<MultipleChoiceTestReview />} />
+      
       {/* Future routes */}
       <Route path="/profile" element={<div className="container py-5 text-center"><h2>Trang hồ sơ (Đang phát triển)</h2></div>} />
       <Route path="/settings" element={<div className="container py-5 text-center"><h2>Cài đặt (Đang phát triển)</h2></div>} />
