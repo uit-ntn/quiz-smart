@@ -171,3 +171,33 @@ const MultipleChoiceService = {
 };
 
 export default MultipleChoiceService;
+
+// Multiple Choice Schema Reference
+/*
+{
+  _id: ObjectId,
+  test_id: ObjectId,               // ref: tests
+  question_text: String,
+  options: [
+    { label: "A", text: String },
+    { label: "B", text: String },
+    { label: "C", text: String },
+    { label: "D", text: String }
+  ],
+  correct_answers: [String],       // ["B"] hoặc ["A","C"]
+  explanation: {
+    correct: String,
+    incorrect_choices: {           // {"A": "...", "C": "..."}
+      label: String
+    }
+  },
+  difficulty: String,              // "easy" | "medium" | "hard"
+  tags: [String],
+  status: String,                  // "active" | "draft" | "archived"
+  created_by: ObjectId,
+  updated_by: ObjectId,
+  created_at: Date,
+  updated_at: Date
+}
+
+*/

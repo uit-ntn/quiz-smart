@@ -88,6 +88,33 @@ const TestService = {
     },
 
     // =========================
+    // 📘 Get all Vocabulary tests
+    // =========================
+    getAllVocabulariesTests: async () => {
+        try {
+            const response = await fetch(`${API_BASE_URL}/tests/vocabularies`);
+            if (!response.ok) throw new Error('Failed to fetch vocabulary tests');
+            return await response.json();
+        } catch (error) {
+            console.error('Error fetching vocabulary tests:', error);
+            throw error;
+        }
+    },
+
+    // =========================
+    // 📘 Get all Vocabulary sub topic by main topic
+    getVocabularySubTopicsByMainTopic: async (mainTopic) => {
+        try {
+            const response = await fetch(`${API_BASE_URL}/tests/vocabularies/sub-topics/${encodeURIComponent(mainTopic)}`);
+            if (!response.ok) throw new Error('Failed to fetch vocabulary sub topics');
+            return await response.json();
+        } catch (error) {
+            console.error('Error fetching vocabulary sub topics:', error);
+            throw error;
+        }
+    },
+
+    // =========================
     // 📘 Get all Grammar tests
     // =========================
     getAllGrammarsTests: async () => {
@@ -227,3 +254,23 @@ const TestService = {
 };
 
 export default TestService;
+
+// Test Schema Reference
+/*
+{
+  _id: ObjectId,
+  test_title: String,              // "TOEIC - Part 1 - Photos - Test 1"
+  description: String,
+  main_topic: String,              // "TOEIC", "IELTS", "AWS", ...
+  sub_topic: String,               // "Part 1 - Photos", "Reading Passage 2", ...
+  test_type: String,               // "multiple_choice" | "grammar" | "vocabulary" | "spelling" | "listening"
+  total_questions: Number,
+  time_limit_minutes: Number,      // optional
+  difficulty: String,              // "easy" | "medium" | "hard"
+  status: String,                  // "active" | "draft" | "archived"
+  created_by: ObjectId,            // ref: users
+  updated_by: ObjectId,            // ref: users
+  created_at: Date,
+  updated_at: Date
+}
+*/

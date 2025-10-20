@@ -1,29 +1,41 @@
 const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:8000/api';
 
+/**
+ * Lấy tất cả vocabularies (không có topic, chỉ filter theo test_id, difficulty, status nếu cần)
+ */
 async function getAllVocabularies(filters = {}) {
   try {
-    const queryParams = new URLSearchParams();
-
-    if (filters.main_topic) queryParams.append('main_topic', filters.main_topic);
-    if (filters.difficulty) queryParams.append('difficulty', filters.difficulty);
-    if (filters.status) queryParams.append('status', filters.status);
-
-    const url = `${API_BASE_URL}/vocabularies${queryParams.toString() ? `?${queryParams.toString()}` : ''}`;
-
-    const response = await fetch(url, {
+    const response = await fetch(`${API_BASE_URL}/vocabularies`, {
       method: 'GET',
       headers: { 'Content-Type': 'application/json' },
     });
 
     if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
 
-    return await response.json();
+    const all = await response.json();
+
+    // Áp dụng filter phía FE (vì BE trả về toàn bộ)
+    let result = all;
+    if (filters.difficulty) {
+      result = result.filter((v) => v.difficulty === filters.difficulty);
+    }
+    if (filters.status) {
+      result = result.filter((v) => v.status === filters.status);
+    }
+    if (filters.test_id) {
+      result = result.filter((v) => String(v.test_id) === String(filters.test_id));
+    }
+
+    return result;
   } catch (error) {
     console.error('Error fetching vocabularies:', error);
     throw error;
   }
 }
 
+/**
+ * Lấy vocabulary theo ID
+ */
 async function getVocabularyById(id) {
   try {
     const response = await fetch(`${API_BASE_URL}/vocabularies/${id}`, {
@@ -40,6 +52,9 @@ async function getVocabularyById(id) {
   }
 }
 
+/**
+ * Tìm kiếm vocabularies theo từ hoặc nghĩa
+ */
 async function searchVocabularies(searchTerm) {
   try {
     const response = await fetch(
@@ -59,19 +74,19 @@ async function searchVocabularies(searchTerm) {
   }
 }
 
-async function createVocabulary(vocabularyData, token) {
+/**
+ * Tạo mới vocabulary
+ */
+async function createVocabulary(vocabularyData) {
   try {
     const response = await fetch(`${API_BASE_URL}/vocabularies`, {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${token}`,
-      },
+      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(vocabularyData),
     });
 
     if (!response.ok) {
-      const errorData = await response.json();
+      const errorData = await response.json().catch(() => ({}));
       throw new Error(errorData.message || `HTTP error! status: ${response.status}`);
     }
 
@@ -82,19 +97,19 @@ async function createVocabulary(vocabularyData, token) {
   }
 }
 
-async function updateVocabulary(id, vocabularyData, token) {
+/**
+ * Cập nhật vocabulary
+ */
+async function updateVocabulary(id, vocabularyData) {
   try {
     const response = await fetch(`${API_BASE_URL}/vocabularies/${id}`, {
       method: 'PUT',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${token}`,
-      },
+      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(vocabularyData),
     });
 
     if (!response.ok) {
-      const errorData = await response.json();
+      const errorData = await response.json().catch(() => ({}));
       throw new Error(errorData.message || `HTTP error! status: ${response.status}`);
     }
 
@@ -105,15 +120,17 @@ async function updateVocabulary(id, vocabularyData, token) {
   }
 }
 
-async function deleteVocabulary(id, token) {
+/**
+ * Xóa vocabulary
+ */
+async function deleteVocabulary(id) {
   try {
     const response = await fetch(`${API_BASE_URL}/vocabularies/${id}`, {
       method: 'DELETE',
-      headers: { 'Authorization': `Bearer ${token}` },
     });
 
     if (!response.ok) {
-      const errorData = await response.json();
+      const errorData = await response.json().catch(() => ({}));
       throw new Error(errorData.message || `HTTP error! status: ${response.status}`);
     }
 
@@ -124,85 +141,38 @@ async function deleteVocabulary(id, token) {
   }
 }
 
-async function getVocabulariesByTopic(mainTopic, subTopic = null) {
+/**
+ * Lấy tất cả vocabularies theo test_id
+ */
+async function getAllVocabulariesByTestId(testId) {
   try {
-    const filters = { main_topic: mainTopic };
-    if (subTopic) filters.sub_topic = subTopic;
-    return await getAllVocabularies(filters);
+    const response = await fetch(`${API_BASE_URL}/vocabularies/test/${testId}`, {
+      method: 'GET',
+      headers: { 'Content-Type': 'application/json' },
+    });
+
+    if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+
+    return await response.json();
   } catch (error) {
-    console.error('Error fetching vocabularies by topic:', error);
+    console.error('Error fetching vocabularies by test id:', error);
     throw error;
   }
 }
 
-async function getRandomVocabularies(count = 10, difficulty = null, mainTopic = null, subTopic = null) {
+/**
+ * Lấy ngẫu nhiên vocabularies để làm quiz
+ */
+async function getRandomVocabularies(count = 10, filters = {}) {
   try {
-    const filters = { status: 'active' };
-    if (difficulty) filters.difficulty = difficulty;
-    if (mainTopic) filters.main_topic = mainTopic;
-    if (subTopic) filters.sub_topic = subTopic;
-
     const allVocabularies = await getAllVocabularies(filters);
-
     if (!allVocabularies || allVocabularies.length === 0) return [];
 
-    // Shuffle + slice
+    // Trộn ngẫu nhiên
     const shuffled = allVocabularies.sort(() => 0.5 - Math.random());
     return shuffled.slice(0, Math.min(count, allVocabularies.length));
   } catch (error) {
     console.error('Error fetching random vocabularies:', error);
-    throw error;
-  }
-}
-
-async function getQuizVocabularies(params = {}) {
-  try {
-    const {
-      count = 10,
-      difficulty = null,
-      mainTopic = null,
-      subTopic = null,
-      random = true,
-    } = params;
-
-    const filters = { status: 'active' };
-    if (difficulty) filters.difficulty = difficulty;
-    if (mainTopic) filters.main_topic = mainTopic;
-    if (subTopic) filters.sub_topic = subTopic;
-
-    const vocabularies = await getAllVocabularies(filters);
-
-    if (!vocabularies || vocabularies.length === 0)
-      throw new Error('Không tìm thấy từ vựng phù hợp với tiêu chí đã chọn');
-
-    let result = vocabularies;
-    if (random) result = vocabularies.sort(() => 0.5 - Math.random());
-
-    return result.slice(0, Math.min(count, result.length));
-  } catch (error) {
-    console.error('Error fetching quiz vocabularies:', error);
-    throw error;
-  }
-}
-
-async function getVocabularyTopics() {
-  try {
-    const vocabularies = await getAllVocabularies({ status: 'active' });
-    const topics = {};
-
-    vocabularies.forEach((vocab) => {
-      if (!topics[vocab.main_topic]) topics[vocab.main_topic] = new Set();
-      topics[vocab.main_topic].add(vocab.sub_topic);
-    });
-
-    // Convert Sets to Arrays
-    Object.keys(topics).forEach((topic) => {
-      topics[topic] = Array.from(topics[topic]);
-    });
-
-    return topics;
-  } catch (error) {
-    console.error('Error fetching vocabulary topics:', error);
     throw error;
   }
 }
@@ -214,10 +184,25 @@ const VocabularyService = {
   createVocabulary,
   updateVocabulary,
   deleteVocabulary,
-  getVocabulariesByTopic,
+  getAllVocabulariesByTestId,
   getRandomVocabularies,
-  getQuizVocabularies,
-  getVocabularyTopics,
 };
 
 export default VocabularyService;
+
+/*
+Vocaburaly Schema sample:
+{
+  _id: ObjectId(),
+  test_id: ObjectId("670abcd123456789..."),
+  word: "curriculum",
+  meaning: "chương trình học",
+  example_sentence: "Our school has introduced a new curriculum.",
+  main_topic: "Vocabulary",
+  sub_topic: "Education",
+  difficulty: "medium",
+  created_by: ObjectId("adminId"),
+  created_at: ISODate(),
+  updated_at: ISODate()
+}
+*/

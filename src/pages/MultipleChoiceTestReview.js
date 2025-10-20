@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
+import TestService from '../services/testService';
 
 const MultipleChoiceTestReview = () => {
   const { testId } = useParams();
@@ -7,11 +8,26 @@ const MultipleChoiceTestReview = () => {
   const location = useLocation();
 
   const [test, setTest] = useState(null);
+  const [testInfo, setTestInfo] = useState(null);
   const [questions, setQuestions] = useState([]);
   const [userAnswers, setUserAnswers] = useState({});
   const [results, setResults] = useState([]);
   const [score, setScore] = useState(0);
   const [selectedQuestion, setSelectedQuestion] = useState(0);
+
+
+  useEffect(() => {
+    const fetchTestData = async () => {
+      try {
+        const data = await TestService.getTestById(testId);
+        setTestInfo(data);
+      } catch (error) {
+        console.error('Error fetching test data:', error);
+      }
+    };
+
+    fetchTestData();
+  }, [testId]);
 
   useEffect(() => {
     if (location.state) {
@@ -49,9 +65,10 @@ const MultipleChoiceTestReview = () => {
 
   if (!test || questions.length === 0) {
     return (
-      <div className="container py-5 text-center">
-        <div className="spinner-border text-primary" role="status">
-          <span className="visually-hidden">Đang tải...</span>
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="w-12 h-12 border-4 border-blue-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+          <p className="text-gray-600">Đang tải...</p>
         </div>
       </div>
     );
@@ -64,266 +81,420 @@ const MultipleChoiceTestReview = () => {
   const currentResult = results.find((r) => r.questionId === currentQuestion._id);
 
   return (
-    <div className="container-fluid py-4">
-      <div className="row">
-        {/* Main Content */}
-        <div className="col-lg-9">
-          {/* Score Card */}
-          <div className="card shadow-sm mb-4">
-            <div className="card-body text-center py-5">
-              <div className="mb-3">
-                <i className={`bi bi-trophy fs-1 text-${getScoreColor(score)}`}></i>
-              </div>
-              <h2 className="display-4 fw-bold mb-2">{score}/10</h2>
-              <h4 className={`text-${getScoreColor(score)} mb-4`}>
-                {getScoreMessage(score)}
-              </h4>
-              <div className="row justify-content-center">
-                <div className="col-md-8">
-                  <div className="row text-center">
-                    <div className="col-3">
-                      <div className="p-3 bg-light rounded">
-                        <h3 className="mb-1">{results.length}</h3>
-                        <small className="text-muted">Tổng câu</small>
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50">
+      {/* Enhanced decorative elements */}
+      <div className="absolute inset-0 bg-grid-pattern opacity-[0.02] pointer-events-none" />
+      <div className="absolute top-0 right-0 w-96 h-96 bg-gradient-to-br from-blue-400/8 to-indigo-400/8 rounded-full blur-3xl" />
+      <div className="absolute bottom-0 left-0 w-96 h-96 bg-gradient-to-tr from-indigo-400/8 to-blue-400/8 rounded-full blur-3xl" />
+
+      <div className="relative py-4 px-3">
+        <div className="max-w-6xl mx-auto">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+            {/* Main Content */}
+            <div className="lg:col-span-2 space-y-4">
+              {/* Enhanced Score Card */}
+              <div className="relative rounded-xl overflow-hidden shadow-lg border border-gray-200 bg-white">
+                <div className="absolute inset-0 bg-gradient-to-br from-blue-50 to-indigo-50" />
+                <div className="relative p-4 text-center">
+                  <div className="w-16 h-16 mx-auto mb-4 rounded-xl bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center shadow-lg">
+                    <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z" />
+                    </svg>
+                  </div>
+                  <h2 className="text-3xl font-bold text-gray-800 mb-2">{score}/10</h2>
+                  <h4 className="text-lg font-semibold text-blue-600 mb-4">
+                    {getScoreMessage(score)}
+                  </h4>
+
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-3 max-w-lg mx-auto">
+                    <div className="relative rounded-lg overflow-hidden border border-gray-200 bg-white shadow-sm">
+                      <div className="absolute inset-0 bg-gradient-to-br from-gray-50 to-gray-100/50" />
+                      <div className="relative p-3">
+                        <div className="flex items-center">
+                          <div className="w-6 h-6 rounded-md bg-gray-500 flex items-center justify-center mr-2">
+                            <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                            </svg>
+                          </div>
+                          <div>
+                            <p className="text-lg font-bold text-gray-700">{results.length}</p>
+                            <p className="text-xs text-gray-500">Tổng câu</p>
+                          </div>
+                        </div>
                       </div>
                     </div>
-                    <div className="col-3">
-                      <div className="p-3 bg-success bg-opacity-10 rounded">
-                        <h3 className="mb-1 text-success">{correctCount}</h3>
-                        <small className="text-muted">Đúng</small>
+
+                    <div className="relative rounded-lg overflow-hidden border border-emerald-200 bg-white shadow-sm">
+                      <div className="absolute inset-0 bg-gradient-to-br from-emerald-50 to-emerald-100/50" />
+                      <div className="relative p-3">
+                        <div className="flex items-center">
+                          <div className="w-6 h-6 rounded-md bg-emerald-500 flex items-center justify-center mr-2">
+                            <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" />
+                            </svg>
+                          </div>
+                          <div>
+                            <p className="text-lg font-bold text-emerald-700">{correctCount}</p>
+                            <p className="text-xs text-gray-500">Đúng</p>
+                          </div>
+                        </div>
                       </div>
                     </div>
-                    <div className="col-3">
-                      <div className="p-3 bg-danger bg-opacity-10 rounded">
-                        <h3 className="mb-1 text-danger">{incorrectCount}</h3>
-                        <small className="text-muted">Sai</small>
+
+                    <div className="relative rounded-lg overflow-hidden border border-red-200 bg-white shadow-sm">
+                      <div className="absolute inset-0 bg-gradient-to-br from-red-50 to-red-100/50" />
+                      <div className="relative p-3">
+                        <div className="flex items-center">
+                          <div className="w-6 h-6 rounded-md bg-red-500 flex items-center justify-center mr-2">
+                            <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
+                            </svg>
+                          </div>
+                          <div>
+                            <p className="text-lg font-bold text-red-700">{incorrectCount}</p>
+                            <p className="text-xs text-gray-500">Sai</p>
+                          </div>
+                        </div>
                       </div>
                     </div>
-                    <div className="col-3">
-                      <div className="p-3 bg-warning bg-opacity-10 rounded">
-                        <h3 className="mb-1 text-warning">{unansweredCount}</h3>
-                        <small className="text-muted">Chưa làm</small>
+
+                    <div className="relative rounded-lg overflow-hidden border border-amber-200 bg-white shadow-sm">
+                      <div className="absolute inset-0 bg-gradient-to-br from-amber-50 to-amber-100/50" />
+                      <div className="relative p-3">
+                        <div className="flex items-center">
+                          <div className="w-6 h-6 rounded-md bg-amber-500 flex items-center justify-center mr-2">
+                            <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                            </svg>
+                          </div>
+                          <div>
+                            <p className="text-lg font-bold text-amber-700">{unansweredCount}</p>
+                            <p className="text-xs text-gray-500">Chưa làm</p>
+                          </div>
+                        </div>
                       </div>
                     </div>
                   </div>
                 </div>
               </div>
-            </div>
-          </div>
 
-          {/* Test Info */}
-          <div className="card shadow-sm mb-4">
-            <div className="card-body">
-              <h5 className="card-title mb-3">
-                <i className="bi bi-info-circle me-2"></i>
-                Thông tin bài kiểm tra
-              </h5>
-              <div className="row">
-                <div className="col-md-6 mb-2">
-                  <strong>Tiêu đề:</strong> {test.test_title}
-                </div>
-                <div className="col-md-6 mb-2">
-                  <strong>Chủ đề:</strong> {test.main_topic} - {test.sub_topic}
-                </div>
-                <div className="col-md-6 mb-2">
-                  <strong>Độ khó:</strong>{' '}
-                  <span className="text-capitalize">{test.difficulty}</span>
-                </div>
-                <div className="col-md-6 mb-2">
-                  <strong>Thời gian giới hạn:</strong> {test.time_limit_minutes} phút
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Question Review */}
-          <div className="card shadow-sm mb-4">
-            <div className="card-header bg-white border-bottom">
-              <h5 className="mb-0">
-                Câu {selectedQuestion + 1} / {questions.length}
-              </h5>
-            </div>
-            <div className="card-body p-4">
-              <h5 className="card-title mb-4">{currentQuestion.question_text}</h5>
-
-              <div className="d-grid gap-3 mb-4">
-                {currentQuestion.options.map((option) => {
-                  const isUserAnswer = userAnswers[currentQuestion._id] === option.label;
-                  const isCorrectAnswer = currentQuestion.correct_answers.includes(option.label);
-
-                  let buttonClass = 'btn btn-outline-secondary text-start';
-                  let icon = null;
-
-                  if (isCorrectAnswer) {
-                    buttonClass = 'btn btn-success text-start';
-                    icon = <i className="bi bi-check-circle-fill ms-auto"></i>;
-                  } else if (isUserAnswer) {
-                    buttonClass = 'btn btn-danger text-start';
-                    icon = <i className="bi bi-x-circle-fill ms-auto"></i>;
-                  }
-
-                  return (
-                    <div key={option.label} className={`${buttonClass} p-3`}>
-                      <div className="d-flex align-items-center">
-                        <span className="badge bg-light text-dark me-3">{option.label}</span>
-                        <span className="flex-grow-1">{option.text}</span>
-                        {icon}
-                      </div>
-                      {isUserAnswer && !isCorrectAnswer && (
-                        <small className="d-block mt-2 text-white">
-                          <i className="bi bi-arrow-right me-1"></i>
-                          Bạn đã chọn đáp án này
-                        </small>
-                      )}
-                      {isCorrectAnswer && (
-                        <small className="d-block mt-2 text-white">
-                          <i className="bi bi-check-lg me-1"></i>
-                          Đáp án đúng
-                        </small>
-                      )}
+              {/* Enhanced Test Info */}
+              <div className="relative rounded-xl overflow-hidden shadow-lg border border-blue-200 bg-white mb-4">
+                <div className="absolute inset-0 bg-gradient-to-br from-blue-50 to-indigo-50" />
+                <div className="relative p-4">
+                  <div className="flex items-center mb-3">
+                    <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center mr-3">
+                      <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                      </svg>
                     </div>
-                  );
-                })}
-              </div>
-
-              {/* Explanation */}
-              <div className={`alert ${currentResult?.isCorrect ? 'alert-success' : 'alert-danger'}`}>
-                <h6 className="alert-heading">
-                  <i className={`bi ${currentResult?.isCorrect ? 'bi-check-circle' : 'bi-x-circle'} me-2`}></i>
-                  {currentResult?.isCorrect ? 'Bạn đã trả lời đúng!' : 'Bạn đã trả lời sai'}
-                </h6>
-                <hr />
-                <p className="mb-2">
-                  <strong>Giải thích đáp án đúng:</strong>
-                  <br />
-                  {currentQuestion.explanation.correct}
-                </p>
-                {!currentResult?.isCorrect && 
-                 currentQuestion.explanation.incorrect_choices?.[userAnswers[currentQuestion._id]] && (
-                  <p className="mb-0">
-                    <strong>Lý do đáp án {userAnswers[currentQuestion._id]} sai:</strong>
-                    <br />
-                    {currentQuestion.explanation.incorrect_choices[userAnswers[currentQuestion._id]]}
-                  </p>
-                )}
-              </div>
-            </div>
-          </div>
-
-          {/* Navigation */}
-          <div className="d-flex justify-content-between gap-3 mb-4">
-            <button
-              className="btn btn-outline-secondary"
-              onClick={() => setSelectedQuestion(Math.max(0, selectedQuestion - 1))}
-              disabled={selectedQuestion === 0}
-            >
-              <i className="bi bi-arrow-left me-2"></i>
-              Câu trước
-            </button>
-
-            <button
-              className="btn btn-outline-secondary"
-              onClick={() =>
-                setSelectedQuestion(Math.min(questions.length - 1, selectedQuestion + 1))
-              }
-              disabled={selectedQuestion === questions.length - 1}
-            >
-              Câu tiếp theo
-              <i className="bi bi-arrow-right ms-2"></i>
-            </button>
-          </div>
-
-          {/* Action Buttons */}
-          <div className="d-flex gap-3 mb-4">
-            <button
-              className="btn btn-primary flex-grow-1"
-              onClick={() => navigate(`/multiple-choice/test/${testId}/settings`)}
-            >
-              <i className="bi bi-arrow-repeat me-2"></i>
-              Làm lại bài kiểm tra
-            </button>
-            <button
-              className="btn btn-success"
-              onClick={() => {
-                // TODO: Implement save result functionality
-                alert('Tính năng lưu kết quả sẽ được phát triển trong tương lai!');
-              }}
-            >
-              <i className="bi bi-bookmark me-2"></i>
-              Lưu kết quả
-            </button>
-            <button
-              className="btn btn-outline-secondary"
-              onClick={() => navigate('/multiple-choice/topics')}
-            >
-              <i className="bi bi-house me-2"></i>
-              Về danh sách chủ đề
-            </button>
-          </div>
-        </div>
-
-        {/* Sidebar - Question Grid */}
-        <div className="col-lg-3">
-          <div className="card shadow-sm sticky-top" style={{ top: '20px' }}>
-            <div className="card-header bg-white border-bottom">
-              <h6 className="mb-0">Danh sách câu hỏi</h6>
-            </div>
-            <div className="card-body">
-              <div className="mb-3">
-                <div className="d-flex align-items-center mb-2">
-                  <span className="badge bg-success me-2">&nbsp;</span>
-                  <small>Trả lời đúng ({correctCount})</small>
-                </div>
-                <div className="d-flex align-items-center mb-2">
-                  <span className="badge bg-danger me-2">&nbsp;</span>
-                  <small>Trả lời sai ({incorrectCount})</small>
-                </div>
-                <div className="d-flex align-items-center">
-                  <span className="badge bg-warning me-2">&nbsp;</span>
-                  <small>Chưa trả lời ({unansweredCount})</small>
+                    <h3 className="text-lg font-bold text-gray-800">Thông tin bài kiểm tra</h3>
+                  </div>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                    <div className="space-y-1">
+                      <p className="text-sm text-gray-600">Tiêu đề</p>
+                      <p className="font-semibold text-gray-800">{testInfo?.test_title}</p>
+                    </div>
+                    <div className="space-y-1">
+                      <p className="text-sm text-gray-600">Chủ đề</p>
+                      <p className="font-semibold text-gray-800">{testInfo?.main_topic} - {testInfo?.sub_topic}</p>
+                    </div>
+                    <div className="space-y-1">
+                      <p className="text-sm text-gray-600">Độ khó</p>
+                      <span className={`inline-flex items-center px-2 py-1 rounded-md text-sm font-medium capitalize ${test.difficulty === 'easy' ? 'bg-green-100 text-green-800' :
+                        test.difficulty === 'medium' ? 'bg-yellow-100 text-yellow-800' :
+                          'bg-red-100 text-red-800'
+                        }`}>
+                        {test.difficulty}
+                      </span>
+                    </div>
+                    <div className="space-y-1">
+                      <p className="text-sm text-gray-600">Thời gian giới hạn</p>
+                      <p className="font-semibold text-gray-800">{test.time_limit_minutes} phút</p>
+                    </div>
+                  </div>
                 </div>
               </div>
 
-              <hr />
+              {/* Enhanced Question Review */}
+              <div className="relative rounded-xl overflow-hidden shadow-lg border border-gray-200 bg-white mb-4">
+                <div className="absolute inset-0 bg-gradient-to-br from-gray-50 to-blue-50/30" />
+                <div className="relative">
+                  {/* Question Header */}
+                  <div className="bg-gradient-to-r from-blue-500 to-indigo-600 px-4 py-3">
+                    <div className="flex items-center justify-between">
+                      <h3 className="text-base font-bold text-white">
+                        Câu {selectedQuestion + 1} / {questions.length}
+                      </h3>
+                      <div className={`w-6 h-6 rounded-full flex items-center justify-center text-white font-bold text-sm ${currentResult?.isCorrect ? 'bg-emerald-500' : 'bg-red-500'
+                        }`}>
+                        {currentResult?.isCorrect ? '✓' : '✗'}
+                      </div>
+                    </div>
+                  </div>
 
-              <div className="d-grid gap-2" style={{ maxHeight: '500px', overflowY: 'auto' }}>
-                {results.map((result, index) => {
-                  const isCurrent = index === selectedQuestion;
-                  const buttonClass = result.isCorrect
-                    ? 'btn-success'
-                    : result.userAnswer
-                    ? 'btn-danger'
-                    : 'btn-warning';
+                  <div className="p-4">
+                    <h4 className="text-lg font-semibold text-gray-800 mb-4 leading-relaxed">
+                      {currentQuestion.question_text}
+                    </h4>
 
-                  return (
-                    <button
-                      key={result.questionId}
-                      className={`btn btn-sm ${isCurrent ? 'btn-primary' : buttonClass}`}
-                      onClick={() => setSelectedQuestion(index)}
-                    >
-                      Câu {index + 1}
-                      {result.isCorrect && <i className="bi bi-check ms-1"></i>}
-                      {!result.isCorrect && result.userAnswer && (
-                        <i className="bi bi-x ms-1"></i>
-                      )}
-                    </button>
-                  );
-                })}
+                    <div className="space-y-2 mb-4">
+                      {currentQuestion.options.map((option) => {
+                        const isUserAnswer = userAnswers[currentQuestion._id] === option.label;
+                        const isCorrectAnswer = currentQuestion.correct_answers.includes(option.label);
+
+                        let optionStyle = 'border-gray-200 bg-gray-50/50';
+                        let iconColor = 'text-gray-400';
+                        let icon = null;
+
+                        if (isCorrectAnswer) {
+                          optionStyle = 'border-emerald-300 bg-emerald-50';
+                          iconColor = 'text-emerald-600';
+                          icon = (
+                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" />
+                            </svg>
+                          );
+                        } else if (isUserAnswer) {
+                          optionStyle = 'border-red-300 bg-red-50';
+                          iconColor = 'text-red-600';
+                          icon = (
+                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
+                            </svg>
+                          );
+                        }
+
+                        return (
+                          <div key={option.label} className={`relative rounded-lg border p-3 transition-all duration-200 ${optionStyle}`}>
+                            <div className="flex items-center space-x-3">
+                              <div className={`w-8 h-8 rounded-md flex items-center justify-center font-bold text-sm bg-white border shadow-sm ${isCorrectAnswer ? 'border-emerald-300 text-emerald-700' :
+                                isUserAnswer ? 'border-red-300 text-red-700' :
+                                  'border-gray-300 text-gray-600'
+                                }`}>
+                                {option.label}
+                              </div>
+                              <span className="flex-1 text-gray-800">{option.text}</span>
+                              {icon && (
+                                <div className={`w-6 h-6 rounded-md flex items-center justify-center ${iconColor}`}>
+                                  {icon}
+                                </div>
+                              )}
+                            </div>
+
+                            {/* User choice indicator */}
+                            {isUserAnswer && (
+                              <div className="absolute -top-1 -right-1">
+                                <div className={`w-5 h-5 rounded-full flex items-center justify-center text-white text-xs font-bold shadow-lg ${isCorrectAnswer ? 'bg-emerald-500' : 'bg-red-500'
+                                  }`}>
+                                  <svg className="w-2 h-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                                  </svg>
+                                </div>
+                              </div>
+                            )}
+                          </div>
+                        );
+                      })}
+                    </div>
+
+                    {/* Enhanced Explanation */}
+                    <div className={`relative rounded-lg border p-4 ${currentResult?.isCorrect ? 'border-emerald-300 bg-emerald-50' : 'border-red-300 bg-red-50'
+                      }`}>
+                      <div className="flex items-center mb-3">
+                        <div className={`w-6 h-6 rounded-md flex items-center justify-center mr-2 ${currentResult?.isCorrect ? 'bg-emerald-500' : 'bg-red-500'
+                          }`}>
+                          <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            {currentResult?.isCorrect ? (
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" />
+                            ) : (
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
+                            )}
+                          </svg>
+                        </div>
+                        <h5 className={`font-bold text-base ${currentResult?.isCorrect ? 'text-emerald-800' : 'text-red-800'
+                          }`}>
+                          {currentResult?.isCorrect ? 'Bạn đã trả lời đúng!' : 'Bạn đã trả lời sai'}
+                        </h5>
+                      </div>
+
+                      <div className="space-y-3">
+                        <div>
+                          <p className="font-semibold text-gray-800 mb-1 text-sm">Giải thích đáp án đúng:</p>
+                          <p className="text-gray-700 text-sm leading-relaxed">{currentQuestion.explanation.correct}</p>
+                        </div>
+
+                        {/* Show explanations for all incorrect choices */}
+                        {currentQuestion.explanation.incorrect_choices && Object.keys(currentQuestion.explanation.incorrect_choices).length > 0 && (
+                          <div className="pt-3 border-t border-gray-200">
+                            <p className="font-semibold text-gray-800 mb-2 text-sm">Giải thích các đáp án sai:</p>
+                            <div className="space-y-2">
+                              {Object.entries(currentQuestion.explanation.incorrect_choices).map(([choice, explanation]) => (
+                                <div key={choice} className="flex items-start space-x-2">
+                                  <span className="inline-flex items-center justify-center w-5 h-5 rounded text-xs font-bold bg-red-100 text-red-700 flex-shrink-0 mt-0.5">
+                                    {choice}
+                                  </span>
+                                  <p className="text-gray-700 text-sm leading-relaxed">{explanation}</p>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Enhanced Navigation */}
+              <div className="flex justify-between items-center gap-3 mb-4">
+                <button
+                  className="group flex items-center px-4 py-2 rounded-lg border border-gray-200 bg-white hover:border-blue-300 hover:bg-blue-50 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:border-gray-200 disabled:hover:bg-white shadow-sm hover:shadow-md"
+                  onClick={() => setSelectedQuestion(Math.max(0, selectedQuestion - 1))}
+                  disabled={selectedQuestion === 0}
+                >
+                  <svg className="w-4 h-4 mr-2 text-gray-600 group-hover:text-blue-600 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 19l-7-7 7-7" />
+                  </svg>
+                  <span className="font-medium text-gray-700 group-hover:text-blue-700 transition-colors text-sm">Câu trước</span>
+                </button>
+
+                <div className="text-center">
+                  <div className="inline-flex items-center px-3 py-2 rounded-lg bg-gradient-to-r from-blue-500 to-indigo-600 text-white font-medium shadow-lg text-sm">
+                    <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+                    </svg>
+                    {selectedQuestion + 1} / {questions.length}
+                  </div>
+                </div>
+
+                <button
+                  className="group flex items-center px-4 py-2 rounded-lg border border-gray-200 bg-white hover:border-blue-300 hover:bg-blue-50 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:border-gray-200 disabled:hover:bg-white shadow-sm hover:shadow-md"
+                  onClick={() =>
+                    setSelectedQuestion(Math.min(questions.length - 1, selectedQuestion + 1))
+                  }
+                  disabled={selectedQuestion === questions.length - 1}
+                >
+                  <span className="font-medium text-gray-700 group-hover:text-blue-700 transition-colors text-sm">Câu tiếp theo</span>
+                  <svg className="w-4 h-4 ml-2 text-gray-600 group-hover:text-blue-600 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7" />
+                  </svg>
+                </button>
+              </div>
+
+              {/* Enhanced Action Buttons */}
+              <div className="flex gap-3 mb-4">
+                <button
+                  className="flex-1 group relative overflow-hidden rounded-lg bg-gradient-to-r from-blue-500 to-indigo-600 px-4 py-3 text-white font-semibold shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105"
+                  onClick={() => navigate(`/multiple-choice/test/${testId}/settings`)}
+                >
+                  <div className="absolute inset-0 bg-white/20 translate-y-full group-hover:translate-y-0 transition-transform duration-300" />
+                  <div className="relative flex items-center justify-center">
+                    <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                    </svg>
+                    Làm lại bài kiểm tra
+                  </div>
+                </button>
+
+                <button
+                  className="group relative overflow-hidden rounded-lg bg-gradient-to-r from-emerald-500 to-emerald-600 px-4 py-3 text-white font-semibold shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105"
+                  onClick={() => {
+                    // TODO: Implement save result functionality
+                    alert('Tính năng lưu kết quả sẽ được phát triển trong tương lai!');
+                  }}
+                >
+                  <div className="absolute inset-0 bg-white/20 translate-y-full group-hover:translate-y-0 transition-transform duration-300" />
+                  <div className="relative flex items-center justify-center">
+                    <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                    </svg>
+                    Lưu kết quả
+                  </div>
+                </button>
+              </div>
+
+              {/* Back to Topics Button */}
+              <div className="text-center">
+                <button
+                  className="group flex items-center px-4 py-2 rounded-lg border border-gray-200 bg-white hover:border-indigo-300 hover:bg-indigo-50 transition-all duration-200 shadow-sm hover:shadow-md mx-auto"
+                  onClick={() => navigate('/multiple-choice/topics')}
+                >
+                  <svg className="w-4 h-4 mr-2 text-gray-600 group-hover:text-indigo-600 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
+                  </svg>
+                  <span className="font-medium text-gray-700 group-hover:text-indigo-700 transition-colors text-sm">Về danh sách chủ đề</span>
+                </button>
               </div>
             </div>
+            {/* Simple Question Grid Sidebar */}
+            <div className="lg:col-span-1">
+              <div className="sticky top-5">
+                <div className="rounded-lg border border-gray-200 bg-white shadow-sm">
+                  {/* Header */}
+                  <div className="px-4 py-3 border-b border-gray-200 bg-gray-50">
+                    <h3 className="font-semibold text-gray-800 flex items-center">
+                      <svg className="w-4 h-4 mr-2 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+                      </svg>
+                      Danh sách câu hỏi
+                    </h3>
+                  </div>
+
+                  <div className="p-4">
+                    {/* Legend */}
+                    <div className="grid grid-cols-3 gap-2 text-xs mb-4">
+                      <div className="flex items-center">
+                        <div className="w-3 h-3 rounded bg-green-500 mr-1"></div>
+                        <span className="text-gray-600">Đúng ({correctCount})</span>
+                      </div>
+                      <div className="flex items-center">
+                        <div className="w-3 h-3 rounded bg-red-500 mr-1"></div>
+                        <span className="text-gray-600">Sai ({incorrectCount})</span>
+                      </div>
+                      <div className="flex items-center">
+                        <div className="w-3 h-3 rounded bg-yellow-500 mr-1"></div>
+                        <span className="text-gray-600">Chưa làm ({unansweredCount})</span>
+                      </div>
+                    </div>
+
+                    {/* Question Grid */}
+                    <div className="grid grid-cols-5 gap-2">
+                      {results.map((result, index) => {
+                        const isCurrent = index === selectedQuestion;
+                        const isAnswered = Array.isArray(result.userAnswer) ? result.userAnswer.length > 0 : !!result.userAnswer;
+                        
+                        let bgColor = 'bg-yellow-500'; // chưa làm
+                        if (result.isCorrect) {
+                          bgColor = 'bg-green-500';
+                        } else if (isAnswered) {
+                          bgColor = 'bg-red-500';
+                        }
+
+                        return (
+                          <button
+                            key={result.questionId}
+                            onClick={() => setSelectedQuestion(index)}
+                            className={`
+                              w-full aspect-square rounded ${bgColor} text-white font-semibold text-sm 
+                              hover:opacity-80 transition-all duration-200
+                              ${isCurrent ? 'ring-2 ring-blue-500 ring-offset-2' : ''}
+                            `}
+                          >
+                            {index + 1}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+
           </div>
         </div>
       </div>
-
-      <style jsx="true">{`
-        .card {
-          border: none;
-          border-radius: 12px;
-        }
-        .btn {
-          transition: all 0.2s ease;
-        }
-      `}</style>
     </div>
   );
 };
