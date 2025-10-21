@@ -177,6 +177,96 @@ async function getRandomVocabularies(count = 10, filters = {}) {
   }
 }
 
+/**
+ * Lấy tất cả main topics từ vocabularies (gọi API backend)
+ */
+async function getAllVocabularyMainTopics() {
+  try {
+    const response = await fetch(`${API_BASE_URL}/tests/vocabularies/main-topics`, {
+      method: 'GET',
+      headers: { 'Content-Type': 'application/json' },
+    });
+
+    if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+
+    const mainTopics = await response.json();
+    return mainTopics || [];
+  } catch (error) {
+    console.error('Error fetching vocabulary main topics:', error);
+    throw error;
+  }
+}
+
+/**
+ * Lấy sub topics theo main topic (gọi API backend)
+ */
+async function getVocabularySubTopicsByMainTopic(mainTopic) {
+  try {
+    const response = await fetch(`${API_BASE_URL}/tests/vocabularies/sub-topics/${encodeURIComponent(mainTopic)}`, {
+      method: 'GET',
+      headers: { 'Content-Type': 'application/json' },
+    });
+
+    if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+
+    const subTopics = await response.json();
+    return subTopics || [];
+  } catch (error) {
+    console.error('Error fetching vocabulary sub topics:', error);
+    throw error;
+  }
+}
+
+/**
+ * Lấy danh sách tests theo main topic và sub topic (gọi API backend)
+ */
+async function getVocabularyTestsByTopics(mainTopic, subTopic) {
+  try {
+    const response = await fetch(`${API_BASE_URL}/tests/topic/${encodeURIComponent(mainTopic)}/${encodeURIComponent(subTopic)}`, {
+      method: 'GET',
+      headers: { 'Content-Type': 'application/json' },
+    });
+
+    if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+
+    const allTests = await response.json();
+    
+    // Lọc chỉ lấy tests có test_type là 'vocabulary'
+    const vocabularyTests = allTests.filter(test => test.test_type === 'vocabulary');
+    
+    return vocabularyTests || [];
+  } catch (error) {
+    console.error('Error fetching vocabulary tests by topics:', error);
+    throw error;
+  }
+}
+
+/**
+ * Lấy thông tin test theo ID (gọi API backend)
+ */
+async function getVocabularyTestById(testId) {
+  try {
+    const response = await fetch(`${API_BASE_URL}/tests/${testId}`, {
+      method: 'GET',
+      headers: { 'Content-Type': 'application/json' },
+    });
+
+    if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+
+    const test = await response.json();
+    
+    // Kiểm tra xem có phải vocabulary test không
+    if (test.test_type !== 'vocabulary') {
+      throw new Error('Test này không phải là vocabulary test');
+    }
+    
+    return test;
+  } catch (error) {
+    console.error('Error fetching vocabulary test by ID:', error);
+    throw error;
+  }
+}
+
 const VocabularyService = {
   getAllVocabularies,
   getVocabularyById,
@@ -186,6 +276,10 @@ const VocabularyService = {
   deleteVocabulary,
   getAllVocabulariesByTestId,
   getRandomVocabularies,
+  getAllVocabularyMainTopics,
+  getVocabularySubTopicsByMainTopic,
+  getVocabularyTestsByTopics,
+  getVocabularyTestById,
 };
 
 export default VocabularyService;

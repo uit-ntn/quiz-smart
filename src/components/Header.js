@@ -32,7 +32,6 @@ const Header = () => {
             </div>
           </Link>
 
-          {/* DESKTOP NAV — tối giản, không gradient */}
           <div className="hidden md:flex items-center gap-1.5">
             {navItems.map((item) => {
               const isActive = location.pathname === item.path;
