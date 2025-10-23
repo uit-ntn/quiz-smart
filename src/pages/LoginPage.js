@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import authService from '../services/authService';
+import BackendAlert from '../components/BackendAlert';
 
 const LoginPage = () => {
   const [formData, setFormData] = useState({
@@ -9,6 +10,7 @@ const LoginPage = () => {
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [showBackendAlert, setShowBackendAlert] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -29,8 +31,9 @@ const LoginPage = () => {
     try {
       await authService.login(formData.email, formData.password);
       // Redirect to return path or home page
-      const returnTo = location.state?.returnTo || '/';
-      navigate(returnTo);
+      const returnTo = localStorage.getItem('authReturnTo') || location.state?.from?.pathname || '/';
+      localStorage.removeItem('authReturnTo');
+      navigate(returnTo, { replace: true });
     } catch (error) {
       setError(error.message);
     } finally {
@@ -38,8 +41,19 @@ const LoginPage = () => {
     }
   };
 
-  const handleGoogleLogin = () => {
-    authService.initiateGoogleLogin();
+  const handleGoogleLogin = async () => {
+    try {
+      // Store return URL before redirecting to Google
+      const returnTo = localStorage.getItem('authReturnTo') || location.state?.from?.pathname || '/';
+      localStorage.setItem('authReturnTo', returnTo);
+      await authService.initiateGoogleLogin();
+    } catch (error) {
+      if (error.message.includes('Backend server chưa chạy') || error.message.includes('Backend server is not running')) {
+        setShowBackendAlert(true);
+      } else {
+        setError(error.message);
+      }
+    }
   };
 
   return (
@@ -214,6 +228,10 @@ const LoginPage = () => {
           </div>
         </div>
       </div>
+      <BackendAlert 
+        show={showBackendAlert} 
+        onClose={() => setShowBackendAlert(false)} 
+      />
     </div>
   );
 };

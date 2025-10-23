@@ -43,6 +43,8 @@ const ProtectedRoute = ({ children, requireAuth = true, requireAdmin = false }) 
 
   // If route requires authentication but user is not authenticated
   if (requireAuth && !isAuthenticated) {
+    // Store the current location for redirect after login
+    localStorage.setItem('authReturnTo', location.pathname + location.search);
     return <Navigate to="/login" state={{ from: location }} replace />;
   }
 

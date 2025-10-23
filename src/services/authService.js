@@ -37,6 +37,8 @@ class AuthService {
 
   // Register new user
   async register(userData) {
+    logger.info('Attempting user registration', { email: userData.email });
+    
     try {
       const response = await fetch(`${API_BASE_URL}/auth/register`, {
         method: 'POST',
@@ -49,19 +51,15 @@ class AuthService {
       const data = await response.json();
 
       if (!response.ok) {
+        logger.error('Registration failed', { status: response.status, message: data.message });
         throw new Error(data.message || 'Registration failed');
       }
 
-      // Store token and user data
-      this.token = data.token;
-      this.user = data.user;
-      
-      localStorage.setItem('token', data.token);
-      localStorage.setItem('user', JSON.stringify(data.user));
-
-      return data;
+      logger.info('Registration OTP sent successfully', { email: userData.email });
+      // Note: Registration only sends OTP, no token/user data yet
+      return data; // { message, email, userId }
     } catch (error) {
-      console.error('Registration error:', error);
+      logger.error('Registration error', error);
       throw error;
     }
   }
@@ -141,8 +139,11 @@ class AuthService {
 
       if (!response.ok) {
         if (response.status === 401) {
-          // Token expired or invalid
-          this.logout();
+          // Token expired or invalid - clean immediately
+          this.token = null;
+          this.user = null;
+          localStorage.removeItem('token');
+          localStorage.removeItem('user');
           throw new Error('Session expired');
         }
         throw new Error('Failed to get user profile');
@@ -160,27 +161,49 @@ class AuthService {
   }
 
   // Google OAuth login
-  initiateGoogleLogin() {
+  async initiateGoogleLogin() {
+    // Save current page for return after login
+    const currentPath = window.location.pathname;
+    if (currentPath && currentPath !== '/login' && currentPath !== '/register') {
+      localStorage.setItem('authReturnTo', currentPath);
+    }
+
     const googleAuthUrl = `${API_BASE_URL}/auth/google`;
     logger.info('Initiating Google OAuth login', {
       url: googleAuthUrl,
       currentOrigin: window.location.origin,
       currentUrl: window.location.href,
+      returnTo: localStorage.getItem('authReturnTo'),
       API_BASE_URL,
-      expectedCallback: `${API_BASE_URL.replace('/api', '')}/api/auth/google/callback`
+      expectedCallback: `${window.location.origin}/auth/success`
     });
     
     try {
-      logger.debug('Redirecting to Google OAuth', googleAuthUrl);
+      // First, test if backend server is running with a simple health check
+      const testResponse = await fetch(`${API_BASE_URL}/auth/health`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json'
+        }
+      });
       
-      // Add some delay to ensure logging is visible
-      setTimeout(() => {
-        window.location.href = googleAuthUrl;
-      }, 100);
+      if (!testResponse.ok) {
+        throw new Error('Backend server is not running on port 8000. Please start the backend server first.');
+      }
+      
+      logger.debug('Backend server is running, redirecting to Google OAuth', googleAuthUrl);
+      
+      // ✅ ĐÚNG: Redirect browser to Google OAuth  
+      window.location.href = googleAuthUrl;
       
     } catch (error) {
-      logger.error('Failed to redirect to Google OAuth', error);
-      throw new Error('Failed to initiate Google login');
+      logger.error('Failed to initiate Google OAuth', error);
+      
+      if (error.message.includes('Failed to fetch') || error.message.includes('NetworkError')) {
+        throw new Error('Backend server chưa chạy. Vui lòng khởi động backend server trên port 8000 trước khi đăng nhập Google.');
+      }
+      
+      throw new Error(error.message || 'Failed to initiate Google login');
     }
   }
 
@@ -199,20 +222,45 @@ class AuthService {
       }
 
       logger.debug('Storing token from Google OAuth');
-      // Store token temporarily
+      // Store token
       this.token = token;
       localStorage.setItem('token', token);
 
       logger.info('Getting user profile after Google OAuth');
       // Get user profile
-      const userData = await this.getCurrentUser();
-      
-      logger.info('Google OAuth login successful', {
-        userId: userData.id,
-        email: userData.email
-      });
-      
-      return userData;
+      try {
+        const userData = await this.getCurrentUser();
+        
+        if (userData) {
+          // Store user data
+          this.user = userData;
+          localStorage.setItem('user', JSON.stringify(userData));
+          
+          logger.info('Google OAuth login successful', {
+            userId: userData._id || userData.id,
+            email: userData.email,
+            authProvider: userData.authProvider
+          });
+          
+          return { user: userData, token: token };
+        } else {
+          throw new Error('Failed to get user data');
+        }
+      } catch (getUserError) {
+        logger.error('Failed to get user profile after Google OAuth', {
+          error: getUserError.message,
+          token: token ? token.substring(0, 20) + '...' : null,
+          apiUrl: `${API_BASE_URL}/auth/me`
+        });
+        
+        // Clean up invalid token immediately
+        this.token = null;
+        this.user = null;
+        localStorage.removeItem('token');
+        localStorage.removeItem('user');
+        
+        throw getUserError;
+      }
     } catch (error) {
       logger.error('Google OAuth callback error', error);
       this.logout(); // Clear any partial auth state
@@ -312,6 +360,127 @@ class AuthService {
       return await response.json();
     } catch (error) {
       console.error('Password change error:', error);
+      throw error;
+    }
+  }
+
+  // Forgot password - send OTP
+  async forgotPassword(email) {
+    logger.info('Initiating forgot password process', { email });
+    
+    try {
+      const response = await fetch(`${API_BASE_URL}/auth/forgot-password`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ email })
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        logger.error('Forgot password failed', { status: response.status, message: data.message });
+        throw new Error(data.message || 'Forgot password request failed');
+      }
+
+      logger.info('Forgot password OTP sent successfully', { email });
+      return data;
+    } catch (error) {
+      logger.error('Forgot password error', error);
+      throw error;
+    }
+  }
+
+  // Reset password with OTP
+  async resetPasswordWithOTP(email, otp, newPassword) {
+    logger.info('Attempting password reset with OTP', { email });
+    
+    try {
+      const response = await fetch(`${API_BASE_URL}/auth/reset-password`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ email, otp, newPassword })
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        logger.error('Password reset failed', { status: response.status, message: data.message });
+        throw new Error(data.message || 'Password reset failed');
+      }
+
+      logger.info('Password reset successful', { email });
+      return data;
+    } catch (error) {
+      logger.error('Password reset error', error);
+      throw error;
+    }
+  }
+
+  // Verify registration OTP
+  async verifyRegistrationOTP(email, otp) {
+    logger.info('Verifying registration OTP', { email });
+    
+    try {
+      const response = await fetch(`${API_BASE_URL}/auth/verify-registration-otp`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ email, otp })
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        logger.error('OTP verification failed', { status: response.status, message: data.message });
+        throw new Error(data.message || 'OTP verification failed');
+      }
+
+      // Store token and user data if verification successful
+      if (data.token && data.user) {
+        this.token = data.token;
+        this.user = data.user;
+        
+        localStorage.setItem('token', data.token);
+        localStorage.setItem('user', JSON.stringify(data.user));
+      }
+
+      logger.info('Registration OTP verified successfully', { email });
+      return data;
+    } catch (error) {
+      logger.error('OTP verification error', error);
+      throw error;
+    }
+  }
+
+  // Resend registration OTP
+  async resendRegistrationOTP(email) {
+    logger.info('Resending registration OTP', { email });
+    
+    try {
+      const response = await fetch(`${API_BASE_URL}/auth/resend-registration-otp`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ email })
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        logger.error('Resend OTP failed', { status: response.status, message: data.message });
+        throw new Error(data.message || 'Failed to resend OTP');
+      }
+
+      logger.info('Registration OTP resent successfully', { email });
+      return data;
+    } catch (error) {
+      logger.error('Resend OTP error', error);
       throw error;
     }
   }

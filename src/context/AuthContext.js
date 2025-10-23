@@ -80,6 +80,26 @@ export const AuthProvider = ({ children }) => {
     localStorage.setItem('user', JSON.stringify(userData));
   };
 
+  const refreshAuth = async () => {
+    try {
+      const token = authService.getToken();
+      if (token) {
+        const userData = await authService.getCurrentUser();
+        setUser(userData);
+        setIsAuthenticated(true);
+        return userData;
+      } else {
+        setUser(null);
+        setIsAuthenticated(false);
+      }
+    } catch (error) {
+      console.error('Auth refresh failed:', error);
+      setUser(null);
+      setIsAuthenticated(false);
+      authService.logout();
+    }
+  };
+
   const value = {
     user,
     isAuthenticated,
@@ -87,7 +107,8 @@ export const AuthProvider = ({ children }) => {
     login,
     register,
     logout,
-    updateUser
+    updateUser,
+    refreshAuth
   };
 
   return (

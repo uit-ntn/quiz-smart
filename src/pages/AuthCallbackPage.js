@@ -1,52 +1,137 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
 import authService from '../services/authService';
 
 const AuthCallbackPage = () => {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
+  const { refreshAuth } = useAuth();
   const [status, setStatus] = useState('processing'); // processing, success, error
   const [message, setMessage] = useState('Đang xử lý đăng nhập...');
 
   useEffect(() => {
     const handleAuthCallback = async () => {
       try {
+        // Get token from URL parameters 
         const token = searchParams.get('token');
-        const error = searchParams.get('error');
+        const error = searchParams.get('error'); 
+        
+        // Check if this is a failure callback
+        const isFailure = window.location.pathname.includes('/auth/failure');
 
-        if (error) {
-          throw new Error('Đăng nhập Google thất bại');
+        console.log('AuthCallback received params:', {
+          token: token ? token.substring(0, 20) + '...' : null,
+          tokenLength: token ? token.length : 0,
+          error,
+          isFailure,
+          allParams: Object.fromEntries(searchParams.entries()),
+          fullURL: window.location.href,
+          pathname: window.location.pathname
+        });
+
+        // Handle failure callback
+        if (isFailure || error) {
+          console.error('Google OAuth failure:', error || 'Authentication failed');
+          throw new Error(`Đăng nhập Google thất bại: ${error || 'Không thể xác thực với Google'}`);
         }
 
         if (!token) {
-          throw new Error('Không nhận được token từ Google');
+          console.error('No token in callback URL');
+          console.error('Available search params:', Object.fromEntries(searchParams.entries()));
+          console.error('Current URL:', window.location.href);
+          
+          // If no token and no error, something went wrong
+          throw new Error('Không nhận được token từ server. Vui lòng kiểm tra backend server.');
+        }
+
+        console.log('Processing token:', {
+          tokenPrefix: token.substring(0, 50),
+          tokenLength: token.length,
+          isJWT: token.includes('.'),
+          tokenParts: token.split('.').length
+        });
+
+        // Validate token format (JWT should have 3 parts)
+        if (!token.includes('.') || token.split('.').length !== 3) {
+          console.error('Invalid token format - not a JWT');
+          throw new Error('Token không hợp lệ. Vui lòng thử lại.');
         }
 
         // Handle Google OAuth callback
-        await authService.handleGoogleCallback(token);
+        const result = await authService.handleGoogleCallback(token);
         
-        setStatus('success');
-        setMessage('Đăng nhập thành công! Đang chuyển hướng...');
-        
-        // Redirect after 2 seconds
-        setTimeout(() => {
-          navigate('/', { replace: true });
-        }, 2000);
+        if (result && result.user) {
+          console.log('Authentication successful, refreshing context...');
+          
+          // Refresh auth context with new user data
+          await refreshAuth();
+          
+          setStatus('success');
+          setMessage('Đăng nhập thành công! Đang chuyển hướng...');
+          
+          // Get the return URL from localStorage if it exists
+          const returnTo = localStorage.getItem('authReturnTo') || '/';
+          localStorage.removeItem('authReturnTo');
+          
+          console.log('Redirecting to:', returnTo);
+          
+          // Redirect after 1.5 seconds
+          setTimeout(() => {
+            navigate(returnTo, { replace: true });
+          }, 1500);
+        } else {
+          throw new Error('Phản hồi xác thực không hợp lệ từ server');
+        }
 
       } catch (error) {
         console.error('Auth callback error:', error);
-        setStatus('error');
-        setMessage(error.message || 'Có lỗi xảy ra trong quá trình đăng nhập');
+        console.error('Error details:', {
+          message: error.message,
+          stack: error.stack,
+          url: window.location.href,
+          searchParams: Object.fromEntries(searchParams.entries())
+        });
         
-        // Redirect to login page after 3 seconds
+        // Clean up any invalid token/user data immediately
+        localStorage.removeItem('token');
+        localStorage.removeItem('user');
+        localStorage.removeItem('authReturnTo');
+        
+        setStatus('error');
+        
+        let errorMessage = 'Có lỗi xảy ra trong quá trình đăng nhập';
+        
+        if (error.message?.includes('Failed to fetch') || error.message?.includes('NetworkError')) {
+          errorMessage = 'Không thể kết nối tới backend server. Vui lòng khởi động backend server trên port 8000.';
+        } else if (error.message?.includes('401') || error.message?.includes('Token validation failed')) {
+          errorMessage = 'Token không hợp lệ hoặc backend server chưa chạy. Vui lòng khởi động backend server.';
+        } else if (error.message?.includes('Session expired')) {
+          errorMessage = 'Phiên đăng nhập đã hết hạn. Vui lòng thử lại.';
+        } else if (error.message?.includes('Invalid token')) {
+          errorMessage = 'Token không hợp lệ. Vui lòng thử lại.';
+        } else if (error.message?.includes('Không nhận được token')) {
+          errorMessage = 'Backend server không trả về token. Vui lòng kiểm tra cấu hình Google OAuth trong backend.';
+        } else if (error.message) {
+          errorMessage = error.message;
+        }
+        
+        setMessage(errorMessage);
+        
+        // Redirect to login page after 4 seconds for better UX
         setTimeout(() => {
-          navigate('/login', { replace: true });
-        }, 3000);
+          navigate('/login', { 
+            state: { 
+              message: 'Đăng nhập Google thất bại. Vui lòng thử lại hoặc kiểm tra backend server.' 
+            },
+            replace: true
+          });
+        }, 4000);
       }
     };
 
     handleAuthCallback();
-  }, [searchParams, navigate]);
+  }, [searchParams, navigate, refreshAuth]);
 
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col justify-center items-center">

@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import authService from '../services/authService';
+import BackendAlert from '../components/BackendAlert';
 
 const RegisterPage = () => {
   const [formData, setFormData] = useState({
@@ -11,6 +12,7 @@ const RegisterPage = () => {
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [showBackendAlert, setShowBackendAlert] = useState(false);
   const navigate = useNavigate();
 
   const handleChange = (e) => {
@@ -58,9 +60,15 @@ const RegisterPage = () => {
 
     try {
       const { full_name, email, password } = formData;
-      await authService.register({ full_name, email, password });
-      // Redirect to dashboard or home page
-      navigate('/');
+      const result = await authService.register({ full_name, email, password });
+      
+      // Registration sends OTP, redirect to verification page
+      navigate('/verify-otp', { 
+        state: { 
+          email: email,
+          message: result.message || 'OTP đã được gửi đến email của bạn.'
+        } 
+      });
     } catch (error) {
       setError(error.message);
     } finally {
@@ -68,8 +76,16 @@ const RegisterPage = () => {
     }
   };
 
-  const handleGoogleLogin = () => {
-    authService.initiateGoogleLogin();
+  const handleGoogleLogin = async () => {
+    try {
+      await authService.initiateGoogleLogin();
+    } catch (error) {
+      if (error.message.includes('backend server') || error.message.includes('Server không phản hồi')) {
+        setShowBackendAlert(true);
+      } else {
+        setError(error.message);
+      }
+    }
   };
 
   return (
@@ -237,6 +253,10 @@ const RegisterPage = () => {
           </div>
         </div>
       </div>
+      <BackendAlert 
+        show={showBackendAlert} 
+        onClose={() => setShowBackendAlert(false)} 
+      />
     </div>
   );
 };
