@@ -1,6 +1,14 @@
 import React from 'react';
 
-const TestLayout = ({ children, testTitle, currentQuestion, totalQuestions, timeLeft, timePerQuestion, onExit }) => {
+const TestLayout = ({
+  children,
+  testTitle,
+  currentQuestion,
+  totalQuestions,
+  timeLeft,
+  timePerQuestion,
+  onExit
+}) => {
   const progress = ((currentQuestion + 1) / totalQuestions) * 100;
   const timeProgress = (timeLeft / timePerQuestion) * 100;
 
@@ -12,66 +20,38 @@ const TestLayout = ({ children, testTitle, currentQuestion, totalQuestions, time
 
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* Simple Header */}
-      <div className="bg-white border-b border-gray-200 shadow-sm">
+      {/* Header */}
+      <div className="bg-white border-b border-gray-200">
         <div className="max-w-7xl mx-auto px-3 sm:px-4 lg:px-6">
-          <div className="flex items-center justify-between h-16">
-            <div className="flex items-center space-x-4">
+          <div className="flex items-center justify-between h-14">
+            <div className="flex items-center gap-4">
               <button
                 onClick={onExit}
-                className="flex items-center px-3 py-2 text-sm text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors"
+                className="flex items-center px-3 py-1.5 text-sm text-gray-700 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors"
               >
                 <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
                 </svg>
                 Thoát
               </button>
-              <div className="h-6 w-px bg-gray-300" />
+              <div className="h-5 w-px bg-gray-300" />
               <div>
-                <h1 className="text-lg font-semibold text-gray-900">{testTitle}</h1>
-                <div className="flex items-center space-x-4 text-sm text-gray-600">
-                  <span>Câu {currentQuestion + 1}/{totalQuestions}</span>
+                <h1 className="text-base font-semibold text-gray-900">{testTitle}</h1>
+                <div className="text-sm text-gray-600">
+                  Câu {currentQuestion + 1}/{totalQuestions}
                 </div>
               </div>
             </div>
-          </div>
-        </div>
-      </div>
 
-      {/* Timer Section - Di chuyển xuống dưới header */}
-      <div className="bg-white border-b border-gray-200">
-        <div className="max-w-7xl mx-auto px-3 sm:px-4 lg:px-6 py-2">
-          <div className="flex items-center justify-between">
-            {/* Progress Bar */}
-            <div className="flex-1 mr-8">
-              <div className="flex items-center justify-between mb-2">
-                <span className="text-sm font-medium text-gray-700">Tiến độ bài test</span>
-                <span className="text-sm text-gray-600">{Math.round(progress)}%</span>
-              </div>
-              <div className="w-full bg-gray-200 rounded-full h-3">
-                <div 
-                  className="bg-blue-600 h-3 rounded-full transition-all duration-300 ease-out"
-                  style={{ width: `${progress}%` }}
-                />
-              </div>
-            </div>
-            
             {/* Timer */}
-            <div className="flex items-center space-x-4">
+            <div className="flex items-center gap-4">
               <div className="text-right">
-                <div className="text-2xl font-bold text-gray-900">{formatTime(timeLeft)}</div>
+                <div className="text-xl font-bold text-gray-900">{formatTime(timeLeft)}</div>
                 <div className="text-xs text-gray-500">Thời gian còn lại</div>
               </div>
-              <div className="w-16 h-16 relative">
-                <svg className="w-16 h-16 transform -rotate-90" viewBox="0 0 100 100">
-                  <circle
-                    cx="50"
-                    cy="50"
-                    r="45"
-                    fill="none"
-                    stroke="#e5e7eb"
-                    strokeWidth="8"
-                  />
+              <div className="w-14 h-14 relative">
+                <svg className="w-14 h-14 transform -rotate-90" viewBox="0 0 100 100">
+                  <circle cx="50" cy="50" r="45" fill="none" stroke="#e5e7eb" strokeWidth="8" />
                   <circle
                     cx="50"
                     cy="50"
@@ -85,22 +65,36 @@ const TestLayout = ({ children, testTitle, currentQuestion, totalQuestions, time
                   />
                 </svg>
                 <div className="absolute inset-0 flex items-center justify-center">
-                  <span className={`text-sm font-bold ${
-                    timeLeft <= 10 ? "text-red-600" : timeLeft <= 30 ? "text-yellow-600" : "text-green-600"
-                  }`}>
+                  <span
+                    className={`text-xs font-bold ${
+                      timeLeft <= 10 ? "text-red-600" : timeLeft <= 30 ? "text-yellow-600" : "text-green-600"
+                    }`}
+                  >
                     {timeLeft}
                   </span>
                 </div>
               </div>
             </div>
           </div>
+
+          {/* Progress Bar */}
+          <div className="py-2">
+            <div className="flex items-center justify-between mb-1">
+              <span className="text-sm font-medium text-gray-700">Tiến độ bài test</span>
+              <span className="text-sm text-gray-600">{Math.round(progress)}%</span>
+            </div>
+            <div className="w-full bg-gray-200 rounded-full h-2.5">
+              <div
+                className="bg-blue-600 h-2.5 rounded-full transition-all duration-300 ease-out"
+                style={{ width: `${progress}%` }}
+              />
+            </div>
+          </div>
         </div>
       </div>
 
-      {/* Main Content */}
-      <div className="flex-1">
-        {children}
-      </div>
+      {/* Main */}
+      <div className="flex-1">{children}</div>
     </div>
   );
 };

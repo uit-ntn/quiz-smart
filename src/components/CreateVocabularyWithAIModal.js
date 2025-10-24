@@ -33,6 +33,7 @@ const CreateVocabularyWithAIModal = ({ show, onClose }) => {
     sub_topic: '',
     difficulty: 'easy',
     time_limit_minutes: 10,
+    visibility: 'public', // 'public' or 'private'
   });
 
   // Refs
@@ -66,6 +67,7 @@ const CreateVocabularyWithAIModal = ({ show, onClose }) => {
       sub_topic: '',
       difficulty: 'easy',
       time_limit_minutes: 10,
+      visibility: 'public',
     });
     setErrMsg('');
     setLoading(false);
@@ -429,6 +431,18 @@ const CreateVocabularyWithAIModal = ({ show, onClose }) => {
                       className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-600 focus:border-purple-600 bg-black text-white"
                     />
                   </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-800 mb-2">Chế độ hiển thị</label>
+                    <select
+                      value={testInfo.visibility}
+                      onChange={(e) => handleTestInfoChange('visibility', e.target.value)}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-600 focus:border-purple-600 bg-black text-white"
+                    >
+                      <option value="public">🌍 Công khai - Mọi người có thể xem</option>
+                      <option value="private">🔒 Riêng tư - Chỉ mình tôi</option>
+                    </select>
+                  </div>
                 </div>
 
                 <div>
@@ -487,6 +501,12 @@ const CreateVocabularyWithAIModal = ({ show, onClose }) => {
                     <div className="bg-white rounded-lg p-3 border border-gray-200">
                       <p className="text-xs font-medium text-gray-600 uppercase">Tạo bởi</p>
                       <p className="text-sm font-semibold text-gray-900 mt-1">AI Gemini</p>
+                    </div>
+                    <div className="bg-white rounded-lg p-3 border border-gray-200">
+                      <p className="text-xs font-medium text-gray-600 uppercase">Chế độ hiển thị</p>
+                      <p className="text-sm font-semibold text-gray-900 mt-1">
+                        {testInfo.visibility === 'public' ? '🌍 Công khai' : '🔒 Riêng tư'}
+                      </p>
                     </div>
                   </div>
                 </div>

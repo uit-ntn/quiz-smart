@@ -5,6 +5,11 @@ import { useNavigate } from 'react-router-dom';
 import testService from '../services/testService';
 import vocabularyService from '../services/vocabularyService';
 
+// Sample mặc định để hiển thị ngay preview khi mở modal
+const SAMPLE_VOCAB = `aisle:lối đi giữa các hàng ghế/kệ:Passengers are walking down the aisle.
+schedule:lịch trình:Please check your schedule before the meeting.
+colleague:đồng nghiệp:I discussed the project with my colleague.`;
+
 const CreateVocabularyTestModal = ({ show, onClose }) => {
   const { user } = useAuth();
   const navigate = useNavigate();
@@ -26,6 +31,7 @@ const CreateVocabularyTestModal = ({ show, onClose }) => {
     sub_topic: '',
     difficulty: 'easy',
     time_limit_minutes: 10,
+    visibility: 'public', // 'public' or 'private'
   });
 
   // Refs
@@ -42,6 +48,13 @@ const CreateVocabularyTestModal = ({ show, onClose }) => {
     };
   }, []);
 
+  // Inject sample khi mở modal để có preview ngay
+  useEffect(() => {
+    if (show && !vocabularyText.trim()) {
+      setVocabularyText(SAMPLE_VOCAB);
+    }
+  }, [show, vocabularyText]);
+
   // Close + reset state
   const handleClose = () => {
     setCurrentStep('vocabulary');
@@ -54,6 +67,7 @@ const CreateVocabularyTestModal = ({ show, onClose }) => {
       sub_topic: '',
       difficulty: 'easy',
       time_limit_minutes: 10,
+      visibility: 'public',
     });
     setErrMsg('');
     setLoading(false);
@@ -101,6 +115,20 @@ const CreateVocabularyTestModal = ({ show, onClose }) => {
 
     return { vocabularies, errors };
   };
+
+  // Preview động ở bước 1 (tính theo thời gian thực từ textarea)
+  const livePreviewVocabularies = useMemo(() => {
+    try {
+      return parseVocabularyText(vocabularyText).vocabularies || [];
+    } catch {
+      return [];
+    }
+  }, [vocabularyText]);
+
+  const totalLines = useMemo(
+    () => vocabularyText.split(/\r?\n/).filter((l) => l.trim()).length,
+    [vocabularyText]
+  );
 
   const handleContinueToTestInfo = () => {
     if (!vocabularyText.trim()) {
@@ -154,8 +182,8 @@ const CreateVocabularyTestModal = ({ show, onClose }) => {
 
   const totalSteps = 3;
   const progressPct = useMemo(() => {
-    if (currentStep === 'vocabulary') return 100 / totalSteps * 1; // 33.33…
-    if (currentStep === 'test-info') return 100 / totalSteps * 2;
+    if (currentStep === 'vocabulary') return (100 / totalSteps) * 1; // 33.33…
+    if (currentStep === 'test-info') return (100 / totalSteps) * 2;
     if (currentStep === 'review') return 100;
     return 100;
   }, [currentStep]);
@@ -185,11 +213,10 @@ const CreateVocabularyTestModal = ({ show, onClose }) => {
         })
       );
 
-      // Nếu muốn “best-effort” thay vì fail cả cụm, dùng allSettled:
+      // Best-effort: không fail cả cụm nếu có từ lỗi
       const results = await Promise.allSettled(vocabularyPromises);
       const rejected = results.filter((r) => r.status === 'rejected');
       if (rejected.length) {
-        // vẫn cho pass nhưng báo số từ lỗi
         setErrMsg(`Một số từ vựng tạo không thành công: ${rejected.length}/${parsedVocabularies.length}`);
       }
 
@@ -282,9 +309,10 @@ const CreateVocabularyTestModal = ({ show, onClose }) => {
         {/* Content */}
         <div className="flex-1 overflow-y-auto">
           <div className="p-6">
-            {/* Step 1 */}
+            {/* Step 1: Layout 2 cột */}
             {currentStep === 'vocabulary' && (
               <div className="space-y-6">
+                {/* Hướng dẫn định dạng */}
                 <div className="bg-gray-50 border border-gray-200 rounded-xl p-4">
                   <div className="flex items-start space-x-3">
                     <div className="w-8 h-8 rounded-lg bg-gray-200 flex items-center justify-center flex-shrink-0">
@@ -295,7 +323,8 @@ const CreateVocabularyTestModal = ({ show, onClose }) => {
                     <div>
                       <h3 className="font-medium text-gray-900 mb-2">Định dạng nhập liệu</h3>
                       <p className="text-sm text-gray-700 mb-3">
-                        Mỗi từ vựng một dòng, định dạng: <code className="bg-gray-200 px-2 py-1 rounded text-xs">từ:nghĩa:câu ví dụ</code>
+                        Mỗi từ vựng một dòng, định dạng:{' '}
+                        <code className="bg-gray-200 px-2 py-1 rounded text-xs">từ:nghĩa:câu ví dụ</code>
                       </p>
                       <div className="bg-gray-100 rounded-lg p-3">
                         <p className="text-xs font-medium text-gray-800 mb-2">Ví dụ:</p>
@@ -309,36 +338,92 @@ colleague:đồng nghiệp:I discussed the project with my colleague.`}
                   </div>
                 </div>
 
-                <div>
-                  <div className="flex items-center justify-between mb-3">
-                    <label className="block text-sm font-medium text-gray-900">
-                      Danh sách từ vựng *
-                    </label>
-                    <span className="text-xs text-gray-700 bg-gray-100 px-2 py-1 rounded-full">
-                      {vocabularyText.split(/\r?\n/).filter((l) => l.trim()).length} từ vựng
-                    </span>
-                  </div>
-                  <textarea
-                    value={vocabularyText}
-                    onChange={(e) => setVocabularyText(e.target.value)}
-                    placeholder="Nhập từ vựng theo định dạng: từ:nghĩa:câu ví dụ"
-                    rows={16}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-600 focus:border-blue-600 font-mono text-sm bg-black text-white placeholder-gray-400 resize-none"
-                  />
-                </div>
-
-                {!!errMsg && (
-                  <div className="bg-red-50 border border-red-200 rounded-xl p-4">
-                    <div className="flex items-start space-x-3">
-                      <div className="w-5 h-5 text-red-400 flex-shrink-0 mt-0.5">
-                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                        </svg>
+                {/* Khu vực 2 cột: textarea & preview */}
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                  {/* LEFT: Textarea */}
+                  <div className="space-y-3">
+                    <div className="flex items-center justify-between">
+                      <label className="block text-sm font-medium text-gray-900">
+                        Danh sách từ vựng *
+                      </label>
+                      <div className="flex items-center gap-2">
+                        <span className="text-xs text-gray-700 bg-gray-100 px-2 py-1 rounded-full">
+                          {totalLines} dòng
+                        </span>
+                        <span className="text-xs text-blue-800 bg-blue-100 px-2 py-1 rounded-full">
+                          {livePreviewVocabularies.length} hợp lệ
+                        </span>
                       </div>
-                      <p className="text-sm text-red-800 whitespace-pre-line">{errMsg}</p>
+                    </div>
+
+                    <textarea
+                      value={vocabularyText}
+                      onChange={(e) => setVocabularyText(e.target.value)}
+                      placeholder="Nhập từ vựng theo định dạng: từ:nghĩa:câu ví dụ"
+                      rows={20}
+                      className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-600 focus:border-blue-600 font-mono text-sm bg-black text-white placeholder-gray-400 resize-none"
+                    />
+
+                    {!!errMsg && (
+                      <div className="bg-red-50 border border-red-200 rounded-xl p-4">
+                        <div className="flex items-start space-x-3">
+                          <div className="w-5 h-5 text-red-400 flex-shrink-0 mt-0.5">
+                            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                            </svg>
+                          </div>
+                          <p className="text-sm text-red-800 whitespace-pre-line">{errMsg}</p>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* RIGHT: Live Review Table */}
+                  <div className="bg-white border border-gray-200 rounded-xl overflow-hidden flex flex-col">
+                    <div className="px-6 py-4 bg-gray-800">
+                      <h3 className="text-lg font-semibold text-white flex items-center">
+                        <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.746 0 3.332.477 4.5 1.253" />
+                        </svg>
+                        Review từ vựng (hiển thị trực tiếp)
+                      </h3>
+                      <p className="text-xs text-gray-300 mt-1">
+                        Parse theo định dạng <span className="font-mono">từ:nghĩa:câu ví dụ</span>
+                      </p>
+                    </div>
+
+                    <div className="overflow-x-auto" style={{ maxHeight: 500 }}>
+                      <table className="w-full">
+                        <thead className="bg-gray-100 sticky top-0 z-10">
+                          <tr>
+                            <th className="px-4 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider w-16">STT</th>
+                            <th className="px-4 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider w-1/4">Từ vựng</th>
+                            <th className="px-4 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider w-1/4">Nghĩa</th>
+                            <th className="px-4 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">Câu ví dụ</th>
+                          </tr>
+                        </thead>
+                        <tbody className="divide-y divide-gray-200">
+                          {livePreviewVocabularies.length === 0 ? (
+                            <tr>
+                              <td colSpan={4} className="px-4 py-6 text-center text-sm text-gray-500">
+                                Nhập dữ liệu ở khung bên trái để xem preview.
+                              </td>
+                            </tr>
+                          ) : (
+                            livePreviewVocabularies.map((vocab, idx) => (
+                              <tr key={`${vocab.word}-${idx}`} className="hover:bg-gray-50 transition-colors">
+                                <td className="px-4 py-3 text-sm font-medium text-gray-900">{idx + 1}</td>
+                                <td className="px-4 py-3 text-sm font-semibold text-gray-900">{vocab.word}</td>
+                                <td className="px-4 py-3 text-sm text-gray-800">{vocab.meaning}</td>
+                                <td className="px-4 py-3 text-sm text-gray-700 italic">{vocab.example_sentence}</td>
+                              </tr>
+                            ))
+                          )}
+                        </tbody>
+                      </table>
                     </div>
                   </div>
-                )}
+                </div>
               </div>
             )}
 
@@ -416,6 +501,18 @@ colleague:đồng nghiệp:I discussed the project with my colleague.`}
                       className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-600 focus:border-blue-600 bg-black text-white"
                     />
                   </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-800 mb-2">Chế độ hiển thị</label>
+                    <select
+                      value={testInfo.visibility}
+                      onChange={(e) => handleTestInfoChange('visibility', e.target.value)}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-600 focus:border-blue-600 bg-black text-white"
+                    >
+                      <option value="public">🌍 Công khai - Mọi người có thể xem</option>
+                      <option value="private">🔒 Riêng tư - Chỉ mình tôi</option>
+                    </select>
+                  </div>
                 </div>
 
                 <div>
@@ -471,6 +568,12 @@ colleague:đồng nghiệp:I discussed the project with my colleague.`}
                       <p className="text-xs font-medium text-gray-600 uppercase">Số từ vựng</p>
                       <p className="text-sm font-semibold text-gray-900 mt-1">{parsedVocabularies.length} từ</p>
                     </div>
+                    <div className="bg-white rounded-lg p-3 border border-gray-200">
+                      <p className="text-xs font-medium text-gray-600 uppercase">Chế độ hiển thị</p>
+                      <p className="text-sm font-semibold text-gray-900 mt-1">
+                        {testInfo.visibility === 'public' ? '🌍 Công khai' : '🔒 Riêng tư'}
+                      </p>
+                    </div>
                     {testInfo.description && (
                       <div className="bg-white rounded-lg p-3 border border-gray-200 md:col-span-2 lg:col-span-1">
                         <p className="text-xs font-medium text-gray-600 uppercase">Mô tả</p>
@@ -485,7 +588,7 @@ colleague:đồng nghiệp:I discussed the project with my colleague.`}
                   <div className="px-6 py-4 bg-gray-800">
                     <h3 className="text-lg font-semibold text-white flex items-center">
                       <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.746 0 3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.746 0 3.332.477 4.5 1.253" />
                       </svg>
                       Danh sách từ vựng ({parsedVocabularies.length} từ)
                     </h3>

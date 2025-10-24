@@ -20,6 +20,14 @@ import VocabularyTestList from '../pages/VocabularyTestList';
 import VocabularyTestSettings from '../pages/VocabularyTestSettings';
 import VocabularyTestTake from '../pages/VocabularyTestTake';
 import VocabularyTestReview from '../pages/VocabularyTestReview';
+import VocabularyTestResult from '../pages/VocabularyTestResult';
+import MyTestResults from '../pages/MyTestResults';
+import AdminDashboard from '../pages/AdminDashboard';
+import AdminTests from '../pages/AdminTests';
+import AdminUsers from '../pages/AdminUsers';
+import AdminTestResults from '../pages/AdminTestResults';
+import AdminVocabularies from '../pages/AdminVocabularies';
+import AdminMultipleChoices from '../pages/AdminMultipleChoices';
 
 
 const AppRoutes = () => {
@@ -60,6 +68,38 @@ const AppRoutes = () => {
         </ProtectedRoute>
       } />
       
+      {/* Admin Routes */}
+      <Route path="/admin" element={
+        <ProtectedRoute requireAdmin={true}>
+          <AdminDashboard />
+        </ProtectedRoute>
+      } />
+      <Route path="/admin/tests" element={
+        <ProtectedRoute requireAdmin={true}>
+          <AdminTests />
+        </ProtectedRoute>
+      } />
+      <Route path="/admin/users" element={
+        <ProtectedRoute requireAdmin={true}>
+          <AdminUsers />
+        </ProtectedRoute>
+      } />
+      <Route path="/admin/test-results" element={
+        <ProtectedRoute requireAdmin={true}>
+          <AdminTestResults />
+        </ProtectedRoute>
+      } />
+      <Route path="/admin/vocabularies" element={
+        <ProtectedRoute requireAdmin={true}>
+          <AdminVocabularies />
+        </ProtectedRoute>
+      } />
+      <Route path="/admin/multiple-choices" element={
+        <ProtectedRoute requireAdmin={true}>
+          <AdminMultipleChoices />
+        </ProtectedRoute>
+      } />
+      
       {/* Multiple Choice Routes */}
       <Route path="/multiple-choice/topics" element={<MultipleChoiceListTopic />} />
       <Route path="/multiple-choice/tests/:mainTopic/:subTopic" element={<MultipleChoiceTestList />} />
@@ -80,6 +120,7 @@ const AppRoutes = () => {
       } />
       
       {/* Vocabulary Routes */}
+      <Route path="/vocabulary" element={<VocabularyListTopic />} />
       <Route path="/vocabulary/topics" element={<VocabularyListTopic />} />
       <Route path="/vocabulary/tests/:mainTopic/:subTopic" element={<VocabularyTestList />} />
       <Route path="/vocabulary/test/:testId/settings" element={
@@ -92,9 +133,19 @@ const AppRoutes = () => {
           <VocabularyTestTake />
         </ProtectedRoute>
       } />
-      <Route path="/vocabulary/test/:testId/review" element={
+      <Route path="/vocabulary/test/:testId/result" element={
+        <ProtectedRoute>
+          <VocabularyTestResult />
+        </ProtectedRoute>
+      } />
+      <Route path="/vocabulary/test-result/:resultId/review" element={
         <ProtectedRoute>
           <VocabularyTestReview />
+        </ProtectedRoute>
+      } />
+      <Route path="/vocabulary/my-results" element={
+        <ProtectedRoute>
+          <MyTestResults />
         </ProtectedRoute>
       } />
       
