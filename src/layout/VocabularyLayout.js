@@ -2,6 +2,8 @@ import React from 'react';
 import Breadcrumb from '../components/Breadcrumb';
 import Footer from '../components/Footer';
 import Header from '../components/Header';
+import CreateVocabularyTestButton from '../components/CreateVocabularyTestButton';
+import CreateVocabularyWithAIButton from '../components/CreateVocabularyWithAIButton';
 
 const VocabularyLayout = ({
   children,
@@ -50,9 +52,11 @@ const VocabularyLayout = ({
                     )}
                   </div>
                 </div>
-                {actions && (
-                  <div className="flex items-center gap-2 flex-shrink-0">{actions}</div>
-                )}
+                <div className="flex items-center gap-3 flex-shrink-0">
+                  {actions}
+                  <CreateVocabularyWithAIButton />
+                  <CreateVocabularyTestButton />
+                </div>
               </div>
             </div>
           )}

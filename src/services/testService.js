@@ -5,6 +5,15 @@
 // Base URL: kiểm tra route prefix backend của bạn (nếu dùng /api thì giữ nguyên)
 const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:8000/api';
 
+// Helper function to get auth headers
+const getAuthHeaders = () => {
+    const token = localStorage.getItem('token');
+    return {
+        'Content-Type': 'application/json',
+        ...(token && { 'Authorization': `Bearer ${token}` })
+    };
+};
+
 const TestService = {
     // =========================
     // 🟢 Create a new test
@@ -13,10 +22,7 @@ const TestService = {
         try {
             const response = await fetch(`${API_BASE_URL}/tests`, {
                 method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    // 'Authorization': `Bearer ${localStorage.getItem('token')}` // nếu có login
-                },
+                headers: getAuthHeaders(),
                 body: JSON.stringify(testData),
             });
             if (!response.ok) {
@@ -163,10 +169,7 @@ const TestService = {
         try {
             const response = await fetch(`${API_BASE_URL}/tests/${id}`, {
                 method: 'PUT',
-                headers: {
-                    'Content-Type': 'application/json',
-                    // 'Authorization': `Bearer ${localStorage.getItem('token')}`
-                },
+                headers: getAuthHeaders(),
                 body: JSON.stringify(updateData),
             });
             if (!response.ok) {
@@ -187,7 +190,7 @@ const TestService = {
         try {
             const response = await fetch(`${API_BASE_URL}/tests/${id}`, {
                 method: 'DELETE',
-                // headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` },
+                headers: getAuthHeaders(),
             });
             if (!response.ok) {
                 const errText = await response.text();

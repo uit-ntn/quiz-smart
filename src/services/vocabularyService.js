@@ -1,5 +1,14 @@
 const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:8000/api';
 
+// Helper function to get auth headers
+const getAuthHeaders = () => {
+    const token = localStorage.getItem('token');
+    return {
+        'Content-Type': 'application/json',
+        ...(token && { 'Authorization': `Bearer ${token}` })
+    };
+};
+
 /**
  * Lấy tất cả vocabularies (không có topic, chỉ filter theo test_id, difficulty, status nếu cần)
  */
@@ -81,7 +90,7 @@ async function createVocabulary(vocabularyData) {
   try {
     const response = await fetch(`${API_BASE_URL}/vocabularies`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: getAuthHeaders(),
       body: JSON.stringify(vocabularyData),
     });
 
@@ -104,7 +113,7 @@ async function updateVocabulary(id, vocabularyData) {
   try {
     const response = await fetch(`${API_BASE_URL}/vocabularies/${id}`, {
       method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
+      headers: getAuthHeaders(),
       body: JSON.stringify(vocabularyData),
     });
 
@@ -127,6 +136,7 @@ async function deleteVocabulary(id) {
   try {
     const response = await fetch(`${API_BASE_URL}/vocabularies/${id}`, {
       method: 'DELETE',
+      headers: getAuthHeaders(),
     });
 
     if (!response.ok) {
@@ -275,12 +285,36 @@ const VocabularyService = {
   updateVocabulary,
   deleteVocabulary,
   getAllVocabulariesByTestId,
-  getRandomVocabularies,
+  searchVocabularies,
   getAllVocabularyMainTopics,
   getVocabularySubTopicsByMainTopic,
   getVocabularyTestsByTopics,
   getVocabularyTestById,
+  generateVocabulary,
 };
+
+/**
+ * Generate vocabulary using AI (Gemini)
+ */
+async function generateVocabulary(generationData) {
+  try {
+    const response = await fetch(`${API_BASE_URL}/vocabularies/generate`, {
+      method: 'POST',
+      headers: getAuthHeaders(),
+      body: JSON.stringify(generationData),
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(errorData.message || `HTTP error! status: ${response.status}`);
+    }
+
+    return await response.json();
+  } catch (error) {
+    console.error('Error generating vocabulary:', error);
+    throw error;
+  }
+}
 
 export default VocabularyService;
 

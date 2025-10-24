@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import MainLayout from "../layout/MainLayout";
 
+
 /* Utils */
 const formatK = (n) => (n >= 1000 ? `${(n / 1000).toFixed(n % 1000 === 0 ? 0 : 1)}k` : `${n}`);
 
@@ -182,23 +183,6 @@ const HomePage = () => {
                       </GlowCard>
                     </>
                   )}
-                </div>
-              </div>
-
-              {/* hero art */}
-              <div className="relative">
-                <div className="relative aspect-[4/3] rounded-[28px] bg-white border border-slate-200 shadow-md overflow-hidden">
-                  <div className="absolute inset-0 bg-gradient-to-tr from-indigo-100 via-transparent to-blue-100" />
-                  <div className="absolute inset-0 bg-grid-pattern opacity-[0.04]" />
-                  <div className="absolute top-6 left-6 right-6 grid grid-cols-3 gap-3">
-                    {[...Array(6)].map((_, i) => (
-                      <div
-                        key={i}
-                        className="h-24 rounded-xl bg-white border border-slate-200 shadow-sm"
-                        style={{ animation: `float ${5 + i}s ease-in-out ${i * 0.2}s infinite alternate` }}
-                      />
-                    ))}
-                  </div>
                 </div>
               </div>
             </div>

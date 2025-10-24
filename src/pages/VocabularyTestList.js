@@ -8,6 +8,7 @@ import EmptyState from '../components/EmptyState';
 import FilterSidebar from '../components/FilterSidebar';
 import Pagination from '../components/Pagination';
 import VocabularyLayout from '../layout/VocabularyLayout';
+import VocabularyPreviewModal from '../components/VocabularyPreviewModal';
 
 const VocabularyTestList = () => {
   const { mainTopic, subTopic } = useParams();
@@ -32,6 +33,15 @@ const VocabularyTestList = () => {
 
   // View mode state
   const [viewMode, setViewMode] = useState('card'); // 'card' or 'list'
+
+  // Vocabulary preview modal state
+  const [previewModal, setPreviewModal] = useState({
+    isOpen: false,
+    test: null,
+    vocabularies: [],
+    loading: false,
+    isPlaying: false
+  });
 
   useEffect(() => {
     fetchTests();
@@ -146,6 +156,57 @@ const VocabularyTestList = () => {
   const handleItemsPerPageChange = (newItemsPerPage) => {
     setItemsPerPage(newItemsPerPage);
     setCurrentPage(1);
+  };
+
+  // Vocabulary preview handlers
+  const handlePreviewVocabulary = async (test) => {
+    const testId = test._id || test.id || test.test_id;
+    setPreviewModal(prev => ({ ...prev, isOpen: true, test, loading: true }));
+
+    try {
+      const vocabularies = await vocabularyService.getAllVocabulariesByTestId(testId);
+      setPreviewModal(prev => ({ 
+        ...prev, 
+        vocabularies: vocabularies || [], 
+        loading: false 
+      }));
+    } catch (error) {
+      console.error('Error fetching vocabularies:', error);
+      setPreviewModal(prev => ({ 
+        ...prev, 
+        vocabularies: [], 
+        loading: false 
+      }));
+    }
+  };
+
+  const handleClosePreviewModal = () => {
+    setPreviewModal({
+      isOpen: false,
+      test: null,
+      vocabularies: [],
+      loading: false,
+      isPlaying: false
+    });
+  };
+
+  const handlePlayAudio = (text, isExample = false) => {
+    if (previewModal.isPlaying) return;
+
+    setPreviewModal(prev => ({ ...prev, isPlaying: true }));
+    const utterance = new SpeechSynthesisUtterance(text);
+    utterance.lang = 'en-US';
+    utterance.rate = 0.9;
+
+    utterance.onend = () => setPreviewModal(prev => ({ ...prev, isPlaying: false }));
+    utterance.onerror = () => setPreviewModal(prev => ({ ...prev, isPlaying: false }));
+
+    window.speechSynthesis.speak(utterance);
+  };
+
+  const handleStartTestFromPreview = () => {
+    const testId = previewModal.test._id || previewModal.test.id || previewModal.test.test_id;
+    window.location.href = `/vocabulary/test/${testId}/settings`;
   };
 
   // Stats calculations
@@ -340,7 +401,12 @@ const VocabularyTestList = () => {
           }>
             {currentTests.map((test) => (
               <div key={test._id || test.id || test.test_id} className="h-full transform hover:scale-105 transition-all duration-200">
-                <VocabularyTestCard test={test} viewMode={viewMode} className="h-full" />
+                <VocabularyTestCard 
+                  test={test} 
+                  viewMode={viewMode} 
+                  className="h-full"
+                  onPreviewVocabulary={handlePreviewVocabulary}
+                />
               </div>
             ))}
           </div>
@@ -371,6 +437,18 @@ const VocabularyTestList = () => {
           </div>
         </>
       )}
+
+      {/* Vocabulary Preview Modal */}
+      <VocabularyPreviewModal
+        isOpen={previewModal.isOpen}
+        onClose={handleClosePreviewModal}
+        items={previewModal.vocabularies}
+        isPlaying={previewModal.isPlaying}
+        onPlayAudio={handlePlayAudio}
+        onStartTest={handleStartTestFromPreview}
+        testTitle={previewModal.test?.test_title}
+        loading={previewModal.loading}
+      />
     </VocabularyLayout>
   );
 };

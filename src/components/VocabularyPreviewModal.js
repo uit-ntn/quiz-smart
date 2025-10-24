@@ -7,7 +7,8 @@ const VocabularyPreviewModal = ({
   isPlaying, 
   onPlayAudio, 
   onStartTest,
-  testTitle 
+  testTitle,
+  loading = false 
 }) => {
   if (!isOpen) return null;
 
@@ -20,6 +21,12 @@ const VocabularyPreviewModal = ({
         </div>
         
         <div className="overflow-y-auto flex-1">
+          {loading ? (
+            <div className="flex items-center justify-center h-64">
+              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+              <span className="ml-4 text-gray-600">Đang tải từ vựng...</span>
+            </div>
+          ) : (
           <div className="overflow-x-auto">
             <table className="w-full">
               <thead className="bg-gray-50 sticky top-0">
@@ -90,6 +97,7 @@ const VocabularyPreviewModal = ({
               </tbody>
             </table>
           </div>
+          )}
         </div>
         
         <div className="p-6 border-t border-gray-200 flex justify-between items-center bg-gray-50 flex-shrink-0">
