@@ -169,12 +169,19 @@ const CreateVocabularyWithAIModal = ({ show, onClose }) => {
     setCurrentStep('creating');
     
     try {
+      // Ensure visibility is a canonical string 'public' or 'private'
+      const visibilityValue = testInfo.visibility === 'public' ? 'public' : 'private';
+
       const testData = {
         ...testInfo,
+        visibility: visibilityValue,
         test_type: 'vocabulary',
         total_questions: generatedVocabularies.length,
         status: 'active',
       };
+
+      // Debug log to inspect outgoing payload when creating a test
+      console.debug('CreateVocabularyWithAIModal - creating test payload:', testData);
 
       const createdTest = await testService.createTest(testData);
 

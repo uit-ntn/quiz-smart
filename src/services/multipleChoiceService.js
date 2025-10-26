@@ -1,15 +1,31 @@
 // Base API URL (ensure your backend route prefix matches)
 const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:8000/api';
 
+// Helper to include auth header when available
+const getAuthHeaders = () => {
+    const token = localStorage.getItem('token');
+    return {
+        'Content-Type': 'application/json',
+        ...(token && { Authorization: `Bearer ${token}` }),
+    };
+};
+
 const MultipleChoiceService = {
     // =========================
     // 📘 Get all multiple choice questions
     // =========================
-    getAllMultipleChoices: async () => {
+    getAllMultipleChoices: async (filters = {}) => {
         try {
-            const response = await fetch(`${API_BASE_URL}/multiple-choices`);
-            if (!response.ok) throw new Error('Failed to fetch questions');
-            return await response.json();
+            const qs = new URLSearchParams(filters).toString();
+            const url = qs ? `${API_BASE_URL}/multiple-choices?${qs}` : `${API_BASE_URL}/multiple-choices`;
+            const response = await fetch(url, { method: 'GET', headers: getAuthHeaders() });
+            if (!response.ok) {
+                const txt = await response.text().catch(() => '');
+                throw new Error(`Failed to fetch questions: ${response.status} ${txt}`);
+            }
+            const data = await response.json().catch(() => ({}));
+            // Controller returns { message, count, questions }
+            return data.questions || data;
         } catch (error) {
             console.error('Error fetching questions:', error);
             throw error;
@@ -22,9 +38,13 @@ const MultipleChoiceService = {
     // =========================
     getQuestionsByTestId: async (testId) => {
         try {
-            const response = await fetch(`${API_BASE_URL}/multiple-choices/test/${testId}`);
-            if (!response.ok) throw new Error('Failed to fetch questions by test ID');
-            return await response.json();
+            const response = await fetch(`${API_BASE_URL}/multiple-choices/test/${testId}`, { method: 'GET', headers: getAuthHeaders() });
+            if (!response.ok) {
+                const txt = await response.text().catch(() => '');
+                throw new Error(`Failed to fetch questions by test ID: ${response.status} ${txt}`);
+            }
+            const data = await response.json().catch(() => ({}));
+            return data.questions || data;
         } catch (error) {
             console.error('Error fetching by test ID:', error);
 
@@ -33,9 +53,9 @@ const MultipleChoiceService = {
                 const all = await MultipleChoiceService.getAllMultipleChoices();
                 if (!Array.isArray(all)) return [];
                 return all.filter(q =>
-                    q.test_id === testId ||
-                    q.testId === testId ||
-                    (q.test && (q.test.id === testId || q.test._id === testId))
+                    String(q.test_id) === String(testId) ||
+                    String(q.testId) === String(testId) ||
+                    (q.test && (String(q.test.id) === String(testId) || String(q.test._id) === String(testId)))
                 );
             } catch {
                 return [];
@@ -48,9 +68,13 @@ const MultipleChoiceService = {
     // =========================
     getQuestionById: async (questionId) => {
         try {
-            const response = await fetch(`${API_BASE_URL}/multiple-choices/${questionId}`);
-            if (!response.ok) throw new Error('Failed to fetch question');
-            return await response.json();
+            const response = await fetch(`${API_BASE_URL}/multiple-choices/${questionId}`, { method: 'GET', headers: getAuthHeaders() });
+            if (!response.ok) {
+                const txt = await response.text().catch(() => '');
+                throw new Error(`Failed to fetch question: ${response.status} ${txt}`);
+            }
+            const data = await response.json().catch(() => ({}));
+            return data.question || data;
         } catch (error) {
             console.error('Error fetching question:', error);
             throw error;
@@ -64,17 +88,15 @@ const MultipleChoiceService = {
         try {
             const response = await fetch(`${API_BASE_URL}/multiple-choices`, {
                 method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    // 'Authorization': `Bearer ${localStorage.getItem('token')}` // uncomment if using JWT
-                },
+                headers: getAuthHeaders(),
                 body: JSON.stringify(questionData),
             });
             if (!response.ok) {
-                const errText = await response.text();
-                throw new Error(`Failed to create question: ${errText}`);
+                const errText = await response.text().catch(() => '');
+                throw new Error(`Failed to create question: ${response.status} ${errText}`);
             }
-            return await response.json();
+            const data = await response.json().catch(() => ({}));
+            return data.question || data;
         } catch (error) {
             console.error('Error creating question:', error);
             throw error;
@@ -88,17 +110,15 @@ const MultipleChoiceService = {
         try {
             const response = await fetch(`${API_BASE_URL}/multiple-choices/${id}`, {
                 method: 'PUT', // backend uses PUT
-                headers: {
-                    'Content-Type': 'application/json',
-                    // 'Authorization': `Bearer ${localStorage.getItem('token')}`
-                },
+                headers: getAuthHeaders(),
                 body: JSON.stringify(updateData),
             });
             if (!response.ok) {
-                const errText = await response.text();
-                throw new Error(`Failed to update question: ${errText}`);
+                const errText = await response.text().catch(() => '');
+                throw new Error(`Failed to update question: ${response.status} ${errText}`);
             }
-            return await response.json();
+            const data = await response.json().catch(() => ({}));
+            return data.question || data;
         } catch (error) {
             console.error('Error updating question:', error);
             throw error;
@@ -112,19 +132,16 @@ const MultipleChoiceService = {
         try {
             const response = await fetch(`${API_BASE_URL}/multiple-choices/${id}`, {
                 method: 'DELETE',
-                // headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` },
+                headers: getAuthHeaders(),
             });
             if (!response.ok) {
-                const errText = await response.text();
-                throw new Error(`Failed to delete question: ${errText}`);
+                const errText = await response.text().catch(() => '');
+                throw new Error(`Failed to delete question: ${response.status} ${errText}`);
             }
 
-            // Handle empty or non-JSON responses safely
-            try {
-                return await response.json();
-            } catch {
-                return { success: true };
-            }
+            // Safe parse
+            const data = await response.json().catch(() => ({}));
+            return data.question || data || { success: true };
         } catch (error) {
             console.error('Error deleting question:', error);
             throw error;

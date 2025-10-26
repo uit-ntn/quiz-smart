@@ -14,17 +14,36 @@ const getAuthHeaders = () => {
  */
 async function getAllVocabularies(filters = {}) {
   try {
+    console.log('Calling API:', `${API_BASE_URL}/vocabularies`);
     const response = await fetch(`${API_BASE_URL}/vocabularies`, {
       method: 'GET',
       headers: { 'Content-Type': 'application/json' },
     });
 
-    if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error('API Error Response:', errorText);
+      throw new Error(`HTTP error! status: ${response.status} - ${errorText}`);
+    }
 
-    const all = await response.json();
+    const data = await response.json();
+    console.log('getAllVocabularies response:', data);
+    
+    // Handle different response formats
+    let allVocabularies = [];
+    if (data.vocabularies && Array.isArray(data.vocabularies)) {
+      allVocabularies = data.vocabularies;
+    } else if (Array.isArray(data)) {
+      allVocabularies = data;
+    } else if (data.success && data.vocabularies) {
+      allVocabularies = data.vocabularies;
+    } else {
+      console.warn('Unexpected response format:', data);
+      return [];
+    }
 
     // Áp dụng filter phía FE (vì BE trả về toàn bộ)
-    let result = all;
+    let result = allVocabularies;
     if (filters.difficulty) {
       result = result.filter((v) => v.difficulty === filters.difficulty);
     }
@@ -54,7 +73,10 @@ async function getVocabularyById(id) {
 
     if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
 
-    return await response.json();
+    const data = await response.json();
+    
+    // Backend now returns { success: true, vocabulary: {...} }
+    return data.vocabulary || data;
   } catch (error) {
     console.error('Error fetching vocabulary:', error);
     throw error;
@@ -76,7 +98,10 @@ async function searchVocabularies(searchTerm) {
 
     if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
 
-    return await response.json();
+    const data = await response.json();
+    
+    // Backend now returns { success: true, vocabularies: [...] }
+    return data.vocabularies || data;
   } catch (error) {
     console.error('Error searching vocabularies:', error);
     throw error;
@@ -99,7 +124,10 @@ async function createVocabulary(vocabularyData) {
       throw new Error(errorData.message || `HTTP error! status: ${response.status}`);
     }
 
-    return await response.json();
+    const data = await response.json();
+    
+    // Backend now returns { success: true, vocabulary: {...} }
+    return data.vocabulary || data;
   } catch (error) {
     console.error('Error creating vocabulary:', error);
     throw error;
@@ -122,7 +150,10 @@ async function updateVocabulary(id, vocabularyData) {
       throw new Error(errorData.message || `HTTP error! status: ${response.status}`);
     }
 
-    return await response.json();
+    const data = await response.json();
+    
+    // Backend now returns { success: true, vocabulary: {...} }
+    return data.vocabulary || data;
   } catch (error) {
     console.error('Error updating vocabulary:', error);
     throw error;
@@ -144,7 +175,10 @@ async function deleteVocabulary(id) {
       throw new Error(errorData.message || `HTTP error! status: ${response.status}`);
     }
 
-    return await response.json();
+    const data = await response.json();
+    
+    // Backend now returns { success: true, message: '...', vocabulary: {...} }
+    return data.vocabulary || data;
   } catch (error) {
     console.error('Error deleting vocabulary:', error);
     throw error;
@@ -156,14 +190,34 @@ async function deleteVocabulary(id) {
  */
 async function getAllVocabulariesByTestId(testId) {
   try {
-    const response = await fetch(`${API_BASE_URL}/vocabularies/test/${testId}`, {
+    const url = `${API_BASE_URL}/vocabularies/test/${testId}`;
+    console.log('Calling API:', url);
+    
+    const response = await fetch(url, {
       method: 'GET',
       headers: { 'Content-Type': 'application/json' },
     });
 
-    if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error('API Error Response:', errorText);
+      throw new Error(`HTTP error! status: ${response.status} - ${errorText}`);
+    }
 
-    return await response.json();
+    const data = await response.json();
+    console.log('getAllVocabulariesByTestId response:', data);
+    
+    // Handle different response formats
+    if (data.vocabularies && Array.isArray(data.vocabularies)) {
+      return data.vocabularies;
+    } else if (Array.isArray(data)) {
+      return data;
+    } else if (data.success && data.vocabularies) {
+      return data.vocabularies;
+    } else {
+      console.warn('Unexpected response format:', data);
+      return [];
+    }
   } catch (error) {
     console.error('Error fetching vocabularies by test id:', error);
     throw error;
@@ -192,15 +246,32 @@ async function getRandomVocabularies(count = 10, filters = {}) {
  */
 async function getAllVocabularyMainTopics() {
   try {
+    console.log('Calling API:', `${API_BASE_URL}/tests/vocabularies/main-topics`);
     const response = await fetch(`${API_BASE_URL}/tests/vocabularies/main-topics`, {
       method: 'GET',
       headers: { 'Content-Type': 'application/json' },
     });
 
-    if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error('API Error Response:', errorText);
+      throw new Error(`HTTP error! status: ${response.status} - ${errorText}`);
+    }
 
-    const mainTopics = await response.json();
-    return mainTopics || [];
+    const data = await response.json();
+    console.log('getAllVocabularyMainTopics response:', data);
+    
+    // Handle different response formats
+    if (data.mainTopics && Array.isArray(data.mainTopics)) {
+      return data.mainTopics;
+    } else if (Array.isArray(data)) {
+      return data;
+    } else if (data.success && data.mainTopics) {
+      return data.mainTopics;
+    } else {
+      console.warn('Unexpected response format:', data);
+      return [];
+    }
   } catch (error) {
     console.error('Error fetching vocabulary main topics:', error);
     throw error;
@@ -212,15 +283,34 @@ async function getAllVocabularyMainTopics() {
  */
 async function getVocabularySubTopicsByMainTopic(mainTopic) {
   try {
-    const response = await fetch(`${API_BASE_URL}/tests/vocabularies/sub-topics/${encodeURIComponent(mainTopic)}`, {
+    const url = `${API_BASE_URL}/tests/vocabularies/sub-topics/${encodeURIComponent(mainTopic)}`;
+    console.log('Calling API:', url);
+    
+    const response = await fetch(url, {
       method: 'GET',
       headers: { 'Content-Type': 'application/json' },
     });
 
-    if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error('API Error Response:', errorText);
+      throw new Error(`HTTP error! status: ${response.status} - ${errorText}`);
+    }
 
-    const subTopics = await response.json();
-    return subTopics || [];
+    const data = await response.json();
+    console.log('getVocabularySubTopicsByMainTopic response:', data);
+    
+    // Handle different response formats
+    if (data.subTopics && Array.isArray(data.subTopics)) {
+      return data.subTopics;
+    } else if (Array.isArray(data)) {
+      return data;
+    } else if (data.success && data.subTopics) {
+      return data.subTopics;
+    } else {
+      console.warn('Unexpected response format:', data);
+      return [];
+    }
   } catch (error) {
     console.error('Error fetching vocabulary sub topics:', error);
     throw error;
@@ -232,17 +322,41 @@ async function getVocabularySubTopicsByMainTopic(mainTopic) {
  */
 async function getVocabularyTestsByTopics(mainTopic, subTopic) {
   try {
-    const response = await fetch(`${API_BASE_URL}/tests/topic/${encodeURIComponent(mainTopic)}/${encodeURIComponent(subTopic)}`, {
+    console.log('Fetching vocabulary tests for:', { mainTopic, subTopic });
+    
+    const url = `${API_BASE_URL}/tests/topic/${encodeURIComponent(mainTopic)}/${encodeURIComponent(subTopic)}`;
+    console.log('API URL:', url);
+    
+    const response = await fetch(url, {
       method: 'GET',
       headers: { 'Content-Type': 'application/json' },
     });
 
-    if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error('API Error Response:', errorText);
+      throw new Error(`HTTP error! status: ${response.status} - ${errorText}`);
+    }
 
-    const allTests = await response.json();
+    const data = await response.json();
+    console.log('API Response Data:', data);
+    
+    // Handle different response formats
+    let allTests = [];
+    if (data.tests) {
+      allTests = data.tests;
+    } else if (Array.isArray(data)) {
+      allTests = data;
+    } else if (data.success && Array.isArray(data.tests)) {
+      allTests = data.tests;
+    } else {
+      console.warn('Unexpected response format:', data);
+      return [];
+    }
     
     // Lọc chỉ lấy tests có test_type là 'vocabulary'
     const vocabularyTests = allTests.filter(test => test.test_type === 'vocabulary');
+    console.log('Filtered vocabulary tests:', vocabularyTests);
     
     return vocabularyTests || [];
   } catch (error) {
@@ -277,22 +391,6 @@ async function getVocabularyTestById(testId) {
   }
 }
 
-const VocabularyService = {
-  getAllVocabularies,
-  getVocabularyById,
-  searchVocabularies,
-  createVocabulary,
-  updateVocabulary,
-  deleteVocabulary,
-  getAllVocabulariesByTestId,
-  searchVocabularies,
-  getAllVocabularyMainTopics,
-  getVocabularySubTopicsByMainTopic,
-  getVocabularyTestsByTopics,
-  getVocabularyTestById,
-  generateVocabulary,
-};
-
 /**
  * Generate vocabulary using AI (Gemini)
  */
@@ -315,6 +413,22 @@ async function generateVocabulary(generationData) {
     throw error;
   }
 }
+
+const VocabularyService = {
+  getAllVocabularies,
+  getVocabularyById,
+  searchVocabularies,
+  createVocabulary,
+  updateVocabulary,
+  deleteVocabulary,
+  getAllVocabulariesByTestId,
+  getRandomVocabularies,
+  getAllVocabularyMainTopics,
+  getVocabularySubTopicsByMainTopic,
+  getVocabularyTestsByTopics,
+  getVocabularyTestById,
+  generateVocabulary,
+};
 
 export default VocabularyService;
 

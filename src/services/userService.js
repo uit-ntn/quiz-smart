@@ -18,35 +18,71 @@ const handleResponse = async (response) => {
       localStorage.removeItem('user');
       window.location.href = '/login';
     }
-    const error = await response.json().catch(() => ({ message: 'Network error' }));
-    throw new Error(error.message || `HTTP error! status: ${response.status}`);
+    const errorText = await response.text();
+    let errorMessage;
+    try {
+      const errorData = JSON.parse(errorText);
+      errorMessage = errorData.message || errorText;
+    } catch {
+      errorMessage = errorText || 'Network error';
+    }
+    console.error('API Error Response:', errorText);
+    throw new Error(errorMessage);
   }
-  return response.json();
+  
+  const text = await response.text();
+  if (!text) return {};
+  
+  try {
+    return JSON.parse(text);
+  } catch {
+    return { data: text };
+  }
 };
 
 const userService = {
-  // Get all users
-  getAllUsers: async () => {
+  // Get all users (admin only)
+  getAllUsers: async (filters = {}) => {
     try {
-      const response = await fetch(`${API_BASE_URL}/users`, {
+      const queryParams = new URLSearchParams(filters).toString();
+      const url = queryParams ? `${API_BASE_URL}/users?${queryParams}` : `${API_BASE_URL}/users`;
+      
+      console.log('Calling API:', url);
+      const response = await fetch(url, {
         method: 'GET',
         headers: getAuthHeaders()
       });
-      return await handleResponse(response);
+      const data = await handleResponse(response);
+      console.log('getAllUsers response:', data);
+      
+      // Handle different response formats
+      if (data.users && Array.isArray(data.users)) {
+        return data.users;
+      } else if (Array.isArray(data)) {
+        return data;
+      } else if (data.success && data.users) {
+        return data.users;
+      } else {
+        console.warn('Unexpected response format:', data);
+        return [];
+      }
     } catch (error) {
       console.error('Error fetching all users:', error);
       throw error;
     }
   },
 
-  // Get user by ID
+  // Get user by ID (admin only)
   getUserById: async (id) => {
     try {
       const response = await fetch(`${API_BASE_URL}/users/${id}`, {
         method: 'GET',
         headers: getAuthHeaders()
       });
-      return await handleResponse(response);
+      const data = await handleResponse(response);
+      
+      // Backend returns user object directly or { user: {...} }
+      return data.user || data;
     } catch (error) {
       console.error('Error fetching user:', error);
       throw error;
@@ -60,14 +96,17 @@ const userService = {
         method: 'GET',
         headers: getAuthHeaders()
       });
-      return await handleResponse(response);
+      const data = await handleResponse(response);
+      
+      // Backend returns user object directly or { user: {...} }
+      return data.user || data;
     } catch (error) {
       console.error('Error fetching profile:', error);
       throw error;
     }
   },
 
-  // Update user profile
+  // Update current user profile
   updateProfile: async (updateData) => {
     try {
       const response = await fetch(`${API_BASE_URL}/users/profile`, {
@@ -75,7 +114,10 @@ const userService = {
         headers: getAuthHeaders(),
         body: JSON.stringify(updateData)
       });
-      return await handleResponse(response);
+      const data = await handleResponse(response);
+      
+      // Backend returns updated user object directly or { user: {...} }
+      return data.user || data;
     } catch (error) {
       console.error('Error updating profile:', error);
       throw error;
@@ -90,28 +132,34 @@ const userService = {
         headers: getAuthHeaders(),
         body: JSON.stringify({ oldPassword, newPassword })
       });
-      return await handleResponse(response);
+      const data = await handleResponse(response);
+      
+      // Backend returns { message: '...' }
+      return data;
     } catch (error) {
       console.error('Error updating password:', error);
       throw error;
     }
   },
 
-  // Search users
+  // Search users (admin only)
   searchUsers: async (searchTerm) => {
     try {
       const response = await fetch(`${API_BASE_URL}/users/search?q=${encodeURIComponent(searchTerm)}`, {
         method: 'GET',
         headers: getAuthHeaders()
       });
-      return await handleResponse(response);
+      const data = await handleResponse(response);
+      
+      // Backend returns users array directly or { users: [...] }
+      return data.users || data;
     } catch (error) {
       console.error('Error searching users:', error);
       throw error;
     }
   },
 
-  // Update user (admin)
+  // Update user (admin only)
   updateUser: async (userId, updateData) => {
     try {
       const response = await fetch(`${API_BASE_URL}/users/${userId}`, {
@@ -119,28 +167,34 @@ const userService = {
         headers: getAuthHeaders(),
         body: JSON.stringify(updateData)
       });
-      return await handleResponse(response);
+      const data = await handleResponse(response);
+      
+      // Backend returns updated user object directly or { user: {...} }
+      return data.user || data;
     } catch (error) {
       console.error('Error updating user:', error);
       throw error;
     }
   },
 
-  // Delete user (admin)
+  // Delete user - soft delete (admin only)
   deleteUser: async (userId) => {
     try {
       const response = await fetch(`${API_BASE_URL}/users/${userId}`, {
         method: 'DELETE',
         headers: getAuthHeaders()
       });
-      return await handleResponse(response);
+      const data = await handleResponse(response);
+      
+      // Backend returns { message: 'User deleted successfully' }
+      return data;
     } catch (error) {
       console.error('Error deleting user:', error);
       throw error;
     }
   },
 
-  // Create user (admin)
+  // Create user (admin only)
   createUser: async (userData) => {
     try {
       const response = await fetch(`${API_BASE_URL}/users`, {
@@ -148,7 +202,10 @@ const userService = {
         headers: getAuthHeaders(),
         body: JSON.stringify(userData)
       });
-      return await handleResponse(response);
+      const data = await handleResponse(response);
+      
+      // Backend returns created user object or { user: {...} }
+      return data.user || data;
     } catch (error) {
       console.error('Error creating user:', error);
       throw error;

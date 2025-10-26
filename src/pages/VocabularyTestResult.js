@@ -12,11 +12,11 @@ const VocabularyTestResult = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
   
-  const { answers = [], settings = {}, testInfo = {} } = location.state || {};
+  const { answers = [], settings = {}, testInfo = {}, draftResultId = null } = location.state || {};
   
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
-  const [testResultId, setTestResultId] = useState(null);
+  const [testResultId, setTestResultId] = useState(draftResultId);
   const [isSaved, setIsSaved] = useState(false);
   const [isPlaying, setIsPlaying] = useState(false);
 
@@ -27,11 +27,11 @@ const VocabularyTestResult = () => {
   const wrongAnswers = totalQuestions - correctAnswers;
 
   useEffect(() => {
-    // Auto save as draft when component mounts
-    if (answers.length > 0 && user && !testResultId) {
+    // If we don't have a draft result ID but have answers, create draft
+    if (answers.length > 0 && user && !draftResultId && !testResultId) {
       saveDraftResult();
     }
-  }, [answers, user]);
+  }, [answers, user, draftResultId]);
 
   const saveDraftResult = async () => {
     if (!user) {
@@ -90,17 +90,20 @@ const VocabularyTestResult = () => {
   };
 
   const saveResult = async () => {
-    if (!testResultId) {
+    if (!testResultId && !draftResultId) {
       setError('Không tìm thấy kết quả để lưu.');
       return;
     }
+
+    const resultId = testResultId || draftResultId;
 
     try {
       setLoading(true);
       setError(null);
 
-      await testResultService.updateTestResultStatus(testResultId, 'active');
+      await testResultService.updateTestResultStatus(resultId, 'active');
       setIsSaved(true);
+      setTestResultId(resultId); // Update state
 
       // Update localStorage
       const savedData = JSON.parse(localStorage.getItem(`vocab_result_${testId}`) || '{}');

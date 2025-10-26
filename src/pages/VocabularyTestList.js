@@ -54,12 +54,30 @@ const VocabularyTestList = () => {
   const fetchTests = async () => {
     try {
       setLoading(true);
-      const response = await vocabularyService.getVocabularyTestsByTopics(mainTopic, subTopic);
-      setAllTests(response);
       setError(null);
+      
+      console.log('Fetching tests for:', { mainTopic, subTopic });
+      
+      if (!mainTopic || !subTopic) {
+        throw new Error('Main topic hoặc sub topic không được tìm thấy');
+      }
+      
+      const response = await vocabularyService.getVocabularyTestsByTopics(mainTopic, subTopic);
+      console.log('API Response:', response);
+      
+      if (!response) {
+        throw new Error('Không nhận được dữ liệu từ server');
+      }
+      
+      // Ensure response is an array
+      const testsArray = Array.isArray(response) ? response : [];
+      console.log('Tests array:', testsArray);
+      
+      setAllTests(testsArray);
     } catch (err) {
-      setError('Không thể tải danh sách bài kiểm tra từ vựng. Vui lòng thử lại sau.');
       console.error('Error fetching vocabulary tests:', err);
+      setError(`Không thể tải danh sách bài kiểm tra từ vựng: ${err.message}`);
+      setAllTests([]);
     } finally {
       setLoading(false);
     }

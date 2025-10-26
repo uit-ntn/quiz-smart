@@ -1,359 +1,333 @@
-import React, { useState, useEffect } from "react";
+import React from "react";
 import { Link } from "react-router-dom";
 import MainLayout from "../layout/MainLayout";
 
-
-/* Utils */
-const formatK = (n) => (n >= 1000 ? `${(n / 1000).toFixed(n % 1000 === 0 ? 0 : 1)}k` : `${n}`);
-
-/* Small UI atoms (LIGHT THEME) */
-const SectionTitle = ({ eyebrow, title, desc, center = true }) => (
-  <div className={`${center ? "text-center" : ""} mb-10`}>
-    {eyebrow && (
-      <span className="inline-flex items-center px-3 py-1 rounded-full text-[10px] font-semibold uppercase tracking-wider bg-slate-100 text-slate-700 border border-slate-200">
-        {eyebrow}
-      </span>
-    )}
-    <h2 className={`mt-3 text-3xl md:text-4xl font-extrabold text-slate-900 ${center ? "" : "md:text-left"}`}>
-      {title}
-    </h2>
-    {desc && (
-      <p className={`mt-3 text-slate-600 ${center ? "max-w-2xl mx-auto" : ""}`}>
-        {desc}
-      </p>
-    )}
-  </div>
+/* ---------- tiny atoms ---------- */
+const Eyebrow = ({ children }) => (
+  <span className="inline-flex items-center px-3 py-1 rounded-full text-[10px] font-semibold uppercase tracking-wider bg-slate-100 text-slate-700 border border-slate-200">
+    {children}
+  </span>
 );
 
-const GlowCard = ({ children, className = "" }) => (
-  <div className={`relative group ${className}`}>
-    <div className="absolute -inset-px rounded-2xl bg-gradient-to-br from-indigo-200/40 via-blue-200/20 to-purple-200/40 opacity-0 blur transition-opacity duration-300 group-hover:opacity-100" />
-    <div className="relative rounded-2xl bg-white border border-slate-200 p-6 shadow-sm">
-      {children}
-    </div>
-  </div>
+const Section = ({ children, className = "" }) => (
+  <section className={`py-14 md:py-20 ${className}`}>{children}</section>
 );
 
-const StatCard = ({ label, value, icon }) => (
-  <GlowCard>
-    <div className="flex items-center justify-between">
-      <div>
-        <p className="text-[11px] uppercase tracking-wider text-slate-500">{label}</p>
-        <p className="mt-1 text-3xl font-extrabold text-slate-900">{value}</p>
-      </div>
-      <div className="p-3 rounded-xl bg-slate-50 border border-slate-200 text-indigo-600">{icon}</div>
-    </div>
-  </GlowCard>
+const H2 = ({ children, center = true }) => (
+  <h2
+    className={[
+      "mt-3 text-3xl md:text-4xl font-extrabold text-slate-900",
+      center ? "text-center" : "",
+    ].join(" ")}
+  >
+    {children}
+  </h2>
 );
 
-const FeatureCard = ({ title, desc, icon }) => (
-  <GlowCard>
-    <div className="w-12 h-12 rounded-xl bg-indigo-600 text-white flex items-center justify-center shadow-sm">
+const Sub = ({ children, center = true, className = "" }) => (
+  <p
+    className={[
+      "mt-3 text-slate-600",
+      center ? "max-w-2xl mx-auto text-center" : "",
+      className,
+    ].join(" ")}
+  >
+    {children}
+  </p>
+);
+
+/* ---------- cards ---------- */
+const Pillar = ({ icon, title, desc }) => (
+  <div className="rounded-2xl bg-white border border-slate-200 p-6 shadow-sm hover:shadow-md transition">
+    <div className="w-11 h-11 rounded-xl bg-slate-900 text-white grid place-items-center">
       {icon}
     </div>
     <h4 className="mt-4 text-lg font-semibold text-slate-900">{title}</h4>
-    <p className="mt-2 text-slate-600 leading-relaxed">{desc}</p>
-  </GlowCard>
-);
-
-const HowStep = ({ step, title, desc }) => (
-  <div className="relative pl-10">
-    <div className="absolute left-0 top-0 w-8 h-8 rounded-full bg-indigo-600 text-white text-sm font-bold flex items-center justify-center shadow">
-      {step}
-    </div>
-    <h5 className="text-base font-semibold text-slate-900">{title}</h5>
-    <p className="mt-1 text-slate-600">{desc}</p>
+    <p className="mt-2 text-slate-600">{desc}</p>
   </div>
 );
 
-const Testimonial = ({ quote, name, role }) => (
-  <GlowCard>
-    <p className="text-slate-700">“{quote}”</p>
+const Category = ({ to, title, desc, glyph }) => (
+  <Link
+    to={to}
+    className="group rounded-2xl bg-white border border-slate-200 p-5 shadow-sm hover:shadow-md transition text-left"
+  >
+    <div className="flex items-start gap-4">
+      <div className="w-10 h-10 rounded-lg bg-indigo-600 text-white grid place-items-center shrink-0">
+        {glyph}
+      </div>
+      <div>
+        <h5 className="text-slate-900 font-semibold">{title}</h5>
+        <p className="text-slate-600 text-sm mt-1">{desc}</p>
+        <span className="inline-flex items-center mt-3 text-sm font-medium text-indigo-700">
+          Bắt đầu ngay
+          <svg className="w-4 h-4 ml-1" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+            <path d="M9 5l7 7-7 7" strokeLinecap="round" strokeLinejoin="round" />
+          </svg>
+        </span>
+      </div>
+    </div>
+  </Link>
+);
+
+const Quote = ({ quote, name, role }) => (
+  <div className="rounded-2xl bg-white border border-slate-200 p-6 shadow-sm">
+    <p className="text-slate-800">“{quote}”</p>
     <div className="mt-4">
       <p className="text-sm font-semibold text-slate-900">{name}</p>
       <p className="text-xs text-slate-500">{role}</p>
     </div>
-  </GlowCard>
+  </div>
 );
 
+/* ---------- page ---------- */
 const HomePage = () => {
-  const [stats, setStats] = useState({
-    totalTopics: 0,
-    totalQuestions: 0,
-    totalUsers: 0,
-    completedTests: 0,
-  });
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    fetchStats();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
-  const fetchStats = async () => {
-    try {
-      setLoading(true);
-      const base = process.env.REACT_APP_API_URL || "http://localhost:8000/api";
-      const res = await fetch(`${base}/topics`);
-      if (res.ok) {
-        const data = await res.json();
-        const topics = data?.data || [];
-        setStats({
-          totalTopics: topics.length,
-          totalQuestions: topics.reduce((sum, t) => sum + (t.totalQuestions || 0), 0),
-          totalUsers: 1250,       // mock
-          completedTests: 15420,  // mock
-        });
-      } else {
-        setStats({ totalTopics: 15, totalQuestions: 2500, totalUsers: 1250, completedTests: 15420 });
-      }
-    } catch {
-      setStats({ totalTopics: 15, totalQuestions: 2500, totalUsers: 1250, completedTests: 15420 });
-    } finally {
-      setLoading(false);
-    }
-  };
-
   return (
-    <MainLayout>
-      <div className="min-h-screen bg-white text-slate-900">
-        {/* ================ HERO (LIGHT) ================ */}
-        <section className="relative overflow-hidden">
-          {/* subtle decorations */}
-          <div className="pointer-events-none absolute inset-0">
-            <div className="absolute -top-24 -right-24 w-[26rem] h-[26rem] bg-indigo-200/40 rounded-full blur-3xl" />
-            <div className="absolute -bottom-24 -left-24 w-[28rem] h-[28rem] bg-blue-200/30 rounded-full blur-3xl" />
-            <div className="absolute inset-0 bg-grid-pattern opacity-[0.03]" />
-          </div>
+    <MainLayout maxWidth="7xl">
+      {/* HERO */}
+      <Section className="relative overflow-hidden">
+        <div className="pointer-events-none absolute inset-0">
+          <div className="absolute -top-24 -right-24 w-[26rem] h-[26rem] bg-indigo-200/40 rounded-full blur-3xl" />
+          <div className="absolute -bottom-24 -left-24 w-[28rem] h-[28rem] bg-blue-200/30 rounded-full blur-3xl" />
+          <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,rgba(0,0,0,0.03),transparent_60%)]" />
+        </div>
 
-          <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20">
-            <div className="grid lg:grid-cols-2 gap-14 items-center">
-              <div>
-                <span className="inline-flex items-center text-[11px] font-semibold uppercase tracking-wider text-slate-700 bg-slate-100 border border-slate-200 rounded-full px-3 py-1">
-                  Nền tảng học tập hiện đại
-                </span>
-                <h1 className="mt-5 text-4xl md:text-6xl font-extrabold leading-tight">
-                  Học thông minh cùng{" "}
-                  <span className="bg-gradient-to-r from-indigo-600 to-blue-600 bg-clip-text text-transparent">
-                    QuizSmart
-                  </span>
-                </h1>
-                <p className="mt-5 text-slate-600 text-lg leading-relaxed max-w-2xl">
-                  Luyện thi TOEIC, IELTS, chứng chỉ Cloud/IT và kỹ năng nghề nghiệp với hệ thống bài test
-                  được thiết kế theo lộ trình.
-                </p>
+        <div className="relative grid lg:grid-cols-2 gap-10 items-center">
+          <div>
+            <Eyebrow>Nền tảng ôn luyện thế hệ mới</Eyebrow>
+            <h1 className="mt-4 text-4xl md:text-6xl font-extrabold leading-tight text-slate-900">
+              Luyện tập theo lộ trình,{" "}
+              <span className="bg-gradient-to-r from-indigo-600 to-blue-600 bg-clip-text text-transparent">
+                đo tiến bộ mỗi ngày
+              </span>
+            </h1>
+            <p className="mt-5 text-slate-600 text-lg leading-relaxed max-w-xl">
+              QuizSmart cung cấp kho đề bám sát mục tiêu (TOEIC/IELTS/IT), chấm tự động,
+              giải thích chi tiết và dashboard tiến độ rõ ràng.
+            </p>
 
-                <div className="mt-8 flex flex-col sm:flex-row gap-3">
-                  <Link
-                    to="/multiple-choice/topics"
-                    className="inline-flex items-center justify-center px-6 py-3 rounded-xl text-white font-semibold bg-indigo-600 hover:bg-indigo-700 shadow-sm transition"
-                  >
-                    Trắc nghiệm theo chủ đề
-                  </Link>
-                  <Link
-                    to="/vocabulary"
-                    className="inline-flex items-center justify-center px-6 py-3 rounded-xl text-slate-700 font-semibold bg-white border border-slate-200 hover:bg-slate-50 transition"
-                  >
-                    Luyện từ vựng
-                  </Link>
-                  <Link
-                    to="/grammar"
-                    className="inline-flex items-center justify-center px-6 py-3 rounded-xl text-slate-700 font-semibold bg-white border border-slate-200 hover:bg-slate-50 transition"
-                  >
-                    Luyện ngữ pháp
-                  </Link>
-                </div>
+            <div className="mt-7 flex flex-col sm:flex-row gap-3">
+              <Link
+                to="/multiple-choice/topics"
+                className="inline-flex items-center justify-center px-6 py-3 rounded-xl text-white font-semibold bg-slate-900 hover:bg-slate-800 shadow-sm"
+              >
+                Bắt đầu làm bài
+              </Link>
+              <Link
+                to="/about"
+                className="inline-flex items-center justify-center px-6 py-3 rounded-xl text-slate-800 font-semibold bg-white border border-slate-200 hover:bg-slate-50"
+              >
+                Tìm hiểu nền tảng
+              </Link>
+            </div>
 
-                {/* quick stats */}
-                <div className="mt-10 grid grid-cols-2 gap-4 max-w-md">
-                  {loading ? (
-                    <>
-                      <div className="h-24 rounded-xl bg-slate-100 border border-slate-200 animate-pulse" />
-                      <div className="h-24 rounded-xl bg-slate-100 border border-slate-200 animate-pulse" />
-                    </>
-                  ) : (
-                    <>
-                      <GlowCard>
-                        <p className="text-2xl font-extrabold">{stats.totalTopics}</p>
-                        <p className="text-slate-600 text-sm">Chủ đề</p>
-                      </GlowCard>
-                      <GlowCard>
-                        <p className="text-2xl font-extrabold">{stats.totalQuestions}</p>
-                        <p className="text-slate-600 text-sm">Câu hỏi</p>
-                      </GlowCard>
-                    </>
-                  )}
-                </div>
+            {/* mini stats */}
+            <div className="mt-10 grid grid-cols-2 gap-4 max-w-md">
+              <div className="rounded-2xl bg-white border border-slate-200 p-5 shadow-sm">
+                <p className="text-2xl font-extrabold">2,500+</p>
+                <p className="text-slate-600 text-sm">Câu hỏi luyện tập</p>
+              </div>
+              <div className="rounded-2xl bg-white border border-slate-200 p-5 shadow-sm">
+                <p className="text-2xl font-extrabold">1,200+</p>
+                <p className="text-slate-600 text-sm">Người học tích cực</p>
               </div>
             </div>
           </div>
-        </section>
 
-        {/* ================ OVERVIEW STATS ================ */}
-        <section className="-mt-10 relative z-10">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-              {loading ? (
-                <>
-                  <div className="h-28 bg-white rounded-2xl border border-slate-200 animate-pulse" />
-                  <div className="h-28 bg-white rounded-2xl border border-slate-200 animate-pulse" />
-                  <div className="h-28 bg-white rounded-2xl border border-slate-200 animate-pulse" />
-                  <div className="h-28 bg-white rounded-2xl border border-slate-200 animate-pulse" />
-                </>
-              ) : (
-                <>
-                  <StatCard
-                    label="Chủ đề"
-                    value={stats.totalTopics}
-                    icon={
-                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 7v10a2 2 0 002 2h6M21 15V9a2 2 0 00-2-2h-7l-2-2H5" />
-                      </svg>
-                    }
-                  />
-                  <StatCard
-                    label="Câu hỏi"
-                    value={stats.totalQuestions}
-                    icon={
-                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 9c0-1.657 1.79-3 4-3s4 1.343 4 3-1 2-2 2-1 1-1 2m-1 4h.01" />
-                      </svg>
-                    }
-                  />
-                  <StatCard
-                    label="Người dùng"
-                    value={`${stats.totalUsers}+`}
-                    icon={
-                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 20h5V9l-7-5-7 5v11h5" />
-                      </svg>
-                    }
-                  />
-                  <StatCard
-                    label="Tests hoàn thành"
-                    value={`${formatK(stats.completedTests)}+`}
-                    icon={
-                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 17l6-6 4 4 8-8" />
-                      </svg>
-                    }
-                  />
-                </>
-              )}
-            </div>
-          </div>
-        </section>
-
-        {/* ================ FEATURES ================ */}
-        <section className="py-18 md:py-20 bg-white">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <SectionTitle
-              eyebrow="Tính năng"
-              title="Vì sao chọn QuizSmart?"
-              desc="Nền tảng học tập dựa trên dữ liệu & trải nghiệm người dùng để tối ưu hiệu quả."
-            />
-            <div className="grid md:grid-cols-3 gap-6">
-              <FeatureCard
-                title="Lộ trình rõ ràng"
-                desc="Bài test phân cấp theo mục tiêu, kèm gợi ý luyện tập phù hợp năng lực hiện tại."
-                icon={<svg className="w-5 h-5" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2a10 10 0 100 20 10 10 0 000-20Zm1 14H7v-2h6v2Zm4-4H7V8h10v4Z" /></svg>}
-              />
-              <FeatureCard
-                title="Theo dõi tiến độ"
-                desc="Biểu đồ kết quả, thời gian làm bài và điểm mạnh/yếu để điều chỉnh học tập."
-                icon={<svg className="w-5 h-5" viewBox="0 0 24 24" fill="currentColor"><path d="M3 3h2v18H3V3Zm4 8h2v10H7V11Zm4-6h2v16h-2V5Zm4 10h2v6h-2v-6Zm4-14h2v20h-2V1Z" /></svg>}
-              />
-              <FeatureCard
-                title="Trải nghiệm mượt"
-                desc="Giao diện tối giản, tốc độ nhanh, tương thích tốt trên mọi thiết bị."
-                icon={<svg className="w-5 h-5" viewBox="0 0 24 24" fill="currentColor"><path d="M4 6h16v12H4zM2 18h20v2H2z" /></svg>}
-              />
-            </div>
-          </div>
-        </section>
-
-        {/* ================ HOW IT WORKS + TESTIMONIALS ================ */}
-        <section className="py-18 md:py-20 bg-white">
-          <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 grid lg:grid-cols-2 gap-12 items-start">
-            <div>
-              <SectionTitle
-                eyebrow="Bắt đầu nhanh"
-                title="Chỉ 3 bước để học hiệu quả"
-                desc="Đăng ký nhanh, chọn mục tiêu và luyện tập mỗi ngày."
-                center={false}
-              />
-              <div className="relative mt-6">
-                <div className="absolute left-4 top-0 bottom-0 w-[2px] bg-gradient-to-b from-indigo-300 to-blue-300" />
-                <div className="space-y-7">
-                  <HowStep step="1" title="Chọn chủ đề" desc="Tìm chủ đề phù hợp mục tiêu (TOEIC, IELTS, Cloud…)." />
-                  <HowStep step="2" title="Làm bài test" desc="Chế độ làm bài linh hoạt, có đồng hồ và chấm ngay." />
-                  <HowStep step="3" title="Xem phân tích" desc="Theo dõi tiến độ, nhận gợi ý cải thiện cụ thể." />
-                </div>
-                <div className="mt-8">
-                  <Link
-                    to="/multiple-choice/topics"
-                    className="inline-flex items-center px-6 py-3 rounded-xl text-white font-semibold bg-indigo-600 hover:bg-indigo-700 shadow-sm transition"
-                  >
-                    Khám phá chủ đề
-                  </Link>
+          {/* mock preview panel */}
+          <div className="relative">
+            <div className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm">
+              <div className="h-56 md:h-72 rounded-2xl bg-gradient-to-br from-indigo-100 via-blue-100 to-purple-100 border border-slate-200 grid place-items-center">
+                <div className="text-center">
+                  <p className="text-sm text-slate-600">Xem nhanh kết quả</p>
+                  <p className="mt-2 text-3xl font-extrabold text-slate-900">78%</p>
+                  <p className="text-xs text-slate-500 mt-1">Tuần này • +6% so với tuần trước</p>
                 </div>
               </div>
-            </div>
-
-            <div>
-              <SectionTitle
-                eyebrow="Đánh giá"
-                title="Người học nói gì?"
-                desc="Một vài cảm nhận thực tế từ người dùng."
-              />
-              <div className="grid sm:grid-cols-2 gap-4">
-                {[
-                  { name: "Phương Anh", role: "Sinh viên", quote: "Giao diện rất dễ dùng, bài tập bám sát mục tiêu học." },
-                  { name: "Minh Khoa", role: "Dev Fresher", quote: "Mục Cloud có nhiều bài hay, giúp mình nắm kiến thức nhanh." },
-                  { name: "Lan Hương", role: "Người đi làm", quote: "Theo dõi tiến độ rõ ràng, rất dễ duy trì thói quen." },
-                  { name: "Quốc Huy", role: "Thí sinh IELTS", quote: "Phần từ vựng + ngữ pháp hỗ trợ tốt cho Reading." },
-                ].map((t, i) => (
-                  <Testimonial key={i} {...t} />
+              <div className="mt-4 grid grid-cols-3 gap-3">
+                {["Tốc độ", "Độ chính xác", "Chuỗi ngày"].map((t, i) => (
+                  <div key={i} className="rounded-xl border border-slate-200 bg-white p-3">
+                    <p className="text-[11px] uppercase tracking-wider text-slate-500">{t}</p>
+                    <p className="mt-1 text-xl font-bold text-slate-900">
+                      {i === 0 ? "1m42s" : i === 1 ? "86%" : "12 ngày"}
+                    </p>
+                  </div>
                 ))}
               </div>
             </div>
           </div>
-        </section>
+        </div>
+      </Section>
 
-        {/* ================ CTA ================ */}
-        <section className="py-20 relative overflow-hidden">
-          <div className="absolute inset-0">
-            <div className="absolute inset-0 bg-gradient-to-r from-indigo-100 via-blue-100 to-purple-100" />
-            <div className="absolute -inset-x-10 -bottom-40 h-80 bg-gradient-to-t from-indigo-200 to-transparent blur-2xl" />
-          </div>
-          <div className="relative max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-            <h2 className="text-3xl md:text-4xl font-extrabold text-slate-900">Sẵn sàng bắt đầu?</h2>
-            <p className="mt-3 text-slate-600">
-              Gia nhập cộng đồng học tập hiệu quả với QuizSmart ngay hôm nay.
-            </p>
-            <div className="mt-6 flex flex-col sm:flex-row gap-3 justify-center">
-              <Link
-                to="/multiple-choice/topics"
-                className="px-6 py-3 rounded-xl text-white font-semibold bg-indigo-600 hover:bg-indigo-700 shadow-sm transition"
-              >
-                Trắc nghiệm ngay
-              </Link>
-              <Link
-                to="/vocabulary"
-                className="px-6 py-3 rounded-xl text-slate-700 font-semibold bg-white border border-slate-200 hover:bg-slate-50 transition"
-              >
-                Luyện từ vựng
-              </Link>
-              <Link
-                to="/grammar"
-                className="px-6 py-3 rounded-xl text-slate-700 font-semibold bg-white border border-slate-200 hover:bg-slate-50 transition"
-              >
-                Luyện ngữ pháp
-              </Link>
+      {/* PILLARS */}
+      <Section>
+        <Eyebrow>Giá trị cốt lõi</Eyebrow>
+        <H2>Học tập có hệ thống</H2>
+        <Sub>
+          Ba trụ cột giúp bạn tiết kiệm thời gian, tập trung đúng nội dung và nhìn rõ tiến bộ.
+        </Sub>
+        <div className="mt-8 grid md:grid-cols-3 gap-5">
+          <Pillar
+            title="Lộ trình cá nhân"
+            desc="Chọn mục tiêu, hệ thống tự gợi ý bài luyện phù hợp để chạm mốc nhanh hơn."
+            icon={
+              <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <path d="M3 6h18M3 12h12M3 18h6" strokeLinecap="round" strokeLinejoin="round" />
+              </svg>
+            }
+          />
+          <Pillar
+            title="Giải thích dễ hiểu"
+            desc="Mỗi câu hỏi có phân tích rõ ràng, tránh mẹo vặt – hiểu bản chất để nhớ lâu."
+            icon={
+              <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <path d="M12 20l9-16H3l9 16z" strokeLinecap="round" strokeLinejoin="round" />
+              </svg>
+            }
+          />
+          <Pillar
+            title="Theo dõi chi tiết"
+            desc="Dashboard trực quan: điểm số, thời gian, chủ đề mạnh/yếu để tối ưu kế hoạch."
+            icon={
+              <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <path d="M3 3v18M21 21H7M7 13l4 4 7-7" strokeLinecap="round" strokeLinejoin="round" />
+              </svg>
+            }
+          />
+        </div>
+      </Section>
+
+      {/* CATEGORIES */}
+      <Section className="bg-white">
+        <Eyebrow>Luyện theo chuyên mục</Eyebrow>
+        <H2>Chọn nội dung bạn muốn chinh phục</H2>
+        <div className="mt-8 grid md:grid-cols-3 gap-5">
+          <Category
+            to="/multiple-choice/topics"
+            title="Trắc nghiệm"
+            desc="Kho đề phong phú, chấm điểm ngay lập tức, có giải thích kèm theo."
+            glyph={
+              <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <path d="M5 13l4 4L19 7" strokeLinecap="round" strokeLinejoin="round" />
+              </svg>
+            }
+          />
+          <Category
+            to="/grammar/topics"
+            title="Ngữ pháp"
+            desc="Bài tập điền chỗ trống & tự luận ngắn để củng cố cấu trúc cốt lõi."
+            glyph={
+              <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <path d="M16 5H8l-2 6h12l-2-6zM6 11v8h12v-8" strokeLinecap="round" strokeLinejoin="round" />
+              </svg>
+            }
+          />
+          <Category
+            to="/vocabulary/topics"
+            title="Từ vựng"
+            desc="Flashcard, điền nghĩa và luyện câu ví dụ để nhớ từ bền vững."
+            glyph={
+              <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <path d="M3 6h18v12H3zM7 6v12" strokeLinecap="round" strokeLinejoin="round" />
+              </svg>
+            }
+          />
+        </div>
+      </Section>
+
+      {/* TESTIMONIALS */}
+      <Section>
+        <Eyebrow>Người học đánh giá</Eyebrow>
+        <H2>Hiệu quả được kiểm chứng</H2>
+        <div className="mt-8 grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          {[
+            {
+              name: "Minh Thư",
+              role: "Thí sinh TOEIC",
+              quote:
+                "Sau 3 tuần, mình tăng 150 điểm. Phần giải thích cực rõ và dễ nhớ.",
+            },
+            {
+              name: "Văn Hậu",
+              role: "Junior Dev",
+              quote:
+                "Lộ trình Cloud/IT bám sát, làm tới đâu hiểu tới đó, đỡ hoang mang.",
+            },
+            {
+              name: "Ngọc Anh",
+              role: "Sinh viên",
+              quote:
+                "UI sạch sẽ, tốc độ nhanh. Rất dễ duy trì thói quen 20 phút/ngày.",
+            },
+            {
+              name: "Trung Kiên",
+              role: "IELTS learner",
+              quote:
+                "Vocabulary + Grammar combo giúp Reading mình tăng đáng kể.",
+            },
+          ].map((t, i) => (
+            <Quote key={i} {...t} />
+          ))}
+        </div>
+      </Section>
+
+      {/* FAQ */}
+      <Section className="bg-white">
+        <Eyebrow>FAQ</Eyebrow>
+        <H2>Câu hỏi thường gặp</H2>
+        <div className="mt-8 grid md:grid-cols-2 gap-5">
+          {[
+            {
+              q: "QuizSmart có miễn phí không?",
+              a: "Bạn có thể luyện các chủ đề cơ bản miễn phí. Tài khoản Pro mở khóa thêm ngân hàng câu hỏi mở rộng và thống kê nâng cao.",
+            },
+            {
+              q: "Có lộ trình gợi ý cho người mới?",
+              a: "Có. Chọn mục tiêu điểm/level, hệ thống đề xuất lộ trình theo tuần với bài luyện phù hợp.",
+            },
+            {
+              q: "Làm bài trên điện thoại ổn chứ?",
+              a: "UI được tối ưu cho mobile, bạn có thể luyện mọi lúc mọi nơi.",
+            },
+            {
+              q: "Kết quả có được lưu lại?",
+              a: "Tất cả bài làm, thời gian, tỉ lệ đúng/sai được lưu và hiển thị trong dashboard cá nhân.",
+            },
+          ].map((f, i) => (
+            <div key={i} className="rounded-2xl border border-slate-200 bg-white p-5">
+              <h4 className="font-semibold text-slate-900">{f.q}</h4>
+              <p className="mt-1 text-slate-600">{f.a}</p>
             </div>
+          ))}
+        </div>
+      </Section>
+
+      {/* CTA */}
+      <Section className="relative overflow-hidden">
+        <div className="absolute inset-0 bg-gradient-to-r from-indigo-100 via-blue-100 to-purple-100" />
+        <div className="relative rounded-3xl border border-slate-200 bg-white/50 backdrop-blur-sm p-8 md:p-10 text-center">
+          <h3 className="text-2xl md:text-3xl font-extrabold text-slate-900">
+            Sẵn sàng tăng tốc hành trình học tập?
+          </h3>
+          <p className="mt-2 text-slate-600">
+            Bắt đầu với một bài test ngắn — nhận phân tích và đề xuất lộ trình ngay.
+          </p>
+          <div className="mt-6 flex flex-col sm:flex-row gap-3 justify-center">
+            <Link
+              to="/multiple-choice/topics"
+              className="px-6 py-3 rounded-xl text-white font-semibold bg-slate-900 hover:bg-slate-800"
+            >
+              Làm bài đầu tiên
+            </Link>
+            <Link
+              to="/register"
+              className="px-6 py-3 rounded-xl text-slate-800 font-semibold bg-white border border-slate-200 hover:bg-slate-50"
+            >
+              Tạo tài khoản miễn phí
+            </Link>
           </div>
-        </section>
-      </div>
+        </div>
+      </Section>
     </MainLayout>
   );
 };

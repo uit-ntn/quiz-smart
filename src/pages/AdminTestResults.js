@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { useAuth } from '../context/AuthContext';
 import AdminLayout from '../layout/AdminLayout';
 import testResultService from '../services/testResultService';
 import LoadingSpinner from '../components/LoadingSpinner';
@@ -11,10 +12,13 @@ const AdminTestResults = () => {
   const [error, setError] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [filterStatus, setFilterStatus] = useState('all');
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage, setItemsPerPage] = useState(10);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [showDetailModal, setShowDetailModal] = useState(false);
   const [resultToDelete, setResultToDelete] = useState(null);
   const [selectedResult, setSelectedResult] = useState(null);
+  const { user } = useAuth();
 
   useEffect(() => {
     fetchResults();
@@ -23,6 +27,11 @@ const AdminTestResults = () => {
   useEffect(() => {
     filterResults();
   }, [results, searchTerm, filterStatus]);
+
+  useEffect(() => {
+    // reset page when filters change
+    setCurrentPage(1);
+  }, [searchTerm, filterStatus, itemsPerPage]);
 
   const fetchResults = async () => {
     try {
@@ -58,6 +67,15 @@ const AdminTestResults = () => {
     setFilteredResults(filtered);
   };
 
+  // Paginated slice for UI
+  const paginatedResults = (() => {
+    const start = (currentPage - 1) * itemsPerPage;
+    const end = start + itemsPerPage;
+    return filteredResults.slice(start, end);
+  })();
+
+  const totalPages = Math.max(1, Math.ceil((filteredResults.length || 0) / itemsPerPage));
+
   const handleDeleteClick = (result) => {
     setResultToDelete(result);
     setShowDeleteModal(true);
@@ -72,13 +90,33 @@ const AdminTestResults = () => {
     if (!resultToDelete) return;
 
     try {
-      await testResultService.deleteTestResult(resultToDelete._id);
+      // Use soft delete (mark as deleted) to match backend behavior
+      await testResultService.softDeleteTestResult(resultToDelete._id);
+      // Remove from local state so UI updates immediately
       setResults(results.filter(r => r._id !== resultToDelete._id));
       setShowDeleteModal(false);
       setResultToDelete(null);
     } catch (err) {
       console.error('Error deleting result:', err);
       alert('Không thể xóa kết quả. Vui lòng thử lại!');
+    }
+  };
+
+  const handleUpdateStatus = async (newStatus) => {
+    if (!selectedResult) return;
+    try {
+      setLoading(true);
+      await testResultService.updateTestResultStatus(selectedResult._id, newStatus);
+      // Refresh selected result and list
+      const refreshed = await testResultService.getTestResultById(selectedResult._id);
+      setSelectedResult(refreshed);
+      await fetchResults();
+      alert('Cập nhật trạng thái thành công');
+    } catch (err) {
+      console.error('Error updating status:', err);
+      alert('Không thể cập nhật trạng thái.');
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -372,7 +410,7 @@ const AdminTestResults = () => {
                     </td>
                   </tr>
                 ) : (
-                  filteredResults.map((result) => (
+                  paginatedResults.map((result) => (
                     <tr key={result._id} className="hover:bg-gray-50 transition-colors">
                       <td className="px-6 py-4">
                         <div className="flex items-center">
@@ -451,6 +489,73 @@ const AdminTestResults = () => {
             </table>
           </div>
         </div>
+
+        {/* Pagination */}
+        <div className="flex items-center justify-between px-4 py-3 bg-white border-t border-gray-200">
+          <div className="text-sm text-gray-700">
+            Hiển thị {filteredResults.length === 0 ? 0 : (currentPage - 1) * itemsPerPage + 1} - {Math.min(currentPage * itemsPerPage, filteredResults.length)} trong {filteredResults.length} kết quả
+          </div>
+          <div className="flex items-center gap-2">
+            <select
+              value={itemsPerPage}
+              onChange={(e) => setItemsPerPage(parseInt(e.target.value, 10))}
+              className="px-2 py-1 border border-gray-300 rounded"
+            >
+              <option value={5}>5</option>
+              <option value={10}>10</option>
+              <option value={25}>25</option>
+              <option value={50}>50</option>
+            </select>
+
+            <div className="flex items-center gap-1">
+              <button
+                onClick={() => setCurrentPage(1)}
+                disabled={currentPage === 1}
+                className="px-2 py-1 border rounded disabled:opacity-50"
+              >
+                «
+              </button>
+              <button
+                onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                disabled={currentPage === 1}
+                className="px-2 py-1 border rounded disabled:opacity-50"
+              >
+                ‹
+              </button>
+
+              <div className="hidden sm:flex items-center gap-1">
+                {Array.from({ length: totalPages }).slice(Math.max(0, currentPage - 3), Math.min(totalPages, currentPage + 2)).map((_, idx) => {
+                  const pageNum = Math.max(1, currentPage - 2) + idx;
+                  return (
+                    <button
+                      key={pageNum}
+                      onClick={() => setCurrentPage(pageNum)}
+                      className={`px-3 py-1 rounded ${currentPage === pageNum ? 'bg-indigo-600 text-white' : 'border'}`}
+                    >
+                      {pageNum}
+                    </button>
+                  );
+                })}
+              </div>
+
+              <button
+                onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                disabled={currentPage === totalPages}
+                className="px-2 py-1 border rounded disabled:opacity-50"
+              >
+                ›
+              </button>
+              <button
+                onClick={() => setCurrentPage(totalPages)}
+                disabled={currentPage === totalPages}
+                className="px-2 py-1 border rounded disabled:opacity-50"
+              >
+                »
+              </button>
+            </div>
+          </div>
+        </div>
+
       </div>
 
       {/* Detail Modal */}

@@ -2,6 +2,7 @@ import React, { useEffect, useState, useRef } from 'react';
 import { useParams, useLocation, useNavigate } from 'react-router-dom';
 import TestLayout from '../layout/TestLayout';
 import vocabularyService from '../services/vocabularyService';
+import testResultService from '../services/testResultService';
 import LoadingSpinner from '../components/LoadingSpinner';
 import ErrorMessage from '../components/ErrorMessage';
 
@@ -138,7 +139,7 @@ const VocabularyTestTake = () => {
     handleSubmit(currentAnswer);
   };
 
-  const moveToNext = () => {
+  const moveToNext = async () => {
     if (index < items.length - 1) {
       setIndex((i) => i + 1);
       setCurrentAnswer('');
@@ -147,9 +148,47 @@ const VocabularyTestTake = () => {
       setLastAnswerResult(null);
       setIsPaused(false);
     } else {
-      navigate(`/vocabulary/test/${testId}/result`, {
-        state: { answers, settings, testInfo },
-      });
+      // Test completed, create draft result
+      try {
+        const totalQuestions = answers.length;
+        const correctAnswers = answers.filter(answer => answer.isCorrect).length;
+        const percentage = totalQuestions > 0 ? Math.round((correctAnswers / totalQuestions) * 100) : 0;
+
+        const testResultData = {
+          test_id: testId,
+          test_type: 'vocabulary',
+          answers: answers.map(answer => ({
+            question_id: answer.question._id || answer.question.id,
+            user_answer: answer.userAnswer,
+            correct_answer: getCorrectAnswer(answer.question),
+            is_correct: answer.isCorrect,
+            question_text: answer.question.word,
+            word: answer.question.word
+          })),
+          score: percentage,
+          correct_answers: correctAnswers,
+          total_questions: totalQuestions,
+          time_taken: Math.floor(Date.now() / 1000) - Math.floor(new Date().getTime() / 1000), // Approximate time
+          status: 'draft' // Create as draft initially
+        };
+
+        const draftResult = await testResultService.createTestResult(testResultData);
+        
+        navigate(`/vocabulary/test/${testId}/result`, {
+          state: { 
+            answers, 
+            settings, 
+            testInfo,
+            draftResultId: draftResult._id || draftResult.id // Pass the draft result ID
+          },
+        });
+      } catch (error) {
+        console.error('Error creating draft result:', error);
+        // Still navigate to result even if draft creation fails
+        navigate(`/vocabulary/test/${testId}/result`, {
+          state: { answers, settings, testInfo },
+        });
+      }
     }
   };
 

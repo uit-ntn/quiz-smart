@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import TestService from '../services/testService';
+import testResultService from '../services/testResultService';
+import LoadingSpinner from '../components/LoadingSpinner';
 
 const MultipleChoiceTestReview = () => {
   const { testId } = useParams();
@@ -14,6 +16,10 @@ const MultipleChoiceTestReview = () => {
   const [results, setResults] = useState([]);
   const [score, setScore] = useState(0);
   const [selectedQuestion, setSelectedQuestion] = useState(0);
+  const [draftResultId, setDraftResultId] = useState(null);
+  const [isSaved, setIsSaved] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
 
 
   useEffect(() => {
@@ -31,11 +37,12 @@ const MultipleChoiceTestReview = () => {
 
   useEffect(() => {
     if (location.state) {
-      const { test, questions, userAnswers, results } = location.state;
+      const { test, questions, userAnswers, results, draftResultId } = location.state;
       setTest(test);
       setQuestions(questions);
       setUserAnswers(userAnswers);
       setResults(results);
+      setDraftResultId(draftResultId);
 
       // Calculate score - thang 10: số câu đúng / tổng số câu * 10
       const correctCount = results.filter((r) => r.isCorrect).length;
@@ -47,6 +54,27 @@ const MultipleChoiceTestReview = () => {
       navigate(`/multiple-choice/test/${testId}/settings`);
     }
   }, [location.state, testId, navigate]);
+
+  const saveResult = async () => {
+    if (!draftResultId) {
+      setError('Không tìm thấy bản nháp kết quả để lưu');
+      return;
+    }
+
+    try {
+      setLoading(true);
+      setError(null);
+      
+      // Update status from draft to active
+      await testResultService.updateTestResultStatus(draftResultId, 'active');
+      setIsSaved(true);
+    } catch (err) {
+      console.error('Error saving result:', err);
+      setError('Không thể lưu kết quả. Vui lòng thử lại!');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const getScoreColor = (score) => {
     if (score >= 8) return 'success';
@@ -398,20 +426,47 @@ const MultipleChoiceTestReview = () => {
                 </button>
 
                 <button
-                  className="group relative overflow-hidden rounded-lg bg-gradient-to-r from-emerald-500 to-emerald-600 px-4 py-3 text-white font-semibold shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105"
-                  onClick={() => {
-                    // TODO: Implement save result functionality
-                    alert('Tính năng lưu kết quả sẽ được phát triển trong tương lai!');
-                  }}
+                  className={`group relative overflow-hidden rounded-lg px-4 py-3 text-white font-semibold shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105 ${
+                    isSaved 
+                      ? 'bg-gradient-to-r from-green-500 to-green-600' 
+                      : loading 
+                        ? 'bg-gradient-to-r from-gray-400 to-gray-500 cursor-not-allowed' 
+                        : 'bg-gradient-to-r from-emerald-500 to-emerald-600'
+                  }`}
+                  onClick={isSaved ? undefined : saveResult}
+                  disabled={loading || isSaved}
                 >
                   <div className="absolute inset-0 bg-white/20 translate-y-full group-hover:translate-y-0 transition-transform duration-300" />
                   <div className="relative flex items-center justify-center">
-                    <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                    </svg>
-                    Lưu kết quả
+                    {loading ? (
+                      <>
+                        <div className="w-4 h-4 mr-2 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                        Đang lưu...
+                      </>
+                    ) : isSaved ? (
+                      <>
+                        <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" />
+                        </svg>
+                        Đã lưu kết quả
+                      </>
+                    ) : (
+                      <>
+                        <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                        </svg>
+                        Lưu kết quả
+                      </>
+                    )}
                   </div>
                 </button>
+
+                {/* Error Display */}
+                {error && (
+                  <div className="mt-4 p-4 bg-red-100 border border-red-200 rounded-lg text-red-700 text-sm">
+                    {error}
+                  </div>
+                )}
               </div>
 
               {/* Back to Topics Button */}

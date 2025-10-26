@@ -96,11 +96,14 @@ const VocabularyTopicModal = ({ isOpen, onClose, mainTopic }) => {
     try {
       setLoading(true);
       setError(null);
+      console.log('VocabularyTopicModal: Fetching sub topics for:', mainTopic);
       const res = await vocabularyService.getVocabularySubTopicsByMainTopic(mainTopic);
+      console.log('VocabularyTopicModal: Sub topics response:', res);
       const normalized = normalizeToSubTopicArray(res);
+      console.log('VocabularyTopicModal: Normalized sub topics:', normalized);
       setSubTopics(normalized);
     } catch (e) {
-      console.error(e);
+      console.error('VocabularyTopicModal: Error fetching sub topics:', e);
       setError('Không thể tải danh sách chủ đề con.');
     } finally {
       setLoading(false);

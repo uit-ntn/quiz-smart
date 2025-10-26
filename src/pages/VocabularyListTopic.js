@@ -40,13 +40,31 @@ const VocabularyListTopic = () => {
   const fetchMainTopics = async () => {
     try {
       setLoading(true);
+      setError(null);
+      console.log('Fetching main topics...');
+      
       const response = await vocabularyService.getAllVocabularyMainTopics();
+      console.log('Main topics response:', response);
+      
+      if (!Array.isArray(response)) {
+        throw new Error('API response is not an array');
+      }
+      
       const mainTopics = response || [];
+      console.log('Processing main topics:', mainTopics);
 
       const topicsWithSubs = await Promise.all(
         mainTopics.map(async (mainTopic) => {
           try {
+            console.log(`Fetching sub topics for: ${mainTopic}`);
             const subTopics = await vocabularyService.getVocabularySubTopicsByMainTopic(mainTopic);
+            console.log(`Sub topics for ${mainTopic}:`, subTopics);
+            
+            if (!Array.isArray(subTopics)) {
+              console.warn(`Sub topics for ${mainTopic} is not an array:`, subTopics);
+              return { mainTopic, subTopics: [], testCount: 0 };
+            }
+            
             return {
               mainTopic,
               subTopics: subTopics || [],
@@ -59,12 +77,12 @@ const VocabularyListTopic = () => {
         })
       );
 
+      console.log('Final topics with sub topics:', topicsWithSubs);
       setAllTopics(mainTopics);
       setTopicsWithSubTopics(topicsWithSubs);
-      setError(null);
     } catch (err) {
       console.error('Error fetching topics:', err);
-      setError('Không thể tải danh sách chủ đề. Vui lòng thử lại sau.');
+      setError(`Không thể tải danh sách chủ đề: ${err.message}`);
     } finally {
       setLoading(false);
     }

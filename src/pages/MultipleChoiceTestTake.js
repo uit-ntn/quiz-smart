@@ -2,6 +2,7 @@ import React, { useState, useEffect, useMemo } from "react";
 import { useParams, useNavigate, useLocation } from "react-router-dom";
 import testService from "../services/testService";
 import MultipleChoiceService from "../services/multipleChoiceService";
+import testResultService from "../services/testResultService";
 
 /**
  * MultipleChoiceTestTake
@@ -249,7 +250,7 @@ const MultipleChoiceTestTake = () => {
     }
   };
 
-  const handleSubmitTest = () => {
+  const handleSubmitTest = async () => {
     setIsSubmitted(true);
 
     const results = (questions || []).map((q) => {
@@ -264,15 +265,55 @@ const MultipleChoiceTestTake = () => {
       };
     });
 
-    navigate(`/multiple-choice/test/${testId}/review`, {
-      state: {
-        test,
-        questions,
-        userAnswers,
-        results,
-        settings,
-      },
-    });
+    // Calculate score
+    const correctAnswers = results.filter(r => r.isCorrect).length;
+    const totalQuestions = results.length;
+    const score = totalQuestions > 0 ? Math.round((correctAnswers / totalQuestions) * 100) : 0;
+
+    // Create draft test result immediately
+    try {
+      const testResultData = {
+        test_id: testId,
+        test_type: 'multiple_choice',
+        answers: results.map(r => ({
+          question_id: r.questionId,
+          user_answer: Array.isArray(r.userAnswer) ? r.userAnswer.join(', ') : r.userAnswer,
+          correct_answer: r.correctAnswer,
+          is_correct: r.isCorrect,
+          question_text: questions.find(q => q._id === r.questionId)?.question_text || ''
+        })),
+        score: score,
+        correct_answers: correctAnswers,
+        total_questions: totalQuestions,
+        time_taken: Math.floor((settings.timeLimit * 60 - timeRemaining) / 60) * 60 + (settings.timeLimit * 60 - timeRemaining) % 60,
+        status: 'draft' // Create as draft initially
+      };
+
+      const draftResult = await testResultService.createTestResult(testResultData);
+      
+      navigate(`/multiple-choice/test/${testId}/review`, {
+        state: {
+          test,
+          questions,
+          userAnswers,
+          results,
+          settings,
+          draftResultId: draftResult._id || draftResult.id // Pass the draft result ID
+        },
+      });
+    } catch (error) {
+      console.error('Error creating draft result:', error);
+      // Still navigate to review even if draft creation fails
+      navigate(`/multiple-choice/test/${testId}/review`, {
+        state: {
+          test,
+          questions,
+          userAnswers,
+          results,
+          settings,
+        },
+      });
+    }
   };
 
   // Color schemes per option index (Tailwind-safe explicit classes)

@@ -16,6 +16,7 @@ import MultipleChoiceTestSettings from '../pages/MultipleChoiceTestSettings';
 import MultipleChoiceTestTake from '../pages/MultipleChoiceTestTake';
 import MultipleChoiceTestReview from '../pages/MultipleChoiceTestReview';
 import VocabularyListTopic from '../pages/VocabularyListTopic';
+import VocabularyDebugPage from '../pages/VocabularyDebugPage';
 import VocabularyTestList from '../pages/VocabularyTestList';
 import VocabularyTestSettings from '../pages/VocabularyTestSettings';
 import VocabularyTestTake from '../pages/VocabularyTestTake';
@@ -122,6 +123,7 @@ const AppRoutes = () => {
       {/* Vocabulary Routes */}
       <Route path="/vocabulary" element={<VocabularyListTopic />} />
       <Route path="/vocabulary/topics" element={<VocabularyListTopic />} />
+      <Route path="/vocabulary/debug" element={<VocabularyDebugPage />} />
       <Route path="/vocabulary/tests/:mainTopic/:subTopic" element={<VocabularyTestList />} />
       <Route path="/vocabulary/test/:testId/settings" element={
         <ProtectedRoute>

@@ -5,10 +5,13 @@ import { useNavigate } from 'react-router-dom';
 import testService from '../services/testService';
 import vocabularyService from '../services/vocabularyService';
 
-// Sample mặc định để hiển thị ngay preview khi mở modal
+/** Ví dụ mặc định */
 const SAMPLE_VOCAB = `aisle:lối đi giữa các hàng ghế/kệ:Passengers are walking down the aisle.
 schedule:lịch trình:Please check your schedule before the meeting.
 colleague:đồng nghiệp:I discussed the project with my colleague.`;
+
+/** Chiều cao đồng nhất cho 2 panel bước 1 (px) */
+const PANEL_HEIGHT = 520;
 
 const CreateVocabularyTestModal = ({ show, onClose }) => {
   const { user } = useAuth();
@@ -22,6 +25,8 @@ const CreateVocabularyTestModal = ({ show, onClose }) => {
   // Step 1
   const [vocabularyText, setVocabularyText] = useState('');
   const [parsedVocabularies, setParsedVocabularies] = useState([]);
+  const [hasSeededSample, setHasSeededSample] = useState(false);
+  const [isSampleActive, setIsSampleActive] = useState(false);
 
   // Step 2
   const [testInfo, setTestInfo] = useState({
@@ -31,11 +36,10 @@ const CreateVocabularyTestModal = ({ show, onClose }) => {
     sub_topic: '',
     difficulty: 'easy',
     time_limit_minutes: 10,
-    visibility: 'public', // 'public' or 'private'
+    visibility: 'public',
   });
 
   // Refs
-  const overlayRef = useRef(null);
   const cardRef = useRef(null);
   const redirectTimerRef = useRef(null);
   const mountedRef = useRef(true);
@@ -48,14 +52,26 @@ const CreateVocabularyTestModal = ({ show, onClose }) => {
     };
   }, []);
 
-  // Inject sample khi mở modal để có preview ngay
+  // Seed sample đúng 1 lần khi mở modal
   useEffect(() => {
-    if (show && !vocabularyText.trim()) {
+    if (show && !hasSeededSample) {
       setVocabularyText(SAMPLE_VOCAB);
+      setHasSeededSample(true);
+      setIsSampleActive(true);
     }
-  }, [show, vocabularyText]);
+  }, [show, hasSeededSample]);
 
-  // Close + reset state
+  // ESC to close
+  useEffect(() => {
+    if (!show) return;
+    const onKey = (e) => {
+      if (e.key === 'Escape' && !loading) handleClose();
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [show, loading]);
+
+  // Reset + close
   const handleClose = () => {
     setCurrentStep('vocabulary');
     setVocabularyText('');
@@ -71,37 +87,20 @@ const CreateVocabularyTestModal = ({ show, onClose }) => {
     });
     setErrMsg('');
     setLoading(false);
+    setHasSeededSample(false);
+    setIsSampleActive(false);
     onClose?.();
   };
 
-  // ESC to close
-  useEffect(() => {
-    if (!show) return;
-    const onKey = (e) => {
-      if (e.key === 'Escape' && !loading) handleClose();
-    };
-    window.addEventListener('keydown', onKey);
-    return () => window.removeEventListener('keydown', onKey);
-  }, [show, loading]);
-
-  // Click outside to close
-  const onOverlayClick = (e) => {
-    if (loading) return;
-    if (cardRef.current && !cardRef.current.contains(e.target)) {
-      handleClose();
-    }
-  };
-
-  // Parse “word:meaning:example with : allowed”
+  // Parse “từ:nghĩa:câu ví dụ (cho phép : trong câu ví dụ)”
   const parseVocabularyText = (text) => {
     const lines = text.split(/\r?\n/).filter((l) => l.trim());
     const vocabularies = [];
     const errors = [];
-
     lines.forEach((line, idx) => {
       const parts = line.split(':').map((s) => s.trim());
       if (parts.length < 2) {
-        errors.push(`Dòng ${idx + 1}: Định dạng không đúng (cần ít nhất word:meaning)`);
+        errors.push(`Dòng ${idx + 1}: Cần tối thiểu "từ:nghĩa"`);
         return;
       }
       const [word, meaning, ...rest] = parts;
@@ -112,11 +111,10 @@ const CreateVocabularyTestModal = ({ show, onClose }) => {
       const example_sentence = (rest.join(':') || `Example sentence with ${word}.`).trim();
       vocabularies.push({ word, meaning, example_sentence });
     });
-
     return { vocabularies, errors };
   };
 
-  // Preview động ở bước 1 (tính theo thời gian thực từ textarea)
+  // Preview realtime
   const livePreviewVocabularies = useMemo(() => {
     try {
       return parseVocabularyText(vocabularyText).vocabularies || [];
@@ -130,76 +128,45 @@ const CreateVocabularyTestModal = ({ show, onClose }) => {
     [vocabularyText]
   );
 
+  // Step handlers
   const handleContinueToTestInfo = () => {
-    if (!vocabularyText.trim()) {
-      setErrMsg('Vui lòng nhập danh sách từ vựng');
-      return;
-    }
+    if (!vocabularyText.trim()) return setErrMsg('Vui lòng nhập danh sách từ vựng');
     const { vocabularies, errors } = parseVocabularyText(vocabularyText);
-    if (errors.length) {
-      setErrMsg(errors.join('\n'));
-      return;
-    }
-    if (!vocabularies.length) {
-      setErrMsg('Không tìm thấy từ vựng hợp lệ nào');
-      return;
-    }
+    if (errors.length) return setErrMsg(errors.join('\n'));
+    if (!vocabularies.length) return setErrMsg('Không tìm thấy từ vựng hợp lệ nào');
     setParsedVocabularies(vocabularies);
     setErrMsg('');
     setCurrentStep('test-info');
   };
 
-  const handleBackToVocabulary = () => {
-    setCurrentStep('vocabulary');
-    setErrMsg('');
-  };
-
-  const handleTestInfoChange = (field, value) => {
-    setTestInfo((prev) => ({ ...prev, [field]: value }));
-  };
-
   const handleContinueToReview = () => {
-    if (!testInfo.test_title.trim()) {
-      setErrMsg('Vui lòng nhập tiêu đề bài test');
-      return;
-    }
-    if (!testInfo.main_topic.trim()) {
-      setErrMsg('Vui lòng nhập chủ đề chính');
-      return;
-    }
-    if (!testInfo.sub_topic.trim()) {
-      setErrMsg('Vui lòng nhập phân mục');
-      return;
-    }
+    if (!testInfo.test_title.trim()) return setErrMsg('Vui lòng nhập tiêu đề bài test');
+    if (!testInfo.main_topic.trim()) return setErrMsg('Vui lòng nhập chủ đề chính');
+    if (!testInfo.sub_topic.trim()) return setErrMsg('Vui lòng nhập phân mục');
     setErrMsg('');
     setCurrentStep('review');
   };
-
-  const handleBackToTestInfo = () => {
-    setCurrentStep('test-info');
-    setErrMsg('');
-  };
-
-  const totalSteps = 3;
-  const progressPct = useMemo(() => {
-    if (currentStep === 'vocabulary') return (100 / totalSteps) * 1; // 33.33…
-    if (currentStep === 'test-info') return (100 / totalSteps) * 2;
-    if (currentStep === 'review') return 100;
-    return 100;
-  }, [currentStep]);
 
   const handleCreateTest = async () => {
     setLoading(true);
     setErrMsg('');
     setCurrentStep('creating');
     try {
+      // Ensure visibility is sent as either 'public' or 'private' (defensive)
+      const visibilityValue = testInfo.visibility === 'public' ? 'public' : 'private';
+
       const testData = {
         ...testInfo,
+        visibility: visibilityValue,
         test_type: 'vocabulary',
         total_questions: parsedVocabularies.length,
         status: 'active',
-        // owner_id: user?._id, // bật nếu backend cần
+        // owner_id: user?._id,
       };
+
+      // Debugging: log payload to help track why visibility may be wrong
+      // (leave this console.log for now — it helps reproduce the issue)
+      console.debug('CreateVocabularyTestModal - creating test payload:', testData);
 
       const createdTest = await testService.createTest(testData);
 
@@ -213,7 +180,6 @@ const CreateVocabularyTestModal = ({ show, onClose }) => {
         })
       );
 
-      // Best-effort: không fail cả cụm nếu có từ lỗi
       const results = await Promise.allSettled(vocabularyPromises);
       const rejected = results.filter((r) => r.status === 'rejected');
       if (rejected.length) {
@@ -221,11 +187,10 @@ const CreateVocabularyTestModal = ({ show, onClose }) => {
       }
 
       setCurrentStep('success');
-
       redirectTimerRef.current = setTimeout(() => {
         navigate(`/vocabulary/test/${createdTest._id}/settings`);
         if (mountedRef.current) onClose?.();
-      }, 1400);
+      }, 1200);
     } catch (err) {
       console.error('Error creating vocabulary test:', err);
       setErrMsg(err?.message || 'Có lỗi xảy ra khi tạo bài test');
@@ -235,42 +200,44 @@ const CreateVocabularyTestModal = ({ show, onClose }) => {
     }
   };
 
+  const totalSteps = 3;
+  const progressPct =
+    currentStep === 'vocabulary' ? (100 / totalSteps) * 1 :
+      currentStep === 'test-info' ? (100 / totalSteps) * 2 :
+        100;
+
   if (!show) return null;
 
-  // Render bằng Portal để đè lên toàn bộ layout
   return createPortal(
     <div
-      ref={overlayRef}
-      onMouseDown={onOverlayClick}
-      className="fixed inset-0 bg-black/70 backdrop-blur-md flex items-center justify-center z-[9999] p-2"
+      className="fixed inset-0 bg-neutral-900/60 backdrop-blur-[2px] flex items-center justify-center z-[9999] p-4"
       aria-modal="true"
       role="dialog"
     >
       <div
         ref={cardRef}
-        onMouseDown={(e) => e.stopPropagation()}
-        className="bg-white rounded-2xl shadow-2xl max-w-7xl w-full h-[90vh] overflow-hidden border border-gray-200 flex flex-col"
+        className="bg-white rounded-xl shadow-2xl max-w-7xl w-full h-[92vh] overflow-hidden border border-neutral-200 flex flex-col"
       >
         {/* Header */}
-        <div className="flex items-center justify-between p-6 border-b border-gray-200 bg-gray-50">
-          <div className="flex items-center space-x-3">
-            <div className="w-10 h-10 rounded-xl bg-blue-600 text-white flex items-center justify-center">
+        <div className="flex items-center justify-between px-6 py-4 border-b border-neutral-200 bg-neutral-50">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-lg bg-indigo-600 text-white flex items-center justify-center">
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.746 0 3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.746 0 3.332.477 4.5 1.253" />
               </svg>
             </div>
             <div>
-              <h2 className="text-xl font-semibold text-gray-900">
+              <h2 className="text-lg font-semibold text-neutral-900">
                 {currentStep === 'vocabulary' && 'Nhập Danh Sách Từ Vựng'}
                 {currentStep === 'test-info' && 'Thông Tin Bài Test'}
                 {currentStep === 'review' && 'Xem Lại Thông Tin'}
                 {currentStep === 'creating' && 'Đang Tạo Bài Test'}
                 {currentStep === 'success' && 'Hoàn Thành!'}
               </h2>
-              <p className="text-sm text-gray-600">
-                {currentStep === 'vocabulary' && 'Bước 1 của 3 - Chuẩn bị từ vựng'}
-                {currentStep === 'test-info' && 'Bước 2 của 3 - Cấu hình bài test'}
-                {currentStep === 'review' && 'Bước 3 của 3 - Kiểm tra thông tin'}
+              <p className="text-xs text-neutral-600">
+                {currentStep === 'vocabulary' && 'Bước 1/3 - Chuẩn bị từ vựng'}
+                {currentStep === 'test-info' && 'Bước 2/3 - Cấu hình bài test'}
+                {currentStep === 'review' && 'Bước 3/3 - Kiểm tra thông tin'}
                 {currentStep === 'creating' && 'Đang xử lý...'}
                 {currentStep === 'success' && 'Bài test đã được tạo thành công'}
               </p>
@@ -279,7 +246,7 @@ const CreateVocabularyTestModal = ({ show, onClose }) => {
           <button
             onClick={handleClose}
             disabled={loading}
-            className="p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-lg transition-colors disabled:opacity-50"
+            className="p-2 text-neutral-500 hover:text-neutral-700 hover:bg-neutral-100 rounded-md transition disabled:opacity-50"
             aria-label="Đóng"
             type="button"
           >
@@ -291,15 +258,15 @@ const CreateVocabularyTestModal = ({ show, onClose }) => {
 
         {/* Progress */}
         {(currentStep === 'vocabulary' || currentStep === 'test-info' || currentStep === 'review') && (
-          <div className="px-6 py-3 bg-white border-b border-gray-200">
-            <div className="flex items-center space-x-2">
-              <div className="flex-1 bg-gray-200 rounded-full h-2">
+          <div className="px-6 py-3 bg-neutral-50 border-b border-neutral-200">
+            <div className="flex items-center gap-2">
+              <div className="flex-1 bg-neutral-200 rounded-full h-2">
                 <div
-                  className="bg-blue-600 h-2 rounded-full transition-all duration-300"
+                  className="bg-indigo-600 h-2 rounded-full transition-all duration-300"
                   style={{ width: `${progressPct}%` }}
                 />
               </div>
-              <span className="text-xs font-medium text-gray-700">
+              <span className="text-xs font-medium text-neutral-700">
                 {currentStep === 'vocabulary' ? '1/3' : currentStep === 'test-info' ? '2/3' : '3/3'}
               </span>
             </div>
@@ -307,115 +274,139 @@ const CreateVocabularyTestModal = ({ show, onClose }) => {
         )}
 
         {/* Content */}
-        <div className="flex-1 overflow-y-auto">
-          <div className="p-6">
-            {/* Step 1: Layout 2 cột */}
+        <div className="flex-1 overflow-y-auto bg-neutral-50">
+          <div className="p-6 space-y-6">
+            {/* STEP 1 */}
             {currentStep === 'vocabulary' && (
               <div className="space-y-6">
-                {/* Hướng dẫn định dạng */}
-                <div className="bg-gray-50 border border-gray-200 rounded-xl p-4">
-                  <div className="flex items-start space-x-3">
-                    <div className="w-8 h-8 rounded-lg bg-gray-200 flex items-center justify-center flex-shrink-0">
-                      <svg className="w-4 h-4 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                {/* Tips */}
+                <div className="bg-white border border-neutral-200 rounded-lg p-35">
+                  <div className="flex items-start gap-4">
+                    <div className="w-10 h-10 rounded-md bg-neutral-200 flex items-center justify-center flex-shrink-0">
+                      <svg
+                        className="w-5 h-5 text-neutral-700"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth="2"
+                          d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                        />
                       </svg>
                     </div>
-                    <div>
-                      <h3 className="font-medium text-gray-900 mb-2">Định dạng nhập liệu</h3>
-                      <p className="text-sm text-gray-700 mb-3">
-                        Mỗi từ vựng một dòng, định dạng:{' '}
-                        <code className="bg-gray-200 px-2 py-1 rounded text-xs">từ:nghĩa:câu ví dụ</code>
+
+                    <div className="flex flex-col justify-center">
+                      <h3 className="font-semibold text-neutral-900 mb-2">
+                        Định dạng nhập liệu
+                      </h3>
+                      <p className="text-sm text-neutral-700 mb-2 leading-relaxed">
+                        Mỗi dòng một mục, theo cấu trúc:
+                        <br />
+                        <code className="bg-neutral-200 px-2 py-1 rounded text-xs font-mono">
+                          từ:nghĩa:câu ví dụ
+                        </code>
                       </p>
-                      <div className="bg-gray-100 rounded-lg p-3">
-                        <p className="text-xs font-medium text-gray-800 mb-2">Ví dụ:</p>
-                        <pre className="text-xs text-gray-800 font-mono">
-{`aisle:lối đi giữa các hàng ghế/kệ:Passengers are walking down the aisle.
-schedule:lịch trình:Please check your schedule before the meeting.
-colleague:đồng nghiệp:I discussed the project with my colleague.`}
-                        </pre>
-                      </div>
+                      <p className="text-xs text-neutral-500">
+                        Bạn có thể dùng dấu ":" trong câu ví dụ — hệ thống sẽ tự nhận dạng.
+                      </p>
                     </div>
                   </div>
                 </div>
 
-                {/* Khu vực 2 cột: textarea & preview */}
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                  {/* LEFT: Textarea */}
-                  <div className="space-y-3">
-                    <div className="flex items-center justify-between">
-                      <label className="block text-sm font-medium text-gray-900">
-                        Danh sách từ vựng *
+                {/* 2 cột: textarea & preview (BẰNG CHIỀU CAO) */}
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-stretch">
+                  {/* LEFT: Editor Card */}
+                  <div
+                    className="bg-white border border-neutral-200 rounded-lg flex flex-col overflow-hidden"
+                    style={{ height: PANEL_HEIGHT }}
+                  >
+                    <div className="px-4 py-3 border-b border-neutral-200 flex items-center justify-between">
+                      <label className="text-sm font-medium text-neutral-900">
+                        Danh sách từ vựng <span className="text-rose-600">*</span>
                       </label>
                       <div className="flex items-center gap-2">
-                        <span className="text-xs text-gray-700 bg-gray-100 px-2 py-1 rounded-full">
-                          {totalLines} dòng
-                        </span>
-                        <span className="text-xs text-blue-800 bg-blue-100 px-2 py-1 rounded-full">
+                        <span className="text-xs text-neutral-700 bg-neutral-100 px-2 py-1 rounded-full">{totalLines} dòng</span>
+                        <span className="text-xs text-indigo-800 bg-indigo-100 px-2 py-1 rounded-full">
                           {livePreviewVocabularies.length} hợp lệ
                         </span>
                       </div>
                     </div>
 
-                    <textarea
-                      value={vocabularyText}
-                      onChange={(e) => setVocabularyText(e.target.value)}
-                      placeholder="Nhập từ vựng theo định dạng: từ:nghĩa:câu ví dụ"
-                      rows={20}
-                      className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-600 focus:border-blue-600 font-mono text-sm bg-black text-white placeholder-gray-400 resize-none"
-                    />
-
-                    {!!errMsg && (
-                      <div className="bg-red-50 border border-red-200 rounded-xl p-4">
-                        <div className="flex items-start space-x-3">
-                          <div className="w-5 h-5 text-red-400 flex-shrink-0 mt-0.5">
-                            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                            </svg>
-                          </div>
-                          <p className="text-sm text-red-800 whitespace-pre-line">{errMsg}</p>
-                        </div>
-                      </div>
-                    )}
-                  </div>
-
-                  {/* RIGHT: Live Review Table */}
-                  <div className="bg-white border border-gray-200 rounded-xl overflow-hidden flex flex-col">
-                    <div className="px-6 py-4 bg-gray-800">
-                      <h3 className="text-lg font-semibold text-white flex items-center">
-                        <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.746 0 3.332.477 4.5 1.253" />
-                        </svg>
-                        Review từ vựng (hiển thị trực tiếp)
-                      </h3>
-                      <p className="text-xs text-gray-300 mt-1">
-                        Parse theo định dạng <span className="font-mono">từ:nghĩa:câu ví dụ</span>
-                      </p>
+                    <div className="flex-1 p-3">
+                      <textarea
+                        value={vocabularyText}
+                        onFocus={() => {
+                          if (isSampleActive && vocabularyText.trim() === SAMPLE_VOCAB.trim()) {
+                            setVocabularyText('');
+                            setIsSampleActive(false);
+                          }
+                        }}
+                        onChange={(e) => {
+                          const v = e.target.value;
+                          setVocabularyText(v);
+                          if (isSampleActive && v !== SAMPLE_VOCAB) setIsSampleActive(false);
+                        }}
+                        placeholder="Nhập theo định dạng: từ:nghĩa:câu ví dụ"
+                        className="w-full h-full resize-none px-3 py-2 border border-neutral-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 font-mono text-sm bg-neutral-50 text-neutral-900 placeholder-neutral-500"
+                        aria-invalid={!!errMsg}
+                      />
                     </div>
 
-                    <div className="overflow-x-auto" style={{ maxHeight: 500 }}>
+                    <div className="px-3 py-2 border-t border-neutral-200 flex gap-2">
+                      <button
+                        type="button"
+                        onClick={() => { setVocabularyText(''); setIsSampleActive(false); }}
+                        className="px-3 py-1.5 text-xs font-medium text-neutral-800 bg-white border border-neutral-300 rounded-md hover:bg-neutral-100"
+                      >
+                        Xoá tất cả
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => { setVocabularyText(SAMPLE_VOCAB); setIsSampleActive(true); }}
+                        className="px-3 py-1.5 text-xs font-medium text-white bg-indigo-600 rounded-md hover:bg-indigo-700"
+                      >
+                        Dán ví dụ mẫu
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* RIGHT: Preview Card */}
+                  <div
+                    className="bg-white border border-neutral-200 rounded-lg overflow-hidden flex flex-col"
+                    style={{ height: PANEL_HEIGHT }}
+                  >
+                    <div className="px-6 py-4 bg-neutral-900">
+                      <h3 className="text-base font-semibold text-white">Review từ vựng (cập nhật trực tiếp)</h3>
+                      <p className="text-xs text-neutral-300">Định dạng: <span className="font-mono">từ:nghĩa:câu ví dụ</span></p>
+                    </div>
+
+                    <div className="flex-1 overflow-auto">
                       <table className="w-full">
-                        <thead className="bg-gray-100 sticky top-0 z-10">
+                        <thead className="bg-neutral-100 sticky top-0 z-10">
                           <tr>
-                            <th className="px-4 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider w-16">STT</th>
-                            <th className="px-4 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider w-1/4">Từ vựng</th>
-                            <th className="px-4 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider w-1/4">Nghĩa</th>
-                            <th className="px-4 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">Câu ví dụ</th>
+                            <th className="px-4 py-2 text-left text-xs font-medium text-neutral-700 uppercase tracking-wider w-16">STT</th>
+                            <th className="px-4 py-2 text-left text-xs font-medium text-neutral-700 uppercase tracking-wider w-1/4">Từ vựng</th>
+                            <th className="px-4 py-2 text-left text-xs font-medium text-neutral-700 uppercase tracking-wider w-1/4">Nghĩa</th>
+                            <th className="px-4 py-2 text-left text-xs font-medium text-neutral-700 uppercase tracking-wider">Câu ví dụ</th>
                           </tr>
                         </thead>
-                        <tbody className="divide-y divide-gray-200">
+                        <tbody className="divide-y divide-neutral-200">
                           {livePreviewVocabularies.length === 0 ? (
                             <tr>
-                              <td colSpan={4} className="px-4 py-6 text-center text-sm text-gray-500">
-                                Nhập dữ liệu ở khung bên trái để xem preview.
+                              <td colSpan={4} className="px-4 py-10 text-center text-sm text-neutral-500">
+                                Nội dung rỗng — bấm “Dán ví dụ mẫu” hoặc nhập ở khung bên trái.
                               </td>
                             </tr>
                           ) : (
                             livePreviewVocabularies.map((vocab, idx) => (
-                              <tr key={`${vocab.word}-${idx}`} className="hover:bg-gray-50 transition-colors">
-                                <td className="px-4 py-3 text-sm font-medium text-gray-900">{idx + 1}</td>
-                                <td className="px-4 py-3 text-sm font-semibold text-gray-900">{vocab.word}</td>
-                                <td className="px-4 py-3 text-sm text-gray-800">{vocab.meaning}</td>
-                                <td className="px-4 py-3 text-sm text-gray-700 italic">{vocab.example_sentence}</td>
+                              <tr key={`${vocab.word}-${idx}`} className={idx % 2 === 1 ? 'bg-neutral-50' : 'bg-white'}>
+                                <td className="px-4 py-2 text-sm font-medium text-neutral-900">{idx + 1}</td>
+                                <td className="px-4 py-2 text-sm font-semibold text-neutral-900">{vocab.word}</td>
+                                <td className="px-4 py-2 text-sm text-neutral-800">{vocab.meaning}</td>
+                                <td className="px-4 py-2 text-sm text-neutral-700 italic">{vocab.example_sentence}</td>
                               </tr>
                             ))
                           )}
@@ -427,56 +418,56 @@ colleague:đồng nghiệp:I discussed the project with my colleague.`}
               </div>
             )}
 
-            {/* Step 2 */}
+            {/* STEP 2 */}
             {currentStep === 'test-info' && (
               <div className="space-y-4">
-                <div>
-                  <h3 className="text-lg font-medium text-gray-900 mb-2">Thông Tin Bài Test</h3>
-                  <p className="text-sm text-gray-700 mb-4">
-                    Đã phân tích <span className="font-medium text-blue-700">{parsedVocabularies.length} từ vựng</span>
+                <div className="bg-white border border-neutral-200 rounded-lg p-4">
+                  <h3 className="text-base font-semibold text-neutral-900 mb-1">Thông Tin Bài Test</h3>
+                  <p className="text-sm text-neutral-700">
+                    Đã phân tích <span className="font-semibold text-indigo-700">{parsedVocabularies.length} từ vựng</span>
                   </p>
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="md:col-span-2">
-                    <label className="block text-sm font-medium text-gray-800 mb-2">Tiêu đề bài test *</label>
+                    <label className="block text-sm font-medium text-neutral-800 mb-1">Tiêu đề bài test <span className="text-rose-600">*</span></label>
                     <input
                       type="text"
                       value={testInfo.test_title}
-                      onChange={(e) => handleTestInfoChange('test_title', e.target.value)}
+                      onChange={(e) => setTestInfo((p) => ({ ...p, test_title: e.target.value }))}
                       placeholder="VD: My Custom Vocabulary Test"
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-600 focus:border-blue-600 bg-black text-white placeholder-gray-400"
+                      className="w-full px-3 py-2 border border-neutral-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 bg-neutral-50 text-neutral-900 placeholder-neutral-500"
                     />
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-gray-800 mb-2">Chủ đề chính *</label>
+                    <label className="block text-sm font-medium text-neutral-800 mb-1">Chủ đề chính <span className="text-rose-600">*</span></label>
                     <input
                       type="text"
                       value={testInfo.main_topic}
-                      onChange={(e) => handleTestInfoChange('main_topic', e.target.value)}
+                      onChange={(e) => setTestInfo((p) => ({ ...p, main_topic: e.target.value }))}
                       placeholder="VD: TOEIC, IELTS, Business English"
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-600 focus:border-blue-600 bg-black text-white placeholder-gray-400"
+                      className="w-full px-3 py-2 border border-neutral-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 bg-neutral-50 text-neutral-900 placeholder-neutral-500"
                     />
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-gray-800 mb-2">Phân mục *</label>
+                    <label className="block text-sm font-medium text-neutral-800 mb-1">Phân mục <span className="text-rose-600">*</span></label>
                     <input
                       type="text"
                       value={testInfo.sub_topic}
-                      onChange={(e) => handleTestInfoChange('sub_topic', e.target.value)}
+                      onChange={(e) => setTestInfo((p) => ({ ...p, sub_topic: e.target.value }))}
                       placeholder="VD: Part 1, Daily Conversation"
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-600 focus:border-blue-600 bg-black text-white placeholder-gray-400"
+                      className="w-full px-3 py-2 border border-neutral-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 bg-neutral-50 text-neutral-900 placeholder-neutral-500"
                     />
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-gray-800 mb-2">Độ khó</label>
+                    <label className="block text-sm font-medium text-neutral-800 mb-1">Độ khó</label>
                     <select
                       value={testInfo.difficulty}
-                      onChange={(e) => handleTestInfoChange('difficulty', e.target.value)}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-600 focus:border-blue-600 bg-black text-white"
+                      onChange={(e) => setTestInfo((p) => ({ ...p, difficulty: e.target.value }))}
+                      className="w-full px-3 py-2 border border-neutral-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 bg-neutral-50 text-neutral-900"
                     >
                       <option value="easy">Dễ</option>
                       <option value="medium">Trung bình</option>
@@ -485,29 +476,27 @@ colleague:đồng nghiệp:I discussed the project with my colleague.`}
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-gray-800 mb-2">Thời gian (phút)</label>
+                    <label className="block text-sm font-medium text-neutral-800 mb-1">Thời gian (phút)</label>
                     <input
                       type="number"
                       min="1"
                       max="120"
                       value={testInfo.time_limit_minutes}
                       onChange={(e) => {
-                        const raw = e.target.value;
-                        const parsed = parseInt(raw, 10);
-                        const isNum = Number.isFinite(parsed);
-                        const clamped = isNum ? Math.max(1, Math.min(120, parsed)) : '';
-                        handleTestInfoChange('time_limit_minutes', clamped === '' ? 10 : clamped);
+                        const parsed = parseInt(e.target.value, 10);
+                        const clamped = Number.isFinite(parsed) ? Math.max(1, Math.min(120, parsed)) : 10;
+                        setTestInfo((p) => ({ ...p, time_limit_minutes: clamped }));
                       }}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-600 focus:border-blue-600 bg-black text-white"
+                      className="w-full px-3 py-2 border border-neutral-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 bg-neutral-50 text-neutral-900"
                     />
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-gray-800 mb-2">Chế độ hiển thị</label>
+                    <label className="block text-sm font-medium text-neutral-800 mb-1">Chế độ hiển thị</label>
                     <select
                       value={testInfo.visibility}
-                      onChange={(e) => handleTestInfoChange('visibility', e.target.value)}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-600 focus:border-blue-600 bg-black text-white"
+                      onChange={(e) => setTestInfo((p) => ({ ...p, visibility: e.target.value }))}
+                      className="w-full px-3 py-2 border border-neutral-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 bg-neutral-50 text-neutral-900"
                     >
                       <option value="public">🌍 Công khai - Mọi người có thể xem</option>
                       <option value="private">🔒 Riêng tư - Chỉ mình tôi</option>
@@ -516,100 +505,90 @@ colleague:đồng nghiệp:I discussed the project with my colleague.`}
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-800 mb-2">Mô tả</label>
+                  <label className="block text-sm font-medium text-neutral-800 mb-1">Mô tả</label>
                   <textarea
                     value={testInfo.description}
-                    onChange={(e) => handleTestInfoChange('description', e.target.value)}
+                    onChange={(e) => setTestInfo((p) => ({ ...p, description: e.target.value }))}
                     placeholder="Mô tả ngắn về bài test này..."
                     rows={3}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-600 focus:border-blue-600 bg-black text-white placeholder-gray-400 resize-none"
+                    className="w-full px-3 py-2 border border-neutral-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 bg-neutral-50 text-neutral-900 placeholder-neutral-500 resize-none"
                   />
                 </div>
 
-                {!!errMsg && (
-                  <div className="bg-red-50 border border-red-200 rounded-md p-3">
-                    <p className="text-sm text-red-800">{errMsg}</p>
+                {errMsg && (
+                  <div className="bg-rose-50 border border-rose-200 rounded-lg p-3" role="alert" aria-live="assertive">
+                    <p className="text-sm text-rose-800">{errMsg}</p>
                   </div>
                 )}
               </div>
             )}
 
-            {/* Step 3 */}
+            {/* STEP 3 */}
             {currentStep === 'review' && (
               <div className="space-y-6">
-                {/* Summary */}
-                <div className="bg-gray-50 border border-gray-200 rounded-xl p-6">
-                  <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
-                    <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                    </svg>
-                    Thông tin bài test
-                  </h3>
+                <div className="bg-white border border-neutral-200 rounded-lg p-6">
+                  <h3 className="text-base font-semibold text-neutral-900 mb-4">Thông tin bài test</h3>
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                    <div className="bg-white rounded-lg p-3 border border-gray-200">
-                      <p className="text-xs font-medium text-gray-600 uppercase">Tiêu đề</p>
-                      <p className="text-sm font-semibold text-gray-900 mt-1">{testInfo.test_title}</p>
+                    <div className="bg-neutral-50 rounded-md p-3 border border-neutral-200">
+                      <p className="text-xs font-medium text-neutral-600 uppercase">Tiêu đề</p>
+                      <p className="text-sm font-semibold text-neutral-900 mt-1">{testInfo.test_title || '-'}</p>
                     </div>
-                    <div className="bg-white rounded-lg p-3 border border-gray-200">
-                      <p className="text-xs font-medium text-gray-600 uppercase">Chủ đề</p>
-                      <p className="text-sm font-semibold text-gray-900 mt-1">{testInfo.main_topic} - {testInfo.sub_topic}</p>
+                    <div className="bg-neutral-50 rounded-md p-3 border border-neutral-200">
+                      <p className="text-xs font-medium text-neutral-600 uppercase">Chủ đề</p>
+                      <p className="text-sm font-semibold text-neutral-900 mt-1">
+                        {(testInfo.main_topic || '-') + ' - ' + (testInfo.sub_topic || '-')}
+                      </p>
                     </div>
-                    <div className="bg-white rounded-lg p-3 border border-gray-200">
-                      <p className="text-xs font-medium text-gray-600 uppercase">Độ khó</p>
-                      <p className="text-sm font-semibold text-gray-900 mt-1 capitalize">
+                    <div className="bg-neutral-50 rounded-md p-3 border border-neutral-200">
+                      <p className="text-xs font-medium text-neutral-600 uppercase">Độ khó</p>
+                      <p className="text-sm font-semibold text-neutral-900 mt-1 capitalize">
                         {testInfo.difficulty === 'easy' ? 'Dễ' : testInfo.difficulty === 'medium' ? 'Trung bình' : 'Khó'}
                       </p>
                     </div>
-                    <div className="bg-white rounded-lg p-3 border border-gray-200">
-                      <p className="text-xs font-medium text-gray-600 uppercase">Thời gian</p>
-                      <p className="text-sm font-semibold text-gray-900 mt-1">{testInfo.time_limit_minutes} phút</p>
+                    <div className="bg-neutral-50 rounded-md p-3 border border-neutral-200">
+                      <p className="text-xs font-medium text-neutral-600 uppercase">Thời gian</p>
+                      <p className="text-sm font-semibold text-neutral-900 mt-1">{testInfo.time_limit_minutes} phút</p>
                     </div>
-                    <div className="bg-white rounded-lg p-3 border border-gray-200">
-                      <p className="text-xs font-medium text-gray-600 uppercase">Số từ vựng</p>
-                      <p className="text-sm font-semibold text-gray-900 mt-1">{parsedVocabularies.length} từ</p>
+                    <div className="bg-neutral-50 rounded-md p-3 border border-neutral-200">
+                      <p className="text-xs font-medium text-neutral-600 uppercase">Số từ vựng</p>
+                      <p className="text-sm font-semibold text-neutral-900 mt-1">{parsedVocabularies.length} từ</p>
                     </div>
-                    <div className="bg-white rounded-lg p-3 border border-gray-200">
-                      <p className="text-xs font-medium text-gray-600 uppercase">Chế độ hiển thị</p>
-                      <p className="text-sm font-semibold text-gray-900 mt-1">
+                    <div className="bg-neutral-50 rounded-md p-3 border border-neutral-200">
+                      <p className="text-xs font-medium text-neutral-600 uppercase">Chế độ hiển thị</p>
+                      <p className="text-sm font-semibold text-neutral-900 mt-1">
                         {testInfo.visibility === 'public' ? '🌍 Công khai' : '🔒 Riêng tư'}
                       </p>
                     </div>
                     {testInfo.description && (
-                      <div className="bg-white rounded-lg p-3 border border-gray-200 md:col-span-2 lg:col-span-1">
-                        <p className="text-xs font-medium text-gray-600 uppercase">Mô tả</p>
-                        <p className="text-sm font-semibold text-gray-900 mt-1">{testInfo.description}</p>
+                      <div className="bg-neutral-50 rounded-md p-3 border border-neutral-200 md:col-span-2 lg:col-span-1">
+                        <p className="text-xs font-medium text-neutral-600 uppercase">Mô tả</p>
+                        <p className="text-sm text-neutral-900 mt-1">{testInfo.description}</p>
                       </div>
                     )}
                   </div>
                 </div>
 
-                {/* Vocabulary Table */}
-                <div className="bg-white border border-gray-200 rounded-xl overflow-hidden">
-                  <div className="px-6 py-4 bg-gray-800">
-                    <h3 className="text-lg font-semibold text-white flex items-center">
-                      <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.746 0 3.332.477 4.5 1.253" />
-                      </svg>
-                      Danh sách từ vựng ({parsedVocabularies.length} từ)
-                    </h3>
+                <div className="bg-white border border-neutral-200 rounded-lg overflow-hidden">
+                  <div className="px-6 py-4 bg-neutral-900">
+                    <h3 className="text-base font-semibold text-white">Danh sách từ vựng ({parsedVocabularies.length} từ)</h3>
                   </div>
-                  <div className="overflow-x-auto" style={{ maxHeight: 400 }}>
+                  <div className="overflow-x-auto" style={{ maxHeight: 420 }}>
                     <table className="w-full">
-                      <thead className="bg-gray-100 sticky top-0">
+                      <thead className="bg-neutral-100 sticky top-0">
                         <tr>
-                          <th className="px-4 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider w-16">STT</th>
-                          <th className="px-4 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider w-1/4">Từ vựng</th>
-                          <th className="px-4 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider w-1/4">Nghĩa</th>
-                          <th className="px-4 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">Câu ví dụ</th>
+                          <th className="px-4 py-3 text-left text-xs font-medium text-neutral-700 uppercase tracking-wider w-16">STT</th>
+                          <th className="px-4 py-3 text-left text-xs font-medium text-neutral-700 uppercase tracking-wider w-1/4">Từ vựng</th>
+                          <th className="px-4 py-3 text-left text-xs font-medium text-neutral-700 uppercase tracking-wider w-1/4">Nghĩa</th>
+                          <th className="px-4 py-3 text-left text-xs font-medium text-neutral-700 uppercase tracking-wider">Câu ví dụ</th>
                         </tr>
                       </thead>
-                      <tbody className="divide-y divide-gray-200">
+                      <tbody className="divide-y divide-neutral-200">
                         {parsedVocabularies.map((vocab, index) => (
-                          <tr key={`${vocab.word}-${index}`} className="hover:bg-gray-50 transition-colors">
-                            <td className="px-4 py-3 text-sm font-medium text-gray-900">{index + 1}</td>
-                            <td className="px-4 py-3 text-sm font-semibold text-gray-900">{vocab.word}</td>
-                            <td className="px-4 py-3 text-sm text-gray-800">{vocab.meaning}</td>
-                            <td className="px-4 py-3 text-sm text-gray-700 italic">{vocab.example_sentence}</td>
+                          <tr key={`${vocab.word}-${index}`} className={index % 2 === 1 ? 'bg-neutral-50' : 'bg-white'}>
+                            <td className="px-4 py-3 text-sm font-medium text-neutral-900">{index + 1}</td>
+                            <td className="px-4 py-3 text-sm font-semibold text-neutral-900">{vocab.word}</td>
+                            <td className="px-4 py-3 text-sm text-neutral-800">{vocab.meaning}</td>
+                            <td className="px-4 py-3 text-sm text-neutral-700 italic">{vocab.example_sentence}</td>
                           </tr>
                         ))}
                       </tbody>
@@ -617,59 +596,50 @@ colleague:đồng nghiệp:I discussed the project with my colleague.`}
                   </div>
                 </div>
 
-                {!!errMsg && (
-                  <div className="bg-red-50 border border-red-200 rounded-xl p-4">
-                    <div className="flex items-start space-x-3">
-                      <div className="w-5 h-5 text-red-400 flex-shrink-0 mt-0.5">
-                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                        </svg>
-                      </div>
-                      <p className="text-sm text-red-800 whitespace-pre-line">{errMsg}</p>
-                    </div>
+                {errMsg && (
+                  <div className="bg-rose-50 border border-rose-200 rounded-lg p-3" role="alert" aria-live="assertive">
+                    <p className="text-sm text-rose-800 whitespace-pre-line">{errMsg}</p>
                   </div>
                 )}
               </div>
             )}
 
-            {/* Step 4 */}
+            {/* STEP 4 */}
             {currentStep === 'creating' && (
-              <div className="text-center py-10">
-                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
-                <h3 className="text-lg font-medium text-gray-900 mb-2">Đang tạo bài test...</h3>
-                <p className="text-sm text-gray-700">
-                  Đang tạo bài test và {parsedVocabularies.length} từ vựng
-                </p>
+              <div className="text-center py-12">
+                <div className="animate-spin rounded-full h-12 w-12 border-2 border-neutral-200 border-t-indigo-600 mx-auto mb-4" />
+                <h3 className="text-base font-medium text-neutral-900 mb-2">Đang tạo bài test...</h3>
+                <p className="text-sm text-neutral-700">Đang tạo bài test và {parsedVocabularies.length} từ vựng</p>
               </div>
             )}
 
-            {/* Step 5 */}
+            {/* STEP 5 */}
             {currentStep === 'success' && (
-              <div className="text-center py-10">
-                <div className="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                  <svg className="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7"></path>
+              <div className="text-center py-12">
+                <div className="w-12 h-12 bg-emerald-100 border border-emerald-200 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <svg className="w-6 h-6 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" />
                   </svg>
                 </div>
-                <h3 className="text-lg font-medium text-gray-900 mb-2">Tạo thành công!</h3>
-                <p className="text-sm text-gray-700 mb-4">
-                  Bài test "{testInfo.test_title}" đã được tạo với {parsedVocabularies.length} từ vựng
+                <h3 className="text-base font-medium text-neutral-900 mb-2">Tạo thành công!</h3>
+                <p className="text-sm text-neutral-700 mb-2">
+                  Bài test "<span className="font-semibold">{testInfo.test_title}</span>" đã được tạo với {parsedVocabularies.length} từ vựng.
                 </p>
-                <p className="text-xs text-gray-500">Đang chuyển hướng đến trang cài đặt bài test...</p>
+                <p className="text-xs text-neutral-500">Đang chuyển hướng đến trang cài đặt...</p>
               </div>
             )}
           </div>
 
           {/* Footer */}
           {(currentStep === 'vocabulary' || currentStep === 'test-info' || currentStep === 'review') && (
-            <div className="flex items-center justify-between p-6 border-t border-gray-200 bg-white">
-              <div className="flex space-x-3">
+            <div className="flex items-center justify-between px-6 py-4 border-t border-neutral-200 bg-white">
+              <div className="flex gap-3">
                 {currentStep === 'test-info' && (
                   <button
                     type="button"
-                    onClick={handleBackToVocabulary}
+                    onClick={() => { setCurrentStep('vocabulary'); setErrMsg(''); }}
                     disabled={loading}
-                    className="px-4 py-2 text-sm font-medium text-gray-800 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-600 disabled:opacity-50"
+                    className="px-4 py-2 text-sm font-medium text-neutral-800 bg-white border border-neutral-300 rounded-md hover:bg-neutral-100 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50"
                   >
                     Quay lại
                   </button>
@@ -677,21 +647,21 @@ colleague:đồng nghiệp:I discussed the project with my colleague.`}
                 {currentStep === 'review' && (
                   <button
                     type="button"
-                    onClick={handleBackToTestInfo}
+                    onClick={() => { setCurrentStep('test-info'); setErrMsg(''); }}
                     disabled={loading}
-                    className="px-4 py-2 text-sm font-medium text-gray-800 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-600 disabled:opacity-50"
+                    className="px-4 py-2 text-sm font-medium text-neutral-800 bg-white border border-neutral-300 rounded-md hover:bg-neutral-100 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50"
                   >
                     Quay lại
                   </button>
                 )}
               </div>
 
-              <div className="flex space-x-3">
+              <div className="flex gap-3">
                 <button
                   type="button"
                   onClick={handleClose}
                   disabled={loading}
-                  className="px-4 py-2 text-sm font-medium text-gray-800 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-600 disabled:opacity-50"
+                  className="px-4 py-2 text-sm font-medium text-neutral-800 bg-white border border-neutral-300 rounded-md hover:bg-neutral-100 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50"
                 >
                   Hủy
                 </button>
@@ -701,7 +671,7 @@ colleague:đồng nghiệp:I discussed the project with my colleague.`}
                     type="button"
                     onClick={handleContinueToTestInfo}
                     disabled={loading}
-                    className="px-4 py-2 text-sm font-medium text-white bg-blue-600 border border-transparent rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-600 disabled:opacity-50"
+                    className="px-4 py-2 text-sm font-medium text-white bg-indigo-600 border border-transparent rounded-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50"
                   >
                     Tiếp tục
                   </button>
@@ -712,7 +682,7 @@ colleague:đồng nghiệp:I discussed the project with my colleague.`}
                     type="button"
                     onClick={handleContinueToReview}
                     disabled={loading}
-                    className="px-4 py-2 text-sm font-medium text-white bg-blue-600 border border-transparent rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-600 disabled:opacity-50"
+                    className="px-4 py-2 text-sm font-medium text-white bg-indigo-600 border border-transparent rounded-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50"
                   >
                     Xem lại
                   </button>
@@ -723,7 +693,7 @@ colleague:đồng nghiệp:I discussed the project with my colleague.`}
                     type="button"
                     onClick={handleCreateTest}
                     disabled={loading}
-                    className="px-6 py-2 text-sm font-semibold text-white bg-green-600 border border-transparent rounded-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-600 disabled:opacity-50"
+                    className="px-5 py-2 text-sm font-semibold text-white bg-emerald-600 border border-transparent rounded-md hover:bg-emerald-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-emerald-600 disabled:opacity-50"
                   >
                     {loading ? 'Đang tạo...' : 'Tạo bài test'}
                   </button>
