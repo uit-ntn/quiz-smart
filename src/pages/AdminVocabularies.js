@@ -193,8 +193,8 @@ const AdminVocabularies = () => {
           Ví dụ
         </label>
         <textarea
-          value={formData.example}
-          onChange={(e) => setFormData({ ...formData, example: e.target.value })}
+          value={formData.example_sentence}
+          onChange={(e) => setFormData({ ...formData, example_sentence: e.target.value })}
           rows="2"
           className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
           placeholder="Câu ví dụ..."
@@ -401,7 +401,7 @@ const AdminVocabularies = () => {
                       </td>
                       <td className="px-6 py-4">
                         <div className="text-sm text-gray-600 max-w-md truncate">
-                          {vocab.example || '-'}
+                          {vocab.example_sentence || '-'}
                         </div>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
