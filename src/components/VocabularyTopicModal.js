@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import vocabularyService from '../services/vocabularyService';
+import testService from '../services/testService';
 
 // Chuẩn hoá nhiều kiểu trả về -> mảng string
 const normalizeToSubTopicArray = (raw) => {
@@ -97,7 +97,7 @@ const VocabularyTopicModal = ({ isOpen, onClose, mainTopic }) => {
       setLoading(true);
       setError(null);
       console.log('VocabularyTopicModal: Fetching sub topics for:', mainTopic);
-      const res = await vocabularyService.getVocabularySubTopicsByMainTopic(mainTopic);
+      const res = await testService.getVocabularySubTopicsByMainTopic(mainTopic);
       console.log('VocabularyTopicModal: Sub topics response:', res);
       const normalized = normalizeToSubTopicArray(res);
       console.log('VocabularyTopicModal: Normalized sub topics:', normalized);

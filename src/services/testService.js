@@ -1,227 +1,192 @@
 // =========================
-// 📘 TestService.js (updated)
+// 📘 src/services/testService.js (final)
 // =========================
 const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:8000/api';
 
-const getAuthHeaders = () => {
-  const token = localStorage.getItem('token');
-  console.log('Token from localStorage:', token ? 'Present' : 'Missing');
-  console.log('Token preview:', token ? token.substring(0, 20) + '...' : 'No token');
-  
-  return {
-    'Content-Type': 'application/json',
-    ...(token && { Authorization: `Bearer ${token}` })
-  };
-};
+// ---- Helpers
+const token = () => localStorage.getItem('token') || '';
+const jsonHeaders = () => ({ 'Content-Type': 'application/json' });
+const authHeaders = () =>
+  token() ? { ...jsonHeaders(), Authorization: `Bearer ${token()}` } : jsonHeaders();
 
-// helper build querystring từ object filters
 const toQuery = (obj = {}) => {
-  const q = new URLSearchParams();
+  const p = new URLSearchParams();
   Object.entries(obj).forEach(([k, v]) => {
-    if (v !== undefined && v !== null && v !== '') q.append(k, v);
+    if (v !== undefined && v !== null && v !== '') p.append(k, v);
   });
-  const s = q.toString();
+  const s = p.toString();
   return s ? `?${s}` : '';
 };
 
+async function handle(res) {
+  const text = await res.text();
+  let body = null;
+  try {
+    body = text ? JSON.parse(text) : null;
+  } catch {
+    // body có thể rỗng/không phải JSON (hard delete trả message đơn)
+  }
+  if (!res.ok) {
+    const msg =
+      (body && (body.message || body.error)) ||
+      text ||
+      `HTTP ${res.status}`;
+    throw new Error(msg);
+  }
+  return body ?? { success: true };
+}
+
+// ---- Service
 const TestService = {
-  // Create
-  createTest: async (payload) => {
+  // CREATE (JWT)
+  async createTest(payload) {
     const res = await fetch(`${API_BASE_URL}/tests`, {
       method: 'POST',
-      headers: getAuthHeaders(),
+      headers: authHeaders(),
       body: JSON.stringify(payload),
     });
-    if (!res.ok) throw new Error(`Failed to create test: ${await res.text()}`);
-    const data = await res.json();
+    const data = await handle(res);
     return data.test || data;
   },
 
-  // All (có filters)
-  getAllTests: async (filters = {}) => {
-    const res = await fetch(`${API_BASE_URL}/tests${toQuery(filters)}`);
-    if (!res.ok) throw new Error(`HTTP error ${res.status}: ${await res.text()}`);
-    const data = await res.json();
-    return data.tests || (Array.isArray(data) ? data : []);
-  },
-
-  // My tests (có filters, cần JWT)
-  getMyTests: async (filters = {}) => {
-    const res = await fetch(`${API_BASE_URL}/tests/my-tests${toQuery(filters)}`, {
-      headers: getAuthHeaders(),
+  // READ ALL (optional auth on BE; FE gọi public)
+  async getAllTests(filters = {}) {
+    const res = await fetch(`${API_BASE_URL}/tests${toQuery(filters)}`, {
+      headers: jsonHeaders(),
     });
-    if (!res.ok) throw new Error(`Failed to fetch my tests: ${await res.text()}`);
-    const data = await res.json();
+    const data = await handle(res);
     return data.tests || (Array.isArray(data) ? data : []);
   },
 
-  // By ID
-  getTestById: async (id) => {
-    const res = await fetch(`${API_BASE_URL}/tests/${id}`);
-    if (!res.ok) throw new Error(`Failed to fetch test: ${await res.text()}`);
-    const data = await res.json();
-    return data.test || data;
-    // service/getTestById trả về { message, test } -> vẫn OK
+  // READ MINE (JWT)
+  async getMyTests(filters = {}) {
+    const res = await fetch(`${API_BASE_URL}/tests/my-tests${toQuery(filters)}`, {
+      headers: authHeaders(),
+    });
+    const data = await handle(res);
+    return data.tests || (Array.isArray(data) ? data : []);
   },
 
-  // Update (JWT)
-  updateTest: async (id, payload) => {
+  // READ BY ID (optional auth)
+  async getTestById(id) {
+    const res = await fetch(`${API_BASE_URL}/tests/${id}`, {
+      headers: jsonHeaders(),
+    });
+    const data = await handle(res);
+    return data.test || data;
+  },
+
+  // UPDATE (JWT, admin/creator)
+  async updateTest(id, payload) {
     const res = await fetch(`${API_BASE_URL}/tests/${id}`, {
       method: 'PUT',
-      headers: getAuthHeaders(),
+      headers: authHeaders(),
       body: JSON.stringify(payload),
     });
-    if (!res.ok) throw new Error(`Failed to update test: ${await res.text()}`);
-    const data = await res.json();
+    const data = await handle(res);
     return data.test || data;
   },
 
-  // Soft delete (JWT) -> DELETE /api/tests/:id (controller.softDeleteTest)
-  softDeleteTest: async (id) => {
+  // SOFT DELETE (JWT, admin/creator) -> DELETE /tests/:id
+  async softDeleteTest(id) {
     const res = await fetch(`${API_BASE_URL}/tests/${id}`, {
       method: 'DELETE',
-      headers: getAuthHeaders(),
+      headers: authHeaders(),
     });
-    if (!res.ok) throw new Error(`Failed to soft delete: ${await res.text()}`);
-    return res.json(); // { success, message, test }
+    return handle(res); // { success, message, test }
   },
 
-  // Hard delete (JWT) -> DELETE /api/tests/:id/hard-delete (controller.hardDeleteTest)
-  hardDeleteTest: async (id) => {
-    const url = `${API_BASE_URL}/tests/${id}/hard-delete`;
-    const headers = getAuthHeaders();
-    
-    console.log('Hard delete request:', {
-      url,
+  // HARD DELETE (JWT, admin/creator) -> DELETE /tests/:id/hard-delete
+  async hardDeleteTest(id) {
+    const res = await fetch(`${API_BASE_URL}/tests/${id}/hard-delete`, {
       method: 'DELETE',
-      headers,
-      testId: id
+      headers: authHeaders(),
     });
-    
-    const res = await fetch(url, {
-      method: 'DELETE',
-      headers,
-    });
-    
-    console.log('Hard delete response status:', res.status);
-    const responseText = await res.text();
-    console.log('Hard delete response text:', responseText);
-    
-    if (!res.ok) {
-      let errorMessage = `Failed to hard delete (${res.status})`;
-      
-      // Handle specific error cases
-      if (res.status === 404) {
-        errorMessage = 'Test not found or endpoint not available';
-      } else if (res.status === 403) {
-        errorMessage = 'Access denied - you do not have permission to delete this test';
-      } else if (res.status === 401) {
-        errorMessage = 'Authentication required - please login again';
-      } else {
-        try {
-          const errorData = JSON.parse(responseText);
-          errorMessage = errorData.message || errorMessage;
-        } catch (e) {
-          errorMessage += `: ${responseText}`;
-        }
-      }
-      
-      throw new Error(errorMessage);
-    }
-    
-    try {
-      return JSON.parse(responseText);
-    } catch (parseError) {
-      console.warn('Failed to parse JSON response:', parseError);
-      return { success: true, message: responseText };
-    }
+    return handle(res); // { success, message }
   },
 
-  // Search
-  searchTests: async (q) => {
-    const res = await fetch(`${API_BASE_URL}/tests/search?q=${encodeURIComponent(q)}`);
-    if (!res.ok) throw new Error(`Failed to search tests: ${await res.text()}`);
-    const data = await res.json();
+  // SEARCH
+  async searchTests(q) {
+    const res = await fetch(`${API_BASE_URL}/tests/search?q=${encodeURIComponent(q)}`, {
+      headers: jsonHeaders(),
+    });
+    const data = await handle(res);
     return data.tests || data;
   },
 
-  // By topic (mainTopic[/subTopic])
-  getTestsByTopic: async (mainTopic, subTopic) => {
+  // BY TOPIC
+  async getTestsByTopic(mainTopic, subTopic) {
     const url = subTopic
       ? `${API_BASE_URL}/tests/topic/${encodeURIComponent(mainTopic)}/${encodeURIComponent(subTopic)}`
       : `${API_BASE_URL}/tests/topic/${encodeURIComponent(mainTopic)}`;
-    const res = await fetch(url);
-    if (!res.ok) throw new Error(`Failed to fetch by topic: ${await res.text()}`);
-    const data = await res.json();
+    const res = await fetch(url, { headers: jsonHeaders() });
+    const data = await handle(res);
     return data.tests || (Array.isArray(data) ? data : []);
   },
 
-  // By type (multiple_choice | grammar | vocabulary)
-  getTestsByType: async (testType) => {
-    const res = await fetch(`${API_BASE_URL}/tests/type/${testType}`);
-    if (!res.ok) throw new Error(`Failed to fetch by type: ${await res.text()}`);
-    const data = await res.json();
+  // BY TYPE
+  async getTestsByType(testType) {
+    const res = await fetch(`${API_BASE_URL}/tests/type/${testType}`, {
+      headers: jsonHeaders(),
+    });
+    const data = await handle(res);
     return data.tests || data;
   },
 
-  // ======= Topics/Sub-topics per type (khớp controller) =======
-  // Multiple Choice topics
-  getAllMultipleChoicesTests: async () => {
-    const res = await fetch(`${API_BASE_URL}/tests/multiple-choices`);
-    if (!res.ok) throw new Error(`Failed to fetch MC tests: ${await res.text()}`);
-    const data = await res.json();
+  // ===== MC =====
+  async getAllMultipleChoicesTests() {
+    const res = await fetch(`${API_BASE_URL}/tests/multiple-choices`, { headers: jsonHeaders() });
+    const data = await handle(res);
     return data.tests || data;
   },
-  getAllMultipleChoiceMainTopics: async () => {
-    const res = await fetch(`${API_BASE_URL}/tests/multiple-choices/main-topics`);
-    if (!res.ok) throw new Error(`Failed to fetch MC main topics: ${await res.text()}`);
-    const data = await res.json();
+  async getAllMultipleChoiceMainTopics() {
+    const res = await fetch(`${API_BASE_URL}/tests/multiple-choices/main-topics`, { headers: jsonHeaders() });
+    const data = await handle(res);
     return data.mainTopics || data || [];
   },
-  getMultipleChoiceSubTopicsByMainTopic: async (mainTopic) => {
-    const res = await fetch(`${API_BASE_URL}/tests/multiple-choices/sub-topics/${encodeURIComponent(mainTopic)}`);
-    if (!res.ok) throw new Error(`Failed to fetch MC sub topics: ${await res.text()}`);
-    const data = await res.json();
+  async getMultipleChoiceSubTopicsByMainTopic(mainTopic) {
+    const res = await fetch(`${API_BASE_URL}/tests/multiple-choices/sub-topics/${encodeURIComponent(mainTopic)}`, {
+      headers: jsonHeaders(),
+    });
+    const data = await handle(res);
+    return data.subTopics || data || [];
+    },
+
+  // ===== Grammar =====
+  async getAllGrammarsTests() {
+    const res = await fetch(`${API_BASE_URL}/tests/grammars`, { headers: jsonHeaders() });
+    const data = await handle(res);
+    return data.tests || data;
+  },
+  async getAllGrammarsMainTopics() {
+    const res = await fetch(`${API_BASE_URL}/tests/grammars/main-topics`, { headers: jsonHeaders() });
+    const data = await handle(res);
+    return data.mainTopics || data || [];
+  },
+  async getGrammarSubTopicsByMainTopic(mainTopic) {
+    const res = await fetch(`${API_BASE_URL}/tests/grammars/sub-topics/${encodeURIComponent(mainTopic)}`, {
+      headers: jsonHeaders(),
+    });
+    const data = await handle(res);
     return data.subTopics || data || [];
   },
 
-  // Grammar topics
-  getAllGrammarsTests: async () => {
-    const res = await fetch(`${API_BASE_URL}/tests/grammars`);
-    if (!res.ok) throw new Error(`Failed to fetch grammar tests: ${await res.text()}`);
-    const data = await res.json();
+  // ===== Vocabulary =====
+  async getAllVocabulariesTests() {
+    const res = await fetch(`${API_BASE_URL}/tests/vocabularies`, { headers: jsonHeaders() });
+    const data = await handle(res);
     return data.tests || data;
   },
-  getAllGrammarsMainTopics: async () => {
-    const res = await fetch(`${API_BASE_URL}/tests/grammars/main-topics`);
-    if (!res.ok) throw new Error(`Failed to fetch grammar main topics: ${await res.text()}`);
-    const data = await res.json();
+  async getAllVocabulariesMainTopics() {
+    const res = await fetch(`${API_BASE_URL}/tests/vocabularies/main-topics`, { headers: jsonHeaders() });
+    const data = await handle(res);
     return data.mainTopics || data || [];
   },
-  getGrammarSubTopicsByMainTopic: async (mainTopic) => {
-    const res = await fetch(`${API_BASE_URL}/tests/grammars/sub-topics/${encodeURIComponent(mainTopic)}`);
-    if (!res.ok) throw new Error(`Failed to fetch grammar sub topics: ${await res.text()}`);
-    const data = await res.json();
-    return data.subTopics || data || [];
-  },
-
-  // Vocabulary topics
-  getAllVocabulariesTests: async () => {
-    const res = await fetch(`${API_BASE_URL}/tests/vocabularies`);
-    if (!res.ok) throw new Error(`Failed to fetch vocabulary tests: ${await res.text()}`);
-    const data = await res.json();
-    return data.tests || data;
-  },
-  getAllVocabulariesMainTopics: async () => {
-    const res = await fetch(`${API_BASE_URL}/tests/vocabularies/main-topics`);
-    if (!res.ok) throw new Error(`Failed to fetch vocabulary main topics: ${await res.text()}`);
-    const data = await res.json();
-    return data.mainTopics || data || [];
-  },
-  getVocabularySubTopicsByMainTopic: async (mainTopic) => {
-    const res = await fetch(`${API_BASE_URL}/tests/vocabularies/sub-topics/${encodeURIComponent(mainTopic)}`);
-    if (!res.ok) throw new Error(`Failed to fetch vocabulary sub topics: ${await res.text()}`);
-    const data = await res.json();
+  async getVocabularySubTopicsByMainTopic(mainTopic) {
+    const res = await fetch(`${API_BASE_URL}/tests/vocabularies/sub-topics/${encodeURIComponent(mainTopic)}`, {
+      headers: jsonHeaders(),
+    });
+    const data = await handle(res);
     return data.subTopics || data || [];
   },
 };

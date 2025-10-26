@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import testService from '../services/testService';
 import vocabularyService from '../services/vocabularyService';
 
 const VocabularyDebugPage = () => {
@@ -16,7 +17,7 @@ const VocabularyDebugPage = () => {
   const fetchMainTopics = async () => {
     try {
       setLoading(true);
-      const response = await vocabularyService.getAllVocabularyMainTopics();
+      const response = await testService.getAllVocabulariesMainTopics();
       console.log('Main Topics Response:', response);
       setMainTopics(response || []);
     } catch (error) {
@@ -29,7 +30,7 @@ const VocabularyDebugPage = () => {
   const fetchSubTopics = async (mainTopic) => {
     try {
       setLoading(true);
-      const response = await vocabularyService.getVocabularySubTopicsByMainTopic(mainTopic);
+      const response = await testService.getVocabularySubTopicsByMainTopic(mainTopic);
       console.log(`Sub Topics for ${mainTopic}:`, response);
       setSubTopics(prev => ({ ...prev, [mainTopic]: response || [] }));
     } catch (error) {

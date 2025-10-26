@@ -1,284 +1,176 @@
+// =========================
+// 📘 src/services/testResultService.js (final)
+// =========================
 const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:8000/api';
 
-// Helper function to get auth headers
-const getAuthHeaders = () => {
-    const token = localStorage.getItem('token');
-    return {
-        'Content-Type': 'application/json',
-        ...(token && { Authorization: `Bearer ${token}` })
-    };
+// ---- Helpers
+const getToken = () => localStorage.getItem('token') || '';
+const jsonHeaders = () => ({ 'Content-Type': 'application/json' });
+const authHeaders = () =>
+  getToken() ? { ...jsonHeaders(), Authorization: `Bearer ${getToken()}` } : jsonHeaders();
+
+const toQuery = (obj = {}) => {
+  const p = new URLSearchParams();
+  Object.entries(obj).forEach(([k, v]) => {
+    if (v !== undefined && v !== null && `${v}` !== '') p.append(k, v);
+  });
+  const s = p.toString();
+  return s ? `?${s}` : '';
 };
 
-// Helper function to handle API responses
-const handleResponse = async (response) => {
-    if (!response.ok) {
-        if (response.status === 401) {
-            // Token expired or invalid
-            localStorage.removeItem('token');
-            localStorage.removeItem('user');
-            window.location.href = '/login';
-        }
-        const errorText = await response.text();
-        let errorMessage;
-        try {
-            const errorData = JSON.parse(errorText);
-            errorMessage = errorData.message || errorText;
-        } catch {
-            errorMessage = errorText || 'Network error';
-        }
-        console.error('API Error Response:', errorText);
-        throw new Error(errorMessage);
+async function handle(res) {
+  const text = await res.text();
+  let body = null;
+  try { body = text ? JSON.parse(text) : null; } catch {}
+  if (!res.ok) {
+    if (res.status === 401) {
+      // hết hạn/không hợp lệ -> dọn local và chuyển login
+      localStorage.removeItem('token');
+      localStorage.removeItem('user');
+      try { window.location.href = '/login'; } catch {}
     }
-    
-    // Some endpoints might return empty body (204), handle that
-    const text = await response.text();
-    if (!text) return {};
-    
-    try {
-        return JSON.parse(text);
-    } catch {
-        return { data: text };
-    }
-};
+    const msg = (body && (body.message || body.error)) || text || `HTTP ${res.status}`;
+    throw new Error(msg);
+  }
+  return body ?? { success: true };
+}
 
-// Build query string from filters object
-const buildQueryString = (params = {}) => {
-    const qs = new URLSearchParams();
-    Object.keys(params).forEach((key) => {
-        const val = params[key];
-        if (val !== undefined && val !== null) {
-            qs.append(key, val);
-        }
+const TestResultService = {
+  // 🟢 Submit / tạo kết quả
+  async createTestResult(payload) {
+    const res = await fetch(`${API_BASE_URL}/test-results`, {
+      method: 'POST',
+      headers: authHeaders(),
+      body: JSON.stringify(payload),
     });
-    const str = qs.toString();
-    return str ? `?${str}` : '';
+    const data = await handle(res);
+    return data.result || data;
+  },
+
+  // 🟡 Cập nhật kết quả theo id
+  async updateTestResult(id, payload) {
+    const res = await fetch(`${API_BASE_URL}/test-results/${id}`, {
+      method: 'PUT',
+      headers: authHeaders(),
+      body: JSON.stringify(payload),
+    });
+    const data = await handle(res);
+    return data.result || data;
+  },
+
+  // 🟡 Cập nhật status theo id (draft/active/archived/deleted...)
+  async updateStatusById(id, status) {
+    const res = await fetch(`${API_BASE_URL}/test-results/${id}/status`, {
+      method: 'PATCH',
+      headers: authHeaders(),
+      body: JSON.stringify({ status }),
+    });
+    const data = await handle(res);
+    return data.result || data;
+  },
+
+  // 🟡 Cập nhật status theo testId (admin)
+  async updateStatusByTestId(testId, status) {
+    const res = await fetch(`${API_BASE_URL}/test-results/test/${testId}/status`, {
+      method: 'PATCH',
+      headers: authHeaders(),
+      body: JSON.stringify({ status }),
+    });
+    return handle(res); // { success, message, modifiedCount }
+  },
+
+  // 📘 Lấy 1 result theo id (admin/owner)
+  async getTestResultById(id) {
+    const res = await fetch(`${API_BASE_URL}/test-results/${id}`, {
+      method: 'GET',
+      headers: authHeaders(),
+    });
+    const data = await handle(res);
+    return data.result || data;
+  },
+
+  // 📘 Lấy results của tôi
+  async getMyTestResults() {
+    const res = await fetch(`${API_BASE_URL}/test-results/my-results`, {
+      method: 'GET',
+      headers: authHeaders(),
+    });
+    const data = await handle(res);
+    return data.results || data || [];
+  },
+
+  // 📊 Thống kê của tôi
+  async getMyStatistics() {
+    const res = await fetch(`${API_BASE_URL}/test-results/my-statistics`, {
+      method: 'GET',
+      headers: authHeaders(),
+    });
+    const data = await handle(res);
+    return data.statistics || data;
+  },
+
+  // 📘 Lấy results theo testId (admin thấy all; user chỉ thấy của mình)
+  async getTestResultsByTest(testId) {
+    const res = await fetch(`${API_BASE_URL}/test-results/test/${testId}`, {
+      method: 'GET',
+      headers: authHeaders(),
+    });
+    const data = await handle(res);
+    return data.results || data || [];
+  },
+
+  // 📊 Thống kê theo userId (admin)
+  // NOTE: route này suy ra từ controller getUserStatistics(userId).
+  // Nếu router bạn đang dùng khác (vd: /test-results/user/:userId/stats),
+  // hãy đổi path dưới cho khớp.
+  async getUserStatistics(userId) {
+    const res = await fetch(`${API_BASE_URL}/test-results/user/${userId}/statistics`, {
+      method: 'GET',
+      headers: authHeaders(),
+    });
+    const data = await handle(res);
+    return data.statistics || data;
+  },
+
+  // 📘 Lấy tất cả (admin) + optional filters { test_id, user_id, status, ... }
+  async getAllTestResults(filters = {}) {
+    const res = await fetch(`${API_BASE_URL}/test-results${toQuery(filters)}`, {
+      method: 'GET',
+      headers: authHeaders(),
+    });
+    const data = await handle(res);
+    return data.results || (Array.isArray(data) ? data : []);
+  },
+
+  // 🔴 Soft delete (admin/owner)
+  async softDeleteTestResult(id) {
+    const res = await fetch(`${API_BASE_URL}/test-results/${id}`, {
+      method: 'DELETE',
+      headers: authHeaders(),
+    });
+    const data = await handle(res);
+    return data.result || data;
+  },
+
+  // 🔴 Hard delete (admin)
+  async hardDeleteTestResult(id) {
+    const res = await fetch(`${API_BASE_URL}/test-results/${id}/hard-delete`, {
+      method: 'DELETE',
+      headers: authHeaders(),
+    });
+    const data = await handle(res);
+    return data.result || data;
+  },
+
+  // ♻️ Restore (admin)
+  async restoreTestResult(id) {
+    const res = await fetch(`${API_BASE_URL}/test-results/${id}/restore`, {
+      method: 'PATCH',
+      headers: authHeaders(),
+    });
+    const data = await handle(res);
+    return data.result || data;
+  },
 };
 
-const testResultService = {
-    // Create new test result (server sets status to 'active')
-    createTestResult: async (resultData) => {
-        try {
-            const response = await fetch(`${API_BASE_URL}/test-results`, {
-                method: 'POST',
-                headers: getAuthHeaders(),
-                body: JSON.stringify(resultData)
-            });
-            const data = await handleResponse(response);
-            // Backend now returns { success: true, result: {...} }
-            return data.result || data;
-        } catch (error) {
-            console.error('Error creating test result:', error);
-            throw error;
-        }
-    },
-
-    // Update a test result by id (fields update)
-    updateTestResult: async (id, updateData) => {
-        try {
-            const response = await fetch(`${API_BASE_URL}/test-results/${id}`, {
-                method: 'PUT',
-                headers: getAuthHeaders(),
-                body: JSON.stringify(updateData)
-            });
-            const data = await handleResponse(response);
-            // Backend now returns { success: true, result: {...} }
-            return data.result || data;
-        } catch (error) {
-            console.error('Error updating test result:', error);
-            throw error;
-        }
-    },
-
-    // Update test result status by result id (e.g., draft -> active, or soft-delete status changes)
-    updateTestResultStatus: async (id, status) => {
-        try {
-            const response = await fetch(`${API_BASE_URL}/test-results/${id}/status`, {
-                method: 'PATCH',
-                headers: getAuthHeaders(),
-                body: JSON.stringify({ status })
-            });
-            const data = await handleResponse(response);
-            // Backend now returns { success: true, result: {...} }
-            return data.result || data;
-        } catch (error) {
-            console.error('Error updating test result status:', error);
-            throw error;
-        }
-    },
-
-    // Update status for all test results of a test (by testId)
-    updateStatusByTestId: async (testId, status) => {
-        try {
-            const response = await fetch(`${API_BASE_URL}/test-results/test/${testId}/status`, {
-                method: 'PATCH',
-                headers: getAuthHeaders(),
-                body: JSON.stringify({ status })
-            });
-            return await handleResponse(response);
-        } catch (error) {
-            console.error('Error updating status by test id:', error);
-            throw error;
-        }
-    },
-
-    // Get test result by ID
-    getTestResultById: async (id) => {
-        try {
-            const response = await fetch(`${API_BASE_URL}/test-results/${id}`, {
-                method: 'GET',
-                headers: getAuthHeaders()
-            });
-            const data = await handleResponse(response);
-            // Backend now returns { success: true, result: {...} }
-            return data.result || data;
-        } catch (error) {
-            console.error('Error getting test result:', error);
-            throw error;
-        }
-    },
-
-    // Get my test results (for current user)
-    getMyTestResults: async () => {
-        try {
-            const response = await fetch(`${API_BASE_URL}/test-results/my-results`, {
-                method: 'GET',
-                headers: getAuthHeaders()
-            });
-            const data = await handleResponse(response);
-            // Backend now returns { success: true, results: [...] }
-            return data.results || data;
-        } catch (error) {
-            console.error('Error getting my test results:', error);
-            throw error;
-        }
-    },
-
-    // Get my statistics (for current user)
-    getMyStatistics: async () => {
-        try {
-            const response = await fetch(`${API_BASE_URL}/test-results/my-statistics`, {
-                method: 'GET',
-                headers: getAuthHeaders()
-            });
-            const data = await handleResponse(response);
-            // Backend now returns { success: true, statistics: {...} }
-            return data.statistics || data;
-        } catch (error) {
-            console.error('Error getting my statistics:', error);
-            throw error;
-        }
-    },
-
-    // Get test results by test id
-    getTestResultsByTest: async (testId) => {
-        try {
-            const response = await fetch(`${API_BASE_URL}/test-results/test/${testId}`, {
-                method: 'GET',
-                headers: getAuthHeaders()
-            });
-            const data = await handleResponse(response);
-            // Backend now returns { success: true, results: [...] }
-            return data.results || data;
-        } catch (error) {
-            console.error('Error getting test results by test:', error);
-            throw error;
-        }
-    },
-
-    // Get test results by user id
-    getTestResultsByUser: async (userId) => {
-        try {
-            const response = await fetch(`${API_BASE_URL}/test-results/user/${userId}`, {
-                method: 'GET',
-                headers: getAuthHeaders()
-            });
-            const data = await handleResponse(response);
-            // Backend now returns { success: true, results: [...] }
-            return data.results || data;
-        } catch (error) {
-            console.error('Error getting test results by user:', error);
-            throw error;
-        }
-    },
-
-    // Get all test results (admin) with optional filters (e.g., status, test_id, user_id, page, limit)
-    getAllTestResults: async (filters = {}) => {
-        try {
-            const qs = buildQueryString(filters);
-            const url = `${API_BASE_URL}/test-results${qs}`;
-            console.log('Calling API:', url);
-            
-            const response = await fetch(url, {
-                method: 'GET',
-                headers: getAuthHeaders()
-            });
-            const data = await handleResponse(response);
-            console.log('getAllTestResults response:', data);
-            
-            // Handle different response formats
-            if (data.results && Array.isArray(data.results)) {
-                return data.results;
-            } else if (Array.isArray(data)) {
-                return data;
-            } else if (data.success && data.results) {
-                return data.results;
-            } else {
-                console.warn('Unexpected response format:', data);
-                return [];
-            }
-        } catch (error) {
-            console.error('Error getting all test results:', error);
-            throw error;
-        }
-    },
-
-    // Soft delete test result (marks as deleted) - typical DELETE route for soft delete
-    softDeleteTestResult: async (id) => {
-        try {
-            const response = await fetch(`${API_BASE_URL}/test-results/${id}`, {
-                method: 'DELETE',
-                headers: getAuthHeaders()
-            });
-            const data = await handleResponse(response);
-            // Backend now returns { success: true, message: '...', result: {...} }
-            return data.result || data;
-        } catch (error) {
-            console.error('Error soft deleting test result:', error);
-            throw error;
-        }
-    },
-
-    // Hard delete test result (admin only) - assumed endpoint
-    hardDeleteTestResult: async (id) => {
-        try {
-            const response = await fetch(`${API_BASE_URL}/test-results/${id}/hard-delete`, {
-                method: 'DELETE',
-                headers: getAuthHeaders()
-            });
-            const data = await handleResponse(response);
-            // Backend now returns { success: true, message: '...', result: {...} }
-            return data.result || data;
-        } catch (error) {
-            console.error('Error hard deleting test result:', error);
-            throw error;
-        }
-    },
-
-    // Restore deleted test result (assumed endpoint)
-    restoreTestResult: async (id) => {
-        try {
-            const response = await fetch(`${API_BASE_URL}/test-results/${id}/restore`, {
-                method: 'PATCH',
-                headers: getAuthHeaders()
-            });
-            const data = await handleResponse(response);
-            // Backend now returns { success: true, message: '...', result: {...} }
-            return data.result || data;
-        } catch (error) {
-            console.error('Error restoring test result:', error);
-            throw error;
-        }
-    }
-};
-
-export default testResultService;
+export default TestResultService;

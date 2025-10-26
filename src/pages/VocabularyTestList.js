@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useParams } from 'react-router-dom';
+import testService from '../services/testService';
 import vocabularyService from '../services/vocabularyService';
 import LoadingSpinner from '../components/LoadingSpinner';
 import ErrorMessage from '../components/ErrorMessage';
@@ -62,18 +63,19 @@ const VocabularyTestList = () => {
         throw new Error('Main topic hoặc sub topic không được tìm thấy');
       }
       
-      const response = await vocabularyService.getVocabularyTestsByTopics(mainTopic, subTopic);
+      const response = await testService.getTestsByTopic(mainTopic, subTopic);
       console.log('API Response:', response);
       
       if (!response) {
         throw new Error('Không nhận được dữ liệu từ server');
       }
       
-      // Ensure response is an array
-      const testsArray = Array.isArray(response) ? response : [];
-      console.log('Tests array:', testsArray);
+      // Ensure response is an array and filter for vocabulary tests only
+      const allTests = Array.isArray(response) ? response : [];
+      const vocabularyTests = allTests.filter(test => test.test_type === 'vocabulary');
+      console.log('Vocabulary tests:', vocabularyTests);
       
-      setAllTests(testsArray);
+      setAllTests(vocabularyTests);
     } catch (err) {
       console.error('Error fetching vocabulary tests:', err);
       setError(`Không thể tải danh sách bài kiểm tra từ vựng: ${err.message}`);

@@ -3,6 +3,7 @@ import { createPortal } from 'react-dom';
 import { useAuth } from '../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import testService from '../services/testService';
+import MultipleChoiceService from '../services/multipleChoiceService';
 import multipleChoiceService from '../services/multipleChoiceService';
 
 /** Ví dụ mẫu cho multiple choice */
@@ -306,7 +307,7 @@ const CreateMultipleChoiceTestModal = ({ show, onClose }) => {
         };
         
         console.log(`Creating question ${index + 1}:`, questionData);
-        return multipleChoiceService.createMultipleChoice(questionData);
+        return MultipleChoiceService.createMultipleChoice(questionData);
       });
 
       await Promise.all(questionPromises);

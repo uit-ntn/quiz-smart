@@ -1,7 +1,8 @@
-import React, { useEffect, useState, useRef } from 'react';
+import React, { useEffect, useState, useRef, useCallback } from 'react';
 import { useParams, useLocation, useNavigate } from 'react-router-dom';
 import TestLayout from '../layout/TestLayout';
 import vocabularyService from '../services/vocabularyService';
+import testService from '../services/testService';
 import testResultService from '../services/testResultService';
 import LoadingSpinner from '../components/LoadingSpinner';
 import ErrorMessage from '../components/ErrorMessage';
@@ -28,7 +29,23 @@ const VocabularyTestTake = () => {
   const [isPaused, setIsPaused] = useState(false);
   const [showAnswer, setShowAnswer] = useState(false);
   const [lastAnswerResult, setLastAnswerResult] = useState(null);
+  const [availableVoices, setAvailableVoices] = useState([]);
   const timerRef = useRef(null);
+
+  // Load available voices
+  useEffect(() => {
+    const loadVoices = () => {
+      const voices = speechSynthesis.getVoices();
+      setAvailableVoices(voices);
+    };
+    
+    loadVoices();
+    speechSynthesis.addEventListener('voiceschanged', loadVoices);
+    
+    return () => {
+      speechSynthesis.removeEventListener('voiceschanged', loadVoices);
+    };
+  }, []);
 
   // Fetch test + câu hỏi
   useEffect(() => {
@@ -37,15 +54,21 @@ const VocabularyTestTake = () => {
         setLoading(true);
         setError(null);
 
+        console.log('Fetching test data for testId:', testId);
+        console.log('Settings:', settings);
+
         const [test, data] = await Promise.all([
-          vocabularyService.getVocabularyTestById(testId),
+          testService.getTestById(testId),
           vocabularyService.getAllVocabulariesByTestId(testId),
         ]);
+
+        console.log('Test info:', test);
+        console.log('Vocabulary data:', data);
 
         setTestInfo(test);
 
         if (!Array.isArray(data) || data.length === 0) {
-          setError(`Không tìm thấy câu hỏi nào cho bài test ${testId}.`);
+          setError(`Không tìm thấy câu hỏi nào cho bài test ${testId}. Vui lòng kiểm tra lại.`);
           return;
         }
 
@@ -56,90 +79,38 @@ const VocabularyTestTake = () => {
           questionNumber: i + 1,
         }));
 
+        console.log('Selected questions:', selected);
+
         setItems(selected);
         setAnswers(new Array(selected.length).fill(null));
         setTimeLeft(settings.timePerQuestion || 30);
       } catch (e) {
-        console.error(e);
-        setError('Có lỗi xảy ra khi tải câu hỏi. Vui lòng thử lại.');
+        console.error('Error fetching test data:', e);
+        setError(`Có lỗi xảy ra khi tải câu hỏi: ${e.message}. Vui lòng thử lại.`);
       } finally {
         setLoading(false);
       }
     };
     run();
-  }, [testId, settings.totalQuestions]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [testId]);
 
-  // Đồng hồ đếm ngược
-  useEffect(() => {
-    if (loading || showAnswer || isPaused) return;
-    timerRef.current = setInterval(() => {
-      setTimeLeft((prev) => {
-        if (prev <= 1) {
-          handleSubmit('');
-          return settings.timePerQuestion || 30;
-        }
-        return prev - 1;
-      });
-    }, 1000);
-    return () => timerRef.current && clearInterval(timerRef.current);
-  }, [index, items, isPaused, showAnswer, loading]);
-
-  const getCorrectAnswer = (item) => {
+  const getCorrectAnswer = useCallback((item) => {
     if (settings.mode === 'word_to_meaning') return item.meaning;
     if (settings.mode === 'meaning_to_word') return item?.word;
     if (settings.mode === 'listen_and_type') return item?.word;
     return '';
-  };
+  }, [settings.mode]);
 
-  const checkAnswer = (item, answer, mode) => {
+  const checkAnswer = useCallback((item, answer, mode) => {
     const ua = (answer || '').toLowerCase().trim();
     if (mode === 'word_to_meaning') return ua === item.meaning.toLowerCase().trim();
     if (mode === 'meaning_to_word') return ua === item?.word.toLowerCase().trim();
     if (mode === 'listen_and_type') return ua === item?.word.toLowerCase().trim();
     return false;
-  };
+  }, []);
 
-  const handleSubmit = (answer) => {
-    timerRef.current && clearInterval(timerRef.current);
-
-    const current = items[index];
-    const isCorrect = checkAnswer(current, answer, settings.mode);
-
-    const next = [...answers];
-    next[index] = {
-      question: current,
-      userAnswer: answer,
-      isCorrect,
-      timeSpent: (settings.timePerQuestion || 30) - timeLeft,
-    };
-    setAnswers(next);
-
-    if (settings.showAnswerMode === 'after_each') {
-      setLastAnswerResult({ isCorrect, correctAnswer: getCorrectAnswer(current) });
-      setShowAnswer(true);
-      setIsPaused(true);
-    } else {
-      moveToNext();
-    }
-  };
-
-  const handleCheckAnswer = () => {
-    if (!currentAnswer.trim()) return;
-    const current = items[index];
-    const isCorrect = checkAnswer(current, currentAnswer, settings.mode);
-    setLastAnswerResult({ isCorrect, correctAnswer: getCorrectAnswer(current) });
-    setShowAnswer(true);
-    setIsPaused(true);
-  };
-
-  const handleContinueAfterCheck = () => {
-    setShowAnswer(false);
-    setLastAnswerResult(null);
-    setIsPaused(false);
-    handleSubmit(currentAnswer);
-  };
-
-  const moveToNext = async () => {
+  const moveToNext = useCallback(async () => {
     if (index < items.length - 1) {
       setIndex((i) => i + 1);
       setCurrentAnswer('');
@@ -190,7 +161,62 @@ const VocabularyTestTake = () => {
         });
       }
     }
+  }, [index, items.length, settings.timePerQuestion, answers, testId, getCorrectAnswer, testInfo, navigate]);
+
+  const handleSubmit = useCallback((answer) => {
+    timerRef.current && clearInterval(timerRef.current);
+
+    const current = items[index];
+    const isCorrect = checkAnswer(current, answer, settings.mode);
+
+    const next = [...answers];
+    next[index] = {
+      question: current,
+      userAnswer: answer,
+      isCorrect,
+      timeSpent: (settings.timePerQuestion || 30) - timeLeft,
+    };
+    setAnswers(next);
+
+    if (settings.showAnswerMode === 'after_each') {
+      setLastAnswerResult({ isCorrect, correctAnswer: getCorrectAnswer(current) });
+      setShowAnswer(true);
+      setIsPaused(true);
+    } else {
+      moveToNext();
+    }
+  }, [items, index, answers, settings.mode, settings.timePerQuestion, settings.showAnswerMode, timeLeft, checkAnswer, getCorrectAnswer, moveToNext]);
+
+  const handleCheckAnswer = () => {
+    if (!currentAnswer.trim()) return;
+    const current = items[index];
+    const isCorrect = checkAnswer(current, currentAnswer, settings.mode);
+    setLastAnswerResult({ isCorrect, correctAnswer: getCorrectAnswer(current) });
+    setShowAnswer(true);
+    setIsPaused(true);
   };
+
+  const handleContinueAfterCheck = () => {
+    setShowAnswer(false);
+    setLastAnswerResult(null);
+    setIsPaused(false);
+    handleSubmit(currentAnswer);
+  };
+
+  // Đồng hồ đếm ngược
+  useEffect(() => {
+    if (loading || showAnswer || isPaused) return;
+    timerRef.current = setInterval(() => {
+      setTimeLeft((prev) => {
+        if (prev <= 1) {
+          handleSubmit('');
+          return settings.timePerQuestion || 30;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+    return () => timerRef.current && clearInterval(timerRef.current);
+  }, [index, items, isPaused, showAnswer, loading, handleSubmit, settings.timePerQuestion]);
 
   const handleExit = () => {
     if (window.confirm('Bạn có chắc chắn muốn thoát? Kết quả sẽ không được lưu.')) {
@@ -201,15 +227,63 @@ const VocabularyTestTake = () => {
   const playAudio = (text) => {
     if (!text || isPlaying) return;
     setIsPlaying(true);
+    
     const u = new SpeechSynthesisUtterance(text);
-    if (settings.voiceMode === 'fixed' && settings.selectedVoice) {
-      const vs = speechSynthesis.getVoices();
-      const v = vs.find(
-        (vv) => vv.name.includes(settings.selectedVoice) || vv.voiceURI.includes(settings.selectedVoice)
-      );
-      if (v) u.voice = v;
+    u.lang = 'en-US'; // Set default language
+    
+    // Configure voice based on settings
+    if (settings.selectedVoice) {
+      const voices = speechSynthesis.getVoices();
+      let selectedVoice = null;
+      
+      // Map custom voice IDs to actual voices
+      const voiceMap = {
+        'en-US-1': voices.find(v => v.lang.startsWith('en-US') && v.name.toLowerCase().includes('female')),
+        'en-US-2': voices.find(v => v.lang.startsWith('en-US') && v.name.toLowerCase().includes('male')),
+        'en-GB-1': voices.find(v => v.lang.startsWith('en-GB') && v.name.toLowerCase().includes('female')),
+        'en-GB-2': voices.find(v => v.lang.startsWith('en-GB') && v.name.toLowerCase().includes('male')),
+        'en-AU-1': voices.find(v => v.lang.startsWith('en-AU') && v.name.toLowerCase().includes('female')),
+        'en-AU-2': voices.find(v => v.lang.startsWith('en-AU') && v.name.toLowerCase().includes('male')),
+        'en-CA-1': voices.find(v => v.lang.startsWith('en-CA') && v.name.toLowerCase().includes('female')),
+        'en-IN-1': voices.find(v => v.lang.startsWith('en-IN') && v.name.toLowerCase().includes('female'))
+      };
+      
+      selectedVoice = voiceMap[settings.selectedVoice];
+      
+      // Fallback: try to find by name or region
+      if (!selectedVoice) {
+        if (settings.selectedVoice.includes('US')) {
+          selectedVoice = voices.find(v => v.lang.startsWith('en-US'));
+        } else if (settings.selectedVoice.includes('GB')) {
+          selectedVoice = voices.find(v => v.lang.startsWith('en-GB'));
+        } else if (settings.selectedVoice.includes('AU')) {
+          selectedVoice = voices.find(v => v.lang.startsWith('en-AU'));
+        } else if (settings.selectedVoice.includes('CA')) {
+          selectedVoice = voices.find(v => v.lang.startsWith('en-CA'));
+        } else if (settings.selectedVoice.includes('IN')) {
+          selectedVoice = voices.find(v => v.lang.startsWith('en-IN'));
+        }
+      }
+      
+      // Final fallback: any English voice
+      if (!selectedVoice) {
+        selectedVoice = voices.find(v => v.lang.startsWith('en'));
+      }
+      
+      if (selectedVoice) {
+        u.voice = selectedVoice;
+        u.lang = selectedVoice.lang;
+        console.log('Using voice:', selectedVoice.name, selectedVoice.lang);
+      }
     }
+    
+    u.rate = 0.8; // Slightly slower for better comprehension
+    u.pitch = 1.0;
+    u.volume = 1.0;
+    
     u.onend = () => setIsPlaying(false);
+    u.onerror = () => setIsPlaying(false);
+    
     speechSynthesis.speak(u);
   };
 
@@ -418,24 +492,36 @@ const VocabularyTestTake = () => {
                   <select
                     value={settings.selectedVoice || ''}
                     onChange={(e) => {
-                      const ns = { ...settings, selectedVoice: e.target.value };
-                      setSettings(ns);
+                      const newSettings = { ...settings, selectedVoice: e.target.value };
+                      setSettings(newSettings);
                       try {
-                        localStorage.setItem(`vocab_settings_${testId}`, JSON.stringify(ns));
-                      } catch { }
+                        localStorage.setItem(`vocab_settings_${testId}`, JSON.stringify(newSettings));
+                      } catch (error) {
+                        console.error('Error saving voice settings:', error);
+                      }
+                      
+                      // Test the new voice immediately
+                      if (current?.word && e.target.value) {
+                        setTimeout(() => playAudio(current.word), 100);
+                      }
                     }}
                     className="w-full p-2 border border-gray-300 rounded-md text-sm"
                   >
-                    <option value="">Giọng ngẫu nhiên</option>
-                    <option value="en-US-1">🇺🇸 Emma (American)</option>
-                    <option value="en-US-2">🇺🇸 James (American)</option>
-                    <option value="en-GB-1">🇬🇧 Charlotte (British)</option>
-                    <option value="en-GB-2">🇬🇧 Oliver (British)</option>
-                    <option value="en-AU-1">🇦🇺 Sophie (Australian)</option>
-                    <option value="en-AU-2">🇦🇺 William (Australian)</option>
-                    <option value="en-CA-1">🇨🇦 Emily (Canadian)</option>
-                    <option value="en-IN-1">🇮🇳 Priya (Indian)</option>
+                    <option value="">Giọng mặc định</option>
+                    <option value="en-US-1">🇺🇸 Nữ (American)</option>
+                    <option value="en-US-2">🇺🇸 Nam (American)</option>
+                    <option value="en-GB-1">🇬🇧 Nữ (British)</option>
+                    <option value="en-GB-2">🇬🇧 Nam (British)</option>
+                    <option value="en-AU-1">🇦🇺 Nữ (Australian)</option>
+                    <option value="en-AU-2">🇦🇺 Nam (Australian)</option>
+                    <option value="en-CA-1">🇨🇦 Nữ (Canadian)</option>
+                    <option value="en-IN-1">🇮🇳 Nữ (Indian)</option>
                   </select>
+                  {availableVoices.length > 0 && (
+                    <p className="text-xs text-gray-500 mt-1">
+                      {availableVoices.filter(v => v.lang.startsWith('en')).length} giọng tiếng Anh có sẵn
+                    </p>
+                  )}
                 </div>
 
                 {/* Tiến độ (mini, ô nhỏ) */}

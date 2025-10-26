@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import VocabularyLayout from '../layout/VocabularyLayout';
 import vocabularyService from '../services/vocabularyService';
+import testService from '../services/testService';
 import LoadingSpinner from '../components/LoadingSpinner';
 import ErrorMessage from '../components/ErrorMessage';
 import VocabularyPreviewModal from '../components/VocabularyPreviewModal';
@@ -44,22 +45,48 @@ const VocabularyTestSettings = () => {
     const fetchTestInfo = async () => {
       try {
         setLoading(true);
+        setError(null);
+        
+        console.log('Fetching test info for testId:', testId);
+        console.log('testId type:', typeof testId);
+        console.log('testId length:', testId?.length);
+        
+        // Validate testId
+        if (!testId) {
+          setError('Test ID không hợp lệ');
+          return;
+        }
+
+        if (typeof testId !== 'string' || testId.trim().length === 0) {
+          setError('Test ID không hợp lệ hoặc bị thiếu');
+          return;
+        }
+        
         const [test, vocabularies] = await Promise.all([
-          vocabularyService.getVocabularyTestById(testId),
+          testService.getTestById(testId),
           vocabularyService.getAllVocabulariesByTestId(testId)
         ]);
         
+        console.log('Test info:', test);
+        console.log('Vocabularies:', vocabularies);
+        
         setTestInfo(test);
         setVocabularies(vocabularies || []);
-        setVocabularyCount(vocabularies.length || 0);
+        setVocabularyCount((vocabularies && vocabularies.length) || 0);
         
         // Load saved settings
         const savedSettings = localStorage.getItem(`vocab_settings_${testId}`);
         if (savedSettings) {
-          setSettings({ ...settings, ...JSON.parse(savedSettings) });
+          try {
+            const parsedSettings = JSON.parse(savedSettings);
+            setSettings(prevSettings => ({ ...prevSettings, ...parsedSettings }));
+          } catch (parseError) {
+            console.error('Error parsing saved settings:', parseError);
+          }
         }
       } catch (err) {
-        setError('Không thể tải thông tin bài test.');
+        console.error('Error fetching test info:', err);
+        setError(`Không thể tải thông tin bài test: ${err.message}`);
       } finally {
         setLoading(false);
       }
@@ -67,6 +94,9 @@ const VocabularyTestSettings = () => {
 
     if (testId) {
       fetchTestInfo();
+    } else {
+      setError('Test ID không được tìm thấy trong URL');
+      setLoading(false);
     }
   }, [testId]);
 
@@ -77,8 +107,20 @@ const VocabularyTestSettings = () => {
   };
 
   const handleStartTest = () => {
+    // Kiểm tra xem có từ vựng không
+    if (!vocabularies || vocabularies.length === 0) {
+      alert('Không có từ vựng nào trong bài test này. Vui lòng kiểm tra lại.');
+      return;
+    }
+
+    // Kiểm tra số câu hỏi
     if (settings.totalQuestions > vocabularyCount) {
       alert(`Chỉ có ${vocabularyCount} từ vựng. Vui lòng chọn số câu hỏi nhỏ hơn hoặc bằng ${vocabularyCount}.`);
+      return;
+    }
+
+    if (settings.totalQuestions <= 0) {
+      alert('Số câu hỏi phải lớn hơn 0.');
       return;
     }
 

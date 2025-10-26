@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import vocabularyService from '../services/vocabularyService';
+import testService from '../services/testService';
 import LoadingSpinner from '../components/LoadingSpinner';
 import ErrorMessage from '../components/ErrorMessage';
 import EmptyState from '../components/EmptyState';
@@ -43,7 +43,7 @@ const VocabularyListTopic = () => {
       setError(null);
       console.log('Fetching main topics...');
       
-      const response = await vocabularyService.getAllVocabularyMainTopics();
+      const response = await testService.getAllVocabulariesMainTopics();
       console.log('Main topics response:', response);
       
       if (!Array.isArray(response)) {
@@ -57,7 +57,7 @@ const VocabularyListTopic = () => {
         mainTopics.map(async (mainTopic) => {
           try {
             console.log(`Fetching sub topics for: ${mainTopic}`);
-            const subTopics = await vocabularyService.getVocabularySubTopicsByMainTopic(mainTopic);
+            const subTopics = await testService.getVocabularySubTopicsByMainTopic(mainTopic);
             console.log(`Sub topics for ${mainTopic}:`, subTopics);
             
             if (!Array.isArray(subTopics)) {
