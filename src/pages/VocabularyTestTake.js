@@ -6,6 +6,7 @@ import testService from '../services/testService';
 import testResultService from '../services/testResultService';
 import LoadingSpinner from '../components/LoadingSpinner';
 import ErrorMessage from '../components/ErrorMessage';
+import Toast from '../components/Toast';
 
 const VocabularyTestTake = () => {
   const { testId } = useParams();
@@ -30,6 +31,8 @@ const VocabularyTestTake = () => {
   const [showAnswer, setShowAnswer] = useState(false);
   const [lastAnswerResult, setLastAnswerResult] = useState(null);
   const [availableVoices, setAvailableVoices] = useState([]);
+  const [showExitConfirm, setShowExitConfirm] = useState(false);
+  const [toast, setToast] = useState({ show: false, message: '', type: 'info' });
   const timerRef = useRef(null);
 
   // Load available voices
@@ -219,9 +222,21 @@ const VocabularyTestTake = () => {
   }, [index, items, isPaused, showAnswer, loading, handleSubmit, settings.timePerQuestion]);
 
   const handleExit = () => {
-    if (window.confirm('Bạn có chắc chắn muốn thoát? Kết quả sẽ không được lưu.')) {
-      navigate(-1);
-    }
+    setShowExitConfirm(true);
+  };
+
+  const confirmExit = () => {
+    setShowExitConfirm(false);
+    navigate(-1);
+  };
+
+  const cancelExit = () => {
+    setShowExitConfirm(false);
+  };
+
+  const showToast = (message, type = 'info') => {
+    setToast({ show: true, message, type });
+    setTimeout(() => setToast({ show: false, message: '', type: 'info' }), 3000);
   };
 
   const playAudio = (text) => {
@@ -580,6 +595,47 @@ const VocabularyTestTake = () => {
           </div>
         </div>
       </div>
+
+      {/* Exit Confirmation Modal */}
+      {showExitConfirm && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg shadow-xl p-6 max-w-md w-full mx-4">
+            <div className="flex items-center mb-4">
+              <div className="w-12 h-12 rounded-full bg-red-100 flex items-center justify-center mr-4">
+                <svg className="w-6 h-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
+                </svg>
+              </div>
+              <div>
+                <h3 className="text-lg font-medium text-gray-900">Xác nhận thoát</h3>
+                <p className="text-sm text-gray-600">Bạn có chắc chắn muốn thoát? Kết quả sẽ không được lưu.</p>
+              </div>
+            </div>
+            <div className="flex justify-end space-x-3">
+              <button
+                onClick={cancelExit}
+                className="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50 transition-colors"
+              >
+                Tiếp tục làm bài
+              </button>
+              <button
+                onClick={confirmExit}
+                className="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 transition-colors"
+              >
+                Thoát
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Toast */}
+      <Toast
+        show={toast.show}
+        message={toast.message}
+        type={toast.type}
+        onClose={() => setToast({ show: false, message: '', type: 'info' })}
+      />
     </TestLayout>
   );
 };

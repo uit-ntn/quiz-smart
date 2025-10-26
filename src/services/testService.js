@@ -67,10 +67,10 @@ const TestService = {
     return data.tests || (Array.isArray(data) ? data : []);
   },
 
-  // READ BY ID (optional auth)
+  // READ BY ID (auth for private tests)
   async getTestById(id) {
     const res = await fetch(`${API_BASE_URL}/tests/${id}`, {
-      headers: jsonHeaders(),
+      headers: authHeaders(),
     });
     const data = await handle(res);
     return data.test || data;
@@ -105,37 +105,37 @@ const TestService = {
     return handle(res); // { success, message }
   },
 
-  // SEARCH
+  // SEARCH (auth to include private tests)
   async searchTests(q) {
     const res = await fetch(`${API_BASE_URL}/tests/search?q=${encodeURIComponent(q)}`, {
-      headers: jsonHeaders(),
+      headers: authHeaders(),
     });
     const data = await handle(res);
     return data.tests || data;
   },
 
-  // BY TOPIC
+  // BY TOPIC (auth to include private tests)
   async getTestsByTopic(mainTopic, subTopic) {
     const url = subTopic
       ? `${API_BASE_URL}/tests/topic/${encodeURIComponent(mainTopic)}/${encodeURIComponent(subTopic)}`
       : `${API_BASE_URL}/tests/topic/${encodeURIComponent(mainTopic)}`;
-    const res = await fetch(url, { headers: jsonHeaders() });
+    const res = await fetch(url, { headers: authHeaders() });
     const data = await handle(res);
     return data.tests || (Array.isArray(data) ? data : []);
   },
 
-  // BY TYPE
+  // BY TYPE (auth to include private tests)
   async getTestsByType(testType) {
     const res = await fetch(`${API_BASE_URL}/tests/type/${testType}`, {
-      headers: jsonHeaders(),
+      headers: authHeaders(),
     });
     const data = await handle(res);
     return data.tests || data;
   },
 
-  // ===== MC =====
+  // ===== MC ===== (auth to include private tests)
   async getAllMultipleChoicesTests() {
-    const res = await fetch(`${API_BASE_URL}/tests/multiple-choices`, { headers: jsonHeaders() });
+    const res = await fetch(`${API_BASE_URL}/tests/multiple-choices`, { headers: authHeaders() });
     const data = await handle(res);
     return data.tests || data;
   },
@@ -152,9 +152,9 @@ const TestService = {
     return data.subTopics || data || [];
     },
 
-  // ===== Grammar =====
+  // ===== Grammar ===== (auth to include private tests)
   async getAllGrammarsTests() {
-    const res = await fetch(`${API_BASE_URL}/tests/grammars`, { headers: jsonHeaders() });
+    const res = await fetch(`${API_BASE_URL}/tests/grammars`, { headers: authHeaders() });
     const data = await handle(res);
     return data.tests || data;
   },
@@ -171,9 +171,9 @@ const TestService = {
     return data.subTopics || data || [];
   },
 
-  // ===== Vocabulary =====
+  // ===== Vocabulary ===== (auth to include private tests)
   async getAllVocabulariesTests() {
-    const res = await fetch(`${API_BASE_URL}/tests/vocabularies`, { headers: jsonHeaders() });
+    const res = await fetch(`${API_BASE_URL}/tests/vocabularies`, { headers: authHeaders() });
     const data = await handle(res);
     return data.tests || data;
   },

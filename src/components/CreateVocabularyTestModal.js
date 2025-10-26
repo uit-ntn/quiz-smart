@@ -188,8 +188,10 @@ const CreateVocabularyTestModal = ({ show, onClose }) => {
 
       setCurrentStep('success');
       redirectTimerRef.current = setTimeout(() => {
-        navigate(`/vocabulary/test/${createdTest._id}/settings`);
-        if (mountedRef.current) onClose?.();
+        if (mountedRef.current) {
+          handleClose();
+          window.location.reload();
+        }
       }, 1200);
     } catch (err) {
       console.error('Error creating vocabulary test:', err);
@@ -625,7 +627,7 @@ const CreateVocabularyTestModal = ({ show, onClose }) => {
                 <p className="text-sm text-neutral-700 mb-2">
                   Bài test "<span className="font-semibold">{testInfo.test_title}</span>" đã được tạo với {parsedVocabularies.length} từ vựng.
                 </p>
-                <p className="text-xs text-neutral-500">Đang chuyển hướng đến trang cài đặt...</p>
+                <p className="text-xs text-neutral-500">Đang tải lại trang...</p>
               </div>
             )}
           </div>
