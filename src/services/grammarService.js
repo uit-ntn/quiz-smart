@@ -1,8 +1,17 @@
 const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:8000/api';
 
+// Helper function for auth headers
+const getAuthHeaders = () => {
+  const token = localStorage.getItem('token');
+  return {
+    'Content-Type': 'application/json',
+    ...(token && { Authorization: `Bearer ${token}` }),
+  };
+};
+
 const GrammarService = {
   /**
-   * 🔹 Lấy tất cả grammar questions (có thể filter qua query)
+   * 🔹 Lấy tất cả grammar questions (auth to include private tests)
    * @param {Object} filters { test_id, difficulty, status }
    * @returns {Promise<Object>} JSON response
    */
@@ -11,7 +20,7 @@ const GrammarService = {
       const query = new URLSearchParams(filters).toString();
       const response = await fetch(`${API_BASE_URL}/grammars${query ? `?${query}` : ''}`, {
         method: 'GET',
-        credentials: 'include',
+        headers: getAuthHeaders(),
       });
 
       if (!response.ok) {
@@ -26,7 +35,7 @@ const GrammarService = {
   },
 
   /**
-   * 🔹 Lấy grammar question theo ID
+   * 🔹 Lấy grammar question theo ID (auth to access private test questions)
    * @param {String} questionId
    * @returns {Promise<Object>}
    */
@@ -34,7 +43,7 @@ const GrammarService = {
     try {
       const response = await fetch(`${API_BASE_URL}/grammars/${questionId}`, {
         method: 'GET',
-        credentials: 'include',
+        headers: getAuthHeaders(),
       });
 
       if (!response.ok) {
@@ -49,7 +58,7 @@ const GrammarService = {
   },
 
   /**
-   * 🔹 Lấy danh sách grammar theo Test ID
+   * 🔹 Lấy danh sách grammar theo Test ID (auth to access private test questions)
    * @param {String} testId
    * @returns {Promise<Object>}
    */
@@ -57,7 +66,7 @@ const GrammarService = {
     try {
       const response = await fetch(`${API_BASE_URL}/grammars/test/${testId}`, {
         method: 'GET',
-        credentials: 'include',
+        headers: getAuthHeaders(),
       });
 
       if (!response.ok) {
@@ -74,17 +83,14 @@ const GrammarService = {
   /**
    * 🔹 Tạo mới grammar question (Admin/Teacher)
    * @param {Object} grammarData
-   * @param {String} token
+   * @param {String} token (deprecated - uses localStorage token)
    * @returns {Promise<Object>}
    */
   createGrammar: async (grammarData, token) => {
     try {
       const response = await fetch(`${API_BASE_URL}/grammars`, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
-        },
+        headers: getAuthHeaders(),
         body: JSON.stringify(grammarData),
       });
 
@@ -104,17 +110,14 @@ const GrammarService = {
    * 🔹 Cập nhật grammar question (Admin/Teacher hoặc Creator)
    * @param {String} grammarId
    * @param {Object} grammarData
-   * @param {String} token
+   * @param {String} token (deprecated - uses localStorage token)
    * @returns {Promise<Object>}
    */
   updateGrammar: async (grammarId, grammarData, token) => {
     try {
       const response = await fetch(`${API_BASE_URL}/grammars/${grammarId}`, {
         method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
-        },
+        headers: getAuthHeaders(),
         body: JSON.stringify(grammarData),
       });
 
@@ -133,16 +136,14 @@ const GrammarService = {
   /**
    * 🔹 Xoá grammar question (Admin/Teacher hoặc Creator)
    * @param {String} grammarId
-   * @param {String} token
+   * @param {String} token (deprecated - uses localStorage token)
    * @returns {Promise<Object>}
    */
   deleteGrammar: async (grammarId, token) => {
     try {
       const response = await fetch(`${API_BASE_URL}/grammars/${grammarId}`, {
         method: 'DELETE',
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
+        headers: getAuthHeaders(),
       });
 
       if (!response.ok) {

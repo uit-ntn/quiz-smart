@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useContext } from 'react';
 import testService from '../services/testService';
 import LoadingSpinner from '../components/LoadingSpinner';
 import ErrorMessage from '../components/ErrorMessage';
@@ -7,8 +7,10 @@ import Pagination from '../components/Pagination';
 import TopicCard from '../components/TopicCard';
 import VocabularyTopicModal from '../components/VocabularyTopicModal';
 import VocabularyLayout from '../layout/VocabularyLayout';
+import AuthContext from '../context/AuthContext';
 
 const VocabularyListTopic = () => {
+  const { user } = useContext(AuthContext); // Thêm auth context
   const [allTopics, setAllTopics] = useState([]);
   const [topicsWithSubTopics, setTopicsWithSubTopics] = useState([]);
   const [filteredTopics, setFilteredTopics] = useState([]);
@@ -31,7 +33,7 @@ const VocabularyListTopic = () => {
 
   useEffect(() => {
     fetchMainTopics();
-  }, []);
+  }, [user]); // Thêm user dependency để re-fetch khi login/logout
 
   useEffect(() => {
     applyFilters();
@@ -42,6 +44,7 @@ const VocabularyListTopic = () => {
       setLoading(true);
       setError(null);
       console.log('Fetching main topics...');
+      console.log('Current user:', user ? user.email : 'Not logged in'); // Debug log
       
       const response = await testService.getAllVocabulariesMainTopics();
       console.log('Main topics response:', response);

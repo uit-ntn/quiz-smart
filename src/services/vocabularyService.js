@@ -20,39 +20,39 @@ const qs = (obj = {}) =>
    READ
    ========================= */
 
-/** GET /vocabularies?test_id=&difficulty=&status=  (BE hỗ trợ filters) */
+/** GET /vocabularies?test_id=&difficulty=&status=  (auth to include private tests) */
 export async function getAllVocabularies(filters = {}) {
   const url = `${API_BASE_URL}/vocabularies${Object.keys(filters).length ? `?${qs(filters)}` : ''}`;
-  const res = await fetch(url, { headers: { 'Content-Type': 'application/json' } });
+  const res = await fetch(url, { headers: getAuthHeaders() });
   if (!res.ok) throw new Error(await res.text());
   const data = await res.json();
   return data.vocabularies || data || [];
 }
 
-/** GET /vocabularies/test/:testId */
+/** GET /vocabularies/test/:testId (auth to access private test vocabularies) */
 export async function getAllVocabulariesByTestId(testId) {
   const res = await fetch(`${API_BASE_URL}/vocabularies/test/${testId}`, {
-    headers: { 'Content-Type': 'application/json' },
+    headers: getAuthHeaders(),
   });
   if (!res.ok) throw new Error(await res.text());
   const data = await res.json();
   return data.vocabularies || data || [];
 }
 
-/** GET /vocabularies/:id */
+/** GET /vocabularies/:id (auth to access private test vocabularies) */
 export async function getVocabularyById(id) {
   const res = await fetch(`${API_BASE_URL}/vocabularies/${id}`, {
-    headers: { 'Content-Type': 'application/json' },
+    headers: getAuthHeaders(),
   });
   if (!res.ok) throw new Error(await res.text());
   const data = await res.json();
   return data.vocabulary || data;
 }
 
-/** GET /vocabularies/search?q=... */
+/** GET /vocabularies/search?q=... (auth to include private tests in search) */
 export async function searchVocabularies(q) {
   const res = await fetch(`${API_BASE_URL}/vocabularies/search?q=${encodeURIComponent(q)}`, {
-    headers: { 'Content-Type': 'application/json' },
+    headers: getAuthHeaders(),
   });
   if (!res.ok) throw new Error(await res.text());
   const data = await res.json();

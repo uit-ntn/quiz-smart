@@ -69,7 +69,8 @@ const TestDetailModal = ({ isOpen, onClose, testId, onTestUpdated }) => {
 
   // Pagination
   const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 10;
+  const [itemsPerPage, setItemsPerPage] = useState(50); // Cho phép thay đổi
+  const [viewMode, setViewMode] = useState('card'); // 'card' or 'table'
 
   // Question modal
   const [questionModalOpen, setQuestionModalOpen] = useState(false);
@@ -238,6 +239,40 @@ const TestDetailModal = ({ isOpen, onClose, testId, onTestUpdated }) => {
                 </div>
 
                 <div className="flex items-center gap-2">
+                  {/* View Mode Toggle */}
+                  <div className="flex bg-slate-100 rounded-lg p-1">
+                    <button
+                      onClick={() => setViewMode('card')}
+                      className={`px-3 py-1 rounded-md text-xs font-medium transition-colors ${
+                        viewMode === 'card' 
+                          ? 'bg-white text-slate-900 shadow-sm' 
+                          : 'text-slate-600 hover:text-slate-900'
+                      }`}
+                    >
+                      <div className="flex items-center gap-1">
+                        <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
+                        </svg>
+                        Card
+                      </div>
+                    </button>
+                    <button
+                      onClick={() => setViewMode('table')}
+                      className={`px-3 py-1 rounded-md text-xs font-medium transition-colors ${
+                        viewMode === 'table' 
+                          ? 'bg-white text-slate-900 shadow-sm' 
+                          : 'text-slate-600 hover:text-slate-900'
+                      }`}
+                    >
+                      <div className="flex items-center gap-1">
+                        <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 10h18M3 14h18m-9-4v8m5-8v8M7 7V4a1 1 0 011-1h8a1 1 0 011 1v3" />
+                        </svg>
+                        Table
+                      </div>
+                    </button>
+                  </div>
+
                   <button
                     onClick={() => setEditingTest(true)}
                     className="inline-flex items-center gap-2 rounded-xl border border-slate-200 px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50"
@@ -367,7 +402,130 @@ const TestDetailModal = ({ isOpen, onClose, testId, onTestUpdated }) => {
                       </div>
                       <p className="text-slate-600">Chưa có câu hỏi nào.</p>
                     </div>
+                  ) : viewMode === 'table' ? (
+                    /* Table View */
+                    <div className="overflow-x-auto">
+                      <table className="w-full border border-slate-200 rounded-xl overflow-hidden">
+                        <thead className="bg-slate-50">
+                          <tr>
+                            <th className="px-4 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">#</th>
+                            {test?.test_type === 'vocabulary' && (
+                              <>
+                                <th className="px-4 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Từ vựng</th>
+                                <th className="px-4 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Nghĩa</th>
+                                <th className="px-4 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Ví dụ</th>
+                              </>
+                            )}
+                            {test?.test_type === 'multiple_choice' && (
+                              <>
+                                <th className="px-4 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Câu hỏi</th>
+                                <th className="px-4 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Đáp án đúng</th>
+                              </>
+                            )}
+                            {test?.test_type === 'grammar' && (
+                              <>
+                                <th className="px-4 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Câu hỏi</th>
+                                <th className="px-4 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Đáp án</th>
+                              </>
+                            )}
+                            <th className="px-4 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Độ khó</th>
+                            <th className="px-4 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Trạng thái</th>
+                            <th className="px-4 py-3 text-right text-xs font-medium text-slate-500 uppercase tracking-wider">Thao tác</th>
+                          </tr>
+                        </thead>
+                        <tbody className="bg-white divide-y divide-slate-200">
+                          {currentQuestions.map((q, idx) => (
+                            <tr key={q._id} className="hover:bg-slate-50">
+                              <td className="px-4 py-3 whitespace-nowrap">
+                                <Badge tone="blue">#{startIndex + idx + 1}</Badge>
+                              </td>
+                              
+                              {/* Vocabulary Table Columns */}
+                              {test?.test_type === 'vocabulary' && (
+                                <>
+                                  <td className="px-4 py-3">
+                                    <span className="font-semibold text-slate-900">{q.word}</span>
+                                  </td>
+                                  <td className="px-4 py-3">
+                                    <span className="text-slate-800">{q.meaning}</span>
+                                  </td>
+                                  <td className="px-4 py-3">
+                                    <span className="text-sm text-slate-600 italic">
+                                      {q.example_sentence ? `"${q.example_sentence}"` : '—'}
+                                    </span>
+                                  </td>
+                                </>
+                              )}
+
+                              {/* Multiple Choice Table Columns */}
+                              {test?.test_type === 'multiple_choice' && (
+                                <>
+                                  <td className="px-4 py-3">
+                                    <span className="text-slate-900">{q.question_text}</span>
+                                  </td>
+                                  <td className="px-4 py-3">
+                                    <div className="flex flex-wrap gap-1">
+                                      {q.correct_answers?.map((answer, i) => (
+                                        <Badge key={i} tone="green">{answer}</Badge>
+                                      ))}
+                                    </div>
+                                  </td>
+                                </>
+                              )}
+
+                              {/* Grammar Table Columns */}
+                              {test?.test_type === 'grammar' && (
+                                <>
+                                  <td className="px-4 py-3">
+                                    <span className="text-slate-900">{q.question_text}</span>
+                                  </td>
+                                  <td className="px-4 py-3">
+                                    <span className="text-emerald-700">{q.correct_answer || '—'}</span>
+                                  </td>
+                                </>
+                              )}
+
+                              <td className="px-4 py-3 whitespace-nowrap">
+                                {q.difficulty ? (
+                                  <Badge tone={difficultyTone(q.difficulty)}>{q.difficulty}</Badge>
+                                ) : (
+                                  <span className="text-slate-400">—</span>
+                                )}
+                              </td>
+                              <td className="px-4 py-3 whitespace-nowrap">
+                                {q.status ? (
+                                  <Badge tone={q.status === 'active' ? 'green' : q.status === 'draft' ? 'slate' : 'red'}>
+                                    {q.status}
+                                  </Badge>
+                                ) : (
+                                  <span className="text-slate-400">—</span>
+                                )}
+                              </td>
+                              <td className="px-4 py-3 whitespace-nowrap text-right">
+                                <div className="flex justify-end gap-1">
+                                  <button
+                                    onClick={() => handleEditQuestion(q)}
+                                    className="rounded-lg border border-slate-200 p-1.5 text-slate-700 hover:bg-slate-50"
+                                    title="Sửa"
+                                  >
+                                    <Icon.edit />
+                                  </button>
+                                  <button
+                                    onClick={() => handleDeleteQuestion(q._id)}
+                                    className="rounded-lg border border-rose-200 p-1.5 text-rose-600 hover:bg-rose-50"
+                                    title="Xoá"
+                                  >
+                                    <Icon.trash />
+                                  </button>
+                                </div>
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
                   ) : (
+                    /* Card View */
                     <div className="space-y-4">
                       {currentQuestions.map((q, idx) => (
                         <div
@@ -456,14 +614,39 @@ const TestDetailModal = ({ isOpen, onClose, testId, onTestUpdated }) => {
                           </div>
                         </div>
                       ))}
+                    </div>
+                  )}
 
-                      {/* Pagination */}
-                      {totalPages > 1 && (
-                        <div className="flex items-center justify-between pt-4">
+                      {/* Pagination or Info */}
+                      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between pt-4 gap-3">
+                        <div className="flex items-center gap-3">
                           <p className="text-sm text-slate-600">
                             Hiển thị {startIndex + 1}–
                             {Math.min(startIndex + itemsPerPage, questions.length)} / {questions.length}
                           </p>
+                          {questions.length > 10 && (
+                            <div className="flex items-center gap-2 text-sm">
+                              <span className="text-slate-600">Hiển thị:</span>
+                              <select
+                                value={itemsPerPage}
+                                onChange={(e) => {
+                                  setItemsPerPage(Number(e.target.value));
+                                  setCurrentPage(1);
+                                }}
+                                className="px-2 py-1 rounded-lg border border-slate-200 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                              >
+                                <option value={10}>10</option>
+                                <option value={25}>25</option>
+                                <option value={50}>50</option>
+                                <option value={100}>100</option>
+                                <option value={questions.length}>Tất cả ({questions.length})</option>
+                              </select>
+                              <span className="text-slate-600">mục/trang</span>
+                            </div>
+                          )}
+                        </div>
+                        
+                        {totalPages > 1 && (
                           <div className="flex items-center gap-1">
                             <button
                               onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
@@ -496,10 +679,8 @@ const TestDetailModal = ({ isOpen, onClose, testId, onTestUpdated }) => {
                               Sau
                             </button>
                           </div>
-                        </div>
-                      )}
-                    </div>
-                  )}
+                        )}
+                      </div>
                 </>
               )}
             </div>

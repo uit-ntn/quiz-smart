@@ -31,12 +31,12 @@ async function handle(res) {
 
 const MultipleChoiceService = {
   // =========================
-  // 📘 Get all multiple-choice (filters: main_topic, sub_topic, difficulty, status, test_id)
+  // 📘 Get all multiple-choice (auth to include private tests)
   // =========================
   async getAllMultipleChoices(filters = {}) {
     const res = await fetch(
       `${API_BASE_URL}/multiple-choices${toQuery(filters)}`,
-      { method: 'GET', headers: jsonHeaders() }
+      { method: 'GET', headers: authHeaders() }
     );
     const data = await handle(res);
     // Controller: { message, count, questions }
@@ -44,24 +44,24 @@ const MultipleChoiceService = {
   },
 
   // =========================
-  // 📘 Get by ID
+  // 📘 Get by ID (auth to access private test questions)
   // =========================
   async getQuestionById(id) {
     const res = await fetch(`${API_BASE_URL}/multiple-choices/${id}`, {
       method: 'GET',
-      headers: jsonHeaders(),
+      headers: authHeaders(),
     });
     const data = await handle(res);
     return data.question || data;
   },
 
   // =========================
-  // 📘 Get all by Test ID
+  // 📘 Get all by Test ID (auth to access private test questions)
   // =========================
   async getQuestionsByTestId(testId) {
     const res = await fetch(`${API_BASE_URL}/multiple-choices/test/${testId}`, {
       method: 'GET',
-      headers: jsonHeaders(),
+      headers: authHeaders(),
     });
     const data = await handle(res);
     return data.questions || (Array.isArray(data) ? data : []);

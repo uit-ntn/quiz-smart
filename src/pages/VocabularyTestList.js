@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useContext } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import testService from '../services/testService';
 import vocabularyService from '../services/vocabularyService';
@@ -10,9 +10,11 @@ import FilterSidebar from '../components/FilterSidebar';
 import Pagination from '../components/Pagination';
 import VocabularyLayout from '../layout/VocabularyLayout';
 import VocabularyPreviewModal from '../components/VocabularyPreviewModal';
+import AuthContext from '../context/AuthContext';
 
 const VocabularyTestList = () => {
   const { mainTopic, subTopic } = useParams();
+  const { user } = useContext(AuthContext); // Thêm auth context
   const [allTests, setAllTests] = useState([]);
   const [filteredTests, setFilteredTests] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -46,7 +48,7 @@ const VocabularyTestList = () => {
 
   useEffect(() => {
     fetchTests();
-  }, [mainTopic, subTopic]);
+  }, [mainTopic, subTopic, user]); // Thêm user dependency để re-fetch khi login/logout
 
   useEffect(() => {
     applyFilters();
@@ -58,6 +60,7 @@ const VocabularyTestList = () => {
       setError(null);
       
       console.log('Fetching tests for:', { mainTopic, subTopic });
+      console.log('Current user:', user ? user.email : 'Not logged in'); // Debug log
       
       if (!mainTopic || !subTopic) {
         throw new Error('Main topic hoặc sub topic không được tìm thấy');
@@ -74,6 +77,7 @@ const VocabularyTestList = () => {
       const allTests = Array.isArray(response) ? response : [];
       const vocabularyTests = allTests.filter(test => test.test_type === 'vocabulary');
       console.log('Vocabulary tests:', vocabularyTests);
+      console.log('Total tests found:', vocabularyTests.length); // Debug log
       
       setAllTests(vocabularyTests);
     } catch (err) {
@@ -254,7 +258,21 @@ const VocabularyTestList = () => {
   ];
 
   const headerActions = (
-    <div className="flex bg-white/70 backdrop-blur-sm rounded-xl border border-white/50 p-1 shadow-lg">
+    <div className="flex items-center gap-3">
+      {/* Refresh Button */}
+      <button
+        onClick={fetchTests}
+        className="flex items-center px-3 py-2 bg-white/70 backdrop-blur-sm border border-white/50 text-gray-700 rounded-lg hover:bg-white/90 transition-all duration-200 shadow-lg"
+        title="Làm mới danh sách"
+      >
+        <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+        </svg>
+        Làm mới
+      </button>
+
+      {/* View Mode Toggle */}
+      <div className="flex bg-white/70 backdrop-blur-sm rounded-xl border border-white/50 p-1 shadow-lg">
       <button
         onClick={() => setViewMode('card')}
         className={`flex items-center px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${
@@ -281,6 +299,7 @@ const VocabularyTestList = () => {
         </svg>
         Danh sách
       </button>
+      </div>
     </div>
   );
 

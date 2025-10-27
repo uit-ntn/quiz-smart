@@ -37,18 +37,18 @@ const AdminTests = () => {
   const [showMultipleChoiceModal, setShowMultipleChoiceModal] = useState(false);
   const [selectedTestId, setSelectedTestId] = useState(null);
   const [testToDelete, setTestToDelete] = useState(null);
-  
+
   // Pagination state
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(10);
-  
+
   // Toast state
   const [toast, setToast] = useState({
     isVisible: false,
     message: '',
     type: 'success'
   });
-  
+
   const [formData, setFormData] = useState({
     test_title: '',
     description: '',
@@ -114,7 +114,7 @@ const AdminTests = () => {
         </svg>
       );
     }
-    
+
     if (sortOrder === 'asc') {
       return (
         <svg className="w-4 h-4 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -274,7 +274,7 @@ const AdminTests = () => {
         testCreatedBy: testToDelete.created_by,
         currentUserId: user?._id
       });
-      
+
       if (deleteType === 'soft') {
         console.log('Calling softDeleteTest...');
         await testService.softDeleteTest(testToDelete._id);
@@ -287,12 +287,12 @@ const AdminTests = () => {
       await fetchTests(); // Refresh the list
       setShowDeleteModal(false);
       setTestToDelete(null);
-      
+
       // Show success toast
       showToast(`Xóa test thành công (${deleteType === 'soft' ? 'xóa mềm' : 'xóa cứng'})`, 'success');
     } catch (err) {
       console.error('Error deleting test:', err);
-      
+
       // More detailed error message
       let errorMessage = err.message || 'Lỗi không xác định';
       if (err.message.includes('403') || err.message.includes('Access denied')) {
@@ -302,7 +302,7 @@ const AdminTests = () => {
       } else if (err.message.includes('404') || err.message.includes('not found')) {
         errorMessage = 'Test không tồn tại hoặc đã bị xóa.';
       }
-      
+
       showToast(`Không thể xóa test: ${errorMessage}`, 'error');
     }
   };
@@ -498,10 +498,10 @@ const AdminTests = () => {
 
         {error && <ErrorMessage message={error} />}
 
-        {/* Advanced Filters */}
-        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-4 sm:p-6 mb-6">
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-4">
-            <h2 className="text-lg font-semibold text-gray-900 mb-2 sm:mb-0">Bộ lọc và tìm kiếm</h2>
+        <section className="rounded-xl border border-neutral-200 shadow-sm p-3 sm:p-4 mb-4 bg-white">
+          {/* Header (nhỏ gọn) */}
+          <div className="flex items-center justify-between mb-3">
+            <h2 className="text-lg font-semibold text-neutral-900">Bộ lọc & tìm kiếm</h2>
             <button
               onClick={() => {
                 setSearchTerm('');
@@ -514,36 +514,37 @@ const AdminTests = () => {
                 setSortBy('created_at');
                 setSortOrder('desc');
               }}
-              className="text-sm text-gray-500 hover:text-gray-700 underline"
+              className="text-xs underline decoration-neutral-300 hover:decoration-indigo-500 text-neutral-600 hover:text-neutral-900"
+              type="button"
             >
               Xóa bộ lọc
             </button>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
+          {/* Hàng 1 (gọn) */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2 mb-3">
             {/* Search */}
             <div className="sm:col-span-2">
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                🔍 Tìm kiếm
-              </label>
+              <label className="block text-xs font-medium text-neutral-900 mb-1">🔍 Tìm kiếm</label>
               <input
                 type="text"
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 placeholder="Tìm theo tên, mô tả, chủ đề..."
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent text-sm"
+                className="w-full h-9 px-3 rounded-md border text-sm border-neutral-200
+                   !bg-neutral-50 !text-neutral-900 placeholder:text-neutral-400
+                   focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
               />
             </div>
 
-            {/* Filter Type */}
+            {/* Type */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                📝 Loại test
-              </label>
+              <label className="block text-xs font-medium text-neutral-900 mb-1">📝 Loại test</label>
               <select
                 value={filterType}
                 onChange={(e) => setFilterType(e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent text-sm"
+                className="w-full h-9 px-3 rounded-md border text-sm border-neutral-200
+                   !bg-neutral-50 !text-neutral-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
               >
                 <option value="all">Tất cả loại</option>
                 <option value="vocabulary">📚 Từ vựng</option>
@@ -552,15 +553,14 @@ const AdminTests = () => {
               </select>
             </div>
 
-            {/* Filter Visibility */}
+            {/* Visibility */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                👁️ Hiển thị
-              </label>
+              <label className="block text-xs font-medium text-neutral-900 mb-1">👁️ Hiển thị</label>
               <select
                 value={filterVisibility}
                 onChange={(e) => setFilterVisibility(e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent text-sm"
+                className="w-full h-9 px-3 rounded-md border text-sm border-neutral-200
+                   !bg-neutral-50 !text-neutral-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
               >
                 <option value="all">Tất cả</option>
                 <option value="public">🌍 Công khai</option>
@@ -569,16 +569,16 @@ const AdminTests = () => {
             </div>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
-            {/* Filter Difficulty */}
+          {/* Hàng 2 (gọn) */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-2">
+            {/* Difficulty */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                ⭐ Độ khó
-              </label>
+              <label className="block text-xs font-medium text-neutral-900 mb-1">⭐ Độ khó</label>
               <select
                 value={filterDifficulty}
                 onChange={(e) => setFilterDifficulty(e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent text-sm"
+                className="w-full h-9 px-3 rounded-md border text-sm border-neutral-200
+                   !bg-neutral-50 !text-neutral-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
               >
                 <option value="all">Tất cả</option>
                 <option value="easy">🟢 Dễ</option>
@@ -587,15 +587,14 @@ const AdminTests = () => {
               </select>
             </div>
 
-            {/* Filter Status */}
+            {/* Status */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                🔄 Trạng thái
-              </label>
+              <label className="block text-xs font-medium text-neutral-900 mb-1">🔄 Trạng thái</label>
               <select
                 value={filterStatus}
                 onChange={(e) => setFilterStatus(e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent text-sm"
+                className="w-full h-9 px-3 rounded-md border text-sm border-neutral-200
+                   !bg-neutral-50 !text-neutral-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
               >
                 <option value="all">Tất cả</option>
                 <option value="active">✅ Hoạt động</option>
@@ -604,49 +603,43 @@ const AdminTests = () => {
               </select>
             </div>
 
-            {/* Date From */}
+            {/* Date from */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                📅 Từ ngày
-              </label>
+              <label className="block text-xs font-medium text-neutral-900 mb-1">📅 Từ ngày</label>
               <input
                 type="date"
                 value={dateFrom}
                 onChange={(e) => setDateFrom(e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent text-sm"
+                className="w-full h-9 px-3 rounded-md border text-sm border-neutral-200
+                   !bg-neutral-50 !text-neutral-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
               />
             </div>
 
-            {/* Date To */}
+            {/* Date to */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                📅 Đến ngày
-              </label>
+              <label className="block text-xs font-medium text-neutral-900 mb-1">📅 Đến ngày</label>
               <input
                 type="date"
                 value={dateTo}
                 onChange={(e) => setDateTo(e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent text-sm"
+                className="w-full h-9 px-3 rounded-md border text-sm border-neutral-200
+                   !bg-neutral-50 !text-neutral-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
               />
             </div>
-
-            {/* Spacer for responsive layout */}
-            <div className="hidden lg:block"></div>
           </div>
 
-          {/* Filter Summary */}
-          <div className="mt-4 flex flex-col sm:flex-row sm:items-center sm:justify-between pt-4 border-t border-gray-200 gap-2">
-            <div className="text-sm text-gray-600">
-              Hiển thị <span className="font-medium text-gray-900">{filteredTests.length}</span> / {tests.length} test
-              {(searchTerm || filterType !== 'all' || filterVisibility !== 'all' || filterDifficulty !== 'all' || filterStatus !== 'all' || dateFrom || dateTo) && (
-                <span className="ml-2 text-blue-600">• Đã áp dụng bộ lọc</span>
-              )}
+          {/* Summary (nhỏ gọn) */}
+          <div className="mt-3 pt-3 border-t border-neutral-200 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+            <div className="text-xs text-neutral-700">
+              Hiển thị <span className="font-semibold text-neutral-900">{filteredTests.length}</span> / {tests.length} test
             </div>
-            <div className="text-sm text-gray-500">
+            <div className="text-xs text-neutral-600">
               Sắp xếp theo {sortBy === 'created_at' ? 'ngày tạo' : sortBy === 'updated_at' ? 'ngày sửa' : sortBy === 'test_title' ? 'tên test' : 'số câu hỏi'} ({sortOrder === 'asc' ? 'tăng dần' : 'giảm dần'})
             </div>
           </div>
-        </div>
+        </section>
+
+
 
         {/* Tests Table */}
         <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden mb-6">
@@ -658,7 +651,7 @@ const AdminTests = () => {
                     STT
                   </th>
                   <th className="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider min-w-[150px]">
-                    <button 
+                    <button
                       onClick={() => handleSort('test_title')}
                       className="flex items-center space-x-1 hover:text-gray-700 transition-colors"
                     >
@@ -667,7 +660,7 @@ const AdminTests = () => {
                     </button>
                   </th>
                   <th className="hidden sm:table-cell px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-24">
-                    <button 
+                    <button
                       onClick={() => handleSort('test_type')}
                       className="flex items-center space-x-1 hover:text-gray-700 transition-colors"
                     >
@@ -676,7 +669,7 @@ const AdminTests = () => {
                     </button>
                   </th>
                   <th className="hidden md:table-cell px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-20">
-                    <button 
+                    <button
                       onClick={() => handleSort('total_questions')}
                       className="flex items-center space-x-1 hover:text-gray-700 transition-colors"
                     >
@@ -685,7 +678,7 @@ const AdminTests = () => {
                     </button>
                   </th>
                   <th className="hidden lg:table-cell px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider min-w-[120px]">
-                    <button 
+                    <button
                       onClick={() => handleSort('created_by')}
                       className="flex items-center space-x-1 hover:text-gray-700 transition-colors"
                     >
@@ -694,7 +687,7 @@ const AdminTests = () => {
                     </button>
                   </th>
                   <th className="hidden lg:table-cell px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-28">
-                    <button 
+                    <button
                       onClick={() => handleSort('created_at')}
                       className="flex items-center space-x-1 hover:text-gray-700 transition-colors"
                     >
@@ -703,7 +696,7 @@ const AdminTests = () => {
                     </button>
                   </th>
                   <th className="hidden md:table-cell px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-24">
-                    <button 
+                    <button
                       onClick={() => handleSort('visibility')}
                       className="flex items-center space-x-1 hover:text-gray-700 transition-colors"
                     >
@@ -744,9 +737,9 @@ const AdminTests = () => {
                         <div className="sm:hidden text-xs text-gray-500 mt-1 space-y-1">
                           <div className="flex items-center gap-2">
                             <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${test.test_type === 'vocabulary' ? 'bg-purple-100 text-purple-800' :
-                                test.test_type === 'multiple_choice' ? 'bg-blue-100 text-blue-800' :
-                                  test.test_type === 'grammar' ? 'bg-green-100 text-green-800' :
-                                    'bg-gray-100 text-gray-800'
+                              test.test_type === 'multiple_choice' ? 'bg-blue-100 text-blue-800' :
+                                test.test_type === 'grammar' ? 'bg-green-100 text-green-800' :
+                                  'bg-gray-100 text-gray-800'
                               }`}>
                               {test.test_type === 'vocabulary' ? 'Từ vựng' :
                                 test.test_type === 'multiple_choice' ? 'Trắc nghiệm' :
@@ -760,9 +753,9 @@ const AdminTests = () => {
                       </td>
                       <td className="hidden sm:table-cell px-3 sm:px-6 py-4 whitespace-nowrap">
                         <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${test.test_type === 'vocabulary' ? 'bg-purple-100 text-purple-800' :
-                            test.test_type === 'multiple_choice' ? 'bg-blue-100 text-blue-800' :
-                              test.test_type === 'grammar' ? 'bg-green-100 text-green-800' :
-                                'bg-gray-100 text-gray-800'
+                          test.test_type === 'multiple_choice' ? 'bg-blue-100 text-blue-800' :
+                            test.test_type === 'grammar' ? 'bg-green-100 text-green-800' :
+                              'bg-gray-100 text-gray-800'
                           }`}>
                           {test.test_type === 'vocabulary' ? 'Từ vựng' :
                             test.test_type === 'multiple_choice' ? 'Trắc nghiệm' :
@@ -842,32 +835,42 @@ const AdminTests = () => {
         </div>
 
         {/* Pagination */}
-        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-4 sm:p-6">
-          <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
+        <section className="bg-white rounded-xl shadow-sm border border-neutral-200 p-3 sm:p-4">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+            {/* Per-page */}
             <div className="flex items-center gap-2 text-sm">
-              <span className="text-gray-700">Hiển thị</span>
+              <span className="text-neutral-700">Hiển thị</span>
               <select
                 value={itemsPerPage}
                 onChange={(e) => setItemsPerPage(Number(e.target.value))}
-                className="border border-gray-300 rounded px-2 py-1 text-sm"
+                className="h-9 px-2 rounded-md border border-neutral-200 text-sm
+                   bg-neutral-50 text-neutral-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                aria-label="Số mục mỗi trang"
               >
                 <option value={5}>5</option>
                 <option value={10}>10</option>
                 <option value={20}>20</option>
                 <option value={50}>50</option>
               </select>
-              <span className="text-gray-700">trên trang</span>
+              <span className="text-neutral-700">trên trang</span>
             </div>
-            
+
+            {/* Pagination */}
             <div className="flex items-center gap-2">
+              {/* Prev */}
               <button
                 onClick={() => setCurrentPage(Math.max(currentPage - 1, 1))}
                 disabled={currentPage === 1}
-                className="px-3 py-1 border border-gray-300 rounded text-sm disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50"
+                className="h-9 px-3 rounded-md border text-sm transition
+                   bg-neutral-50 border-neutral-200 text-neutral-800
+                   hover:bg-neutral-100 focus:outline-none focus:ring-2 focus:ring-indigo-500
+                   disabled:opacity-50 disabled:cursor-not-allowed"
+                aria-label="Trang trước"
               >
-                Trước
+                ← Trước
               </button>
-              
+
+              {/* Page numbers */}
               <div className="flex gap-1">
                 {Array.from({ length: Math.min(totalPages, 5) }, (_, i) => {
                   let pageNum;
@@ -880,51 +883,63 @@ const AdminTests = () => {
                   } else {
                     pageNum = currentPage - 2 + i;
                   }
-                  
+
+                  const isActive = currentPage === pageNum;
+
                   return (
                     <button
                       key={pageNum}
                       onClick={() => setCurrentPage(pageNum)}
-                      className={`px-3 py-1 border border-gray-300 rounded text-sm ${
-                        currentPage === pageNum 
-                          ? 'bg-blue-500 text-white border-blue-500' 
-                          : 'hover:bg-gray-50'
-                      }`}
+                      className={[
+                        "h-9 min-w-9 px-3 rounded-md border text-sm transition focus:outline-none focus:ring-2 focus:ring-indigo-500",
+                        isActive
+                          ? "bg-indigo-600 text-white border-indigo-600 shadow-sm"
+                          : "bg-neutral-50 text-neutral-800 border-neutral-200 hover:bg-neutral-100"
+                      ].join(" ")}
+                      aria-current={isActive ? "page" : undefined}
                     >
                       {pageNum}
                     </button>
                   );
                 })}
+
                 {totalPages > 5 && currentPage < totalPages - 2 && (
                   <>
-                    <span className="px-2 py-1 text-sm text-gray-500">...</span>
+                    <span className="px-2 py-1 text-sm text-neutral-500 select-none">…</span>
                     <button
                       onClick={() => setCurrentPage(totalPages)}
-                      className="px-3 py-1 border border-gray-300 rounded text-sm hover:bg-gray-50"
+                      className="h-9 min-w-9 px-3 rounded-md border text-sm transition
+                         bg-neutral-50 text-neutral-800 border-neutral-200
+                         hover:bg-neutral-100 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                      aria-label={`Tới trang ${totalPages}`}
                     >
                       {totalPages}
                     </button>
                   </>
                 )}
               </div>
-              
+
+              {/* Next */}
               <button
                 onClick={() => setCurrentPage(Math.min(currentPage + 1, totalPages))}
                 disabled={currentPage === totalPages}
-                className="px-3 py-1 border border-gray-300 rounded text-sm disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50"
+                className="h-9 px-3 rounded-md border text-sm transition
+                   bg-neutral-50 border-neutral-200 text-neutral-800
+                   hover:bg-neutral-100 focus:outline-none focus:ring-2 focus:ring-indigo-500
+                   disabled:opacity-50 disabled:cursor-not-allowed"
+                aria-label="Trang sau"
               >
-                Sau
+                Sau →
               </button>
             </div>
-            
-            <div className="text-sm text-gray-700 text-center sm:text-left">
-              Trang {currentPage} / {totalPages} 
-              <span className="block sm:inline sm:ml-2">
-                (Tổng: {filteredTests.length} tests)
-              </span>
+
+            {/* Status */}
+            <div className="text-sm text-neutral-700 text-center sm:text-left">
+              Trang {currentPage} / {totalPages}
+              <span className="block sm:inline sm:ml-2">(Tổng: {filteredTests.length} tests)</span>
             </div>
           </div>
-        </div>
+        </section>
       </div>
 
       {/* Test Type Selection Modal */}
@@ -943,7 +958,7 @@ const AdminTests = () => {
                 <div className="font-semibold text-lg">📚 Vocabulary Test</div>
                 <div className="text-gray-600 text-sm">Tạo bài test từ vựng</div>
               </button>
-              
+
               <button
                 onClick={() => {
                   setShowTestTypeModal(false);
@@ -954,7 +969,7 @@ const AdminTests = () => {
                 <div className="font-semibold text-lg">✅ Multiple Choice Test</div>
                 <div className="text-gray-600 text-sm">Tạo bài test trắc nghiệm</div>
               </button>
-              
+
               <button
                 onClick={() => {
                   setShowTestTypeModal(false);
@@ -966,7 +981,7 @@ const AdminTests = () => {
                 <div className="text-gray-600 text-sm">Tạo bài test ngữ pháp</div>
               </button>
             </div>
-            
+
             <div className="flex justify-end mt-6">
               <button
                 onClick={() => setShowTestTypeModal(false)}
@@ -1025,7 +1040,7 @@ const AdminTests = () => {
                 <div className="font-semibold text-lg">Tạo với AI</div>
                 <div className="text-gray-600 text-sm">Nhập topic và để AI tạo từ vựng</div>
               </button>
-              
+
               <button
                 onClick={() => {
                   setShowVocabularyModal(false);
@@ -1037,7 +1052,7 @@ const AdminTests = () => {
                 <div className="text-gray-600 text-sm">Nhập từ vựng và định nghĩa</div>
               </button>
             </div>
-            
+
             <div className="flex justify-end mt-6">
               <button
                 onClick={() => setShowVocabularyModal(false)}
