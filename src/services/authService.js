@@ -123,11 +123,11 @@ class AuthService {
   }
 
   // ---------- Google OAuth ----------
-  async initiateGoogleLogin() {
-    // Lưu đường dẫn để quay lại
-    const path = window.location.pathname;
-    if (path && !['/login', '/register'].includes(path)) {
-      localStorage.setItem('authReturnTo', path);
+  async initiateGoogleLogin(returnUrl = null) {
+    // Lưu đường dẫn để quay lại - ưu tiên returnUrl được truyền vào
+    const targetPath = returnUrl || window.location.pathname;
+    if (targetPath && !['/login', '/register'].includes(targetPath)) {
+      localStorage.setItem('authReturnTo', targetPath);
     }
 
     // Kiểm tra BE sống
@@ -136,8 +136,15 @@ class AuthService {
       throw new Error('Backend chưa chạy (GET /auth/health thất bại). Hãy khởi động BE (port 8000).');
     }
 
+    // Xây dựng URL với returnUrl nếu có
+    let googleAuthUrl = `${API_BASE_URL}/auth/google`;
+    if (returnUrl) {
+      const encodedReturnUrl = encodeURIComponent(returnUrl);
+      googleAuthUrl += `?returnUrl=${encodedReturnUrl}`;
+    }
+
     // Redirect sang Google OAuth
-    window.location.href = `${API_BASE_URL}/auth/google`;
+    window.location.href = googleAuthUrl;
   }
 
   // Gọi ở trang /auth/success khi nhận ?token=...
@@ -154,6 +161,12 @@ class AuthService {
       this._clearAuth();
       throw e;
     }
+  }
+
+  // Utility method để redirect tới Google login từ bất kỳ đâu
+  redirectToGoogleLogin(fromPage = null) {
+    const returnUrl = fromPage || window.location.pathname + window.location.search;
+    this.initiateGoogleLogin(returnUrl);
   }
 
   // ---------- OTP & Password flows ----------

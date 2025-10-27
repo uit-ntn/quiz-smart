@@ -74,6 +74,26 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
+  const loginWithGoogle = async (returnUrl = null) => {
+    try {
+      await authService.initiateGoogleLogin(returnUrl);
+      // No need to update state here, will be handled in callback
+    } catch (error) {
+      throw error;
+    }
+  };
+
+  const handleGoogleCallback = async (token) => {
+    try {
+      const response = await authService.handleGoogleCallback(token);
+      setUser(response.user);
+      setIsAuthenticated(true);
+      return response;
+    } catch (error) {
+      throw error;
+    }
+  };
+
   const updateUser = (userData) => {
     setUser(userData);
     // Update localStorage as well
@@ -107,6 +127,8 @@ export const AuthProvider = ({ children }) => {
     login,
     register,
     logout,
+    loginWithGoogle,
+    handleGoogleCallback,
     updateUser,
     refreshAuth
   };
