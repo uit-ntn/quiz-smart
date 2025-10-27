@@ -21,11 +21,15 @@ const defaultByType = (type, testId) => {
           { label: "B", text: "" },
           { label: "C", text: "" },
           { label: "D", text: "" },
+          { label: "E", text: "" }
         ],
         correct_answers: [],
-        difficulty: "medium",
-        points: 1,
-        explanation: "",
+        explanation: {
+          correct: "",
+          incorrect_choices: {}
+        },
+        difficulty: "easy",
+        tags: [],
         test_id: testId,
         status: "active",
       };
@@ -34,8 +38,6 @@ const defaultByType = (type, testId) => {
         word: "",
         meaning: "",
         example_sentence: "",
-        difficulty: "medium",
-        points: 1,
         test_id: testId,
       };
     case "grammar":
@@ -223,115 +225,243 @@ const QuestionModal = ({
               {/* MULTIPLE CHOICE */}
               {lockedType === "multiple_choice" && (
                 <>
+                  {/* Question Text */}
                   <div>
-                    <label className="block text-sm font-medium text-black mb-2">
-                      Câu hỏi <span className="text-red-600">*</span>
+                    <label className="block text-sm font-semibold text-gray-900 mb-2">
+                      Câu hỏi <span className="text-red-500">*</span>
                     </label>
                     <textarea
                       rows={3}
                       value={formData.question_text || ""}
                       onChange={(e) => setField("question_text", e.target.value)}
-                      placeholder="Nhập câu hỏi…"
-                      className={`w-full px-3 py-2 rounded-lg border text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent ${
-                        errors.question_text ? "border-red-300" : "border-sky-100"
-                      } bg-indigo-50 text-black placeholder:text-indigo-400`}
+                      placeholder="Nhập câu hỏi trắc nghiệm..."
+                      className={`w-full px-4 py-3 rounded-xl border-2 text-sm focus:outline-none focus:ring-0 transition-colors ${
+                        errors.question_text 
+                          ? "border-red-300 bg-red-50 focus:border-red-400" 
+                          : "border-blue-200 bg-blue-50 focus:border-blue-400 hover:border-blue-300"
+                      } text-gray-900 placeholder:text-blue-400`}
                     />
                     {errors.question_text && (
                       <p className="mt-1 text-xs text-red-600">{errors.question_text}</p>
                     )}
                   </div>
 
+                  {/* Options List */}
                   <div>
-                    <label className="block text-sm font-medium text-black mb-2">
-                      Đáp án <span className="text-red-600">*</span>
+                    <label className="block text-sm font-semibold text-gray-900 mb-3">
+                      Các lựa chọn <span className="text-red-500">*</span>
                     </label>
-                    <div className="space-y-2">
-                      {(formData.options || []).map((opt, idx) => (
-                        <div key={opt?.label || idx} className="flex items-center gap-3">
-                          <input
-                            type="checkbox"
-                            checked={(formData.correct_answers || []).includes(opt?.label)}
-                            onChange={() => toggleCorrectAnswer(opt?.label)}
-                            className="w-4 h-4 text-indigo-600 border-sky-300 rounded focus:ring-indigo-500"
-                          />
-                          <span className="w-8 text-sm font-medium text-indigo-900">{opt?.label}:</span>
-                          <input
-                            type="text"
-                            value={opt?.text || ""}
-                            onChange={(e) => handleOptionChange(idx, e.target.value)}
-                            placeholder={`Đáp án ${opt?.label}`}
-                            className="flex-1 px-3 py-2 rounded-lg border text-sm border-sky-100 focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-indigo-50 text-black placeholder:text-indigo-400"
-                          />
-                        </div>
-                      ))}
+                    <div className="space-y-3">
+                      {(formData.options || []).map((opt, idx) => {
+                        const isCorrect = (formData.correct_answers || []).includes(opt?.label);
+                        const optionColors = {
+                          A: isCorrect ? "border-emerald-400 bg-emerald-50" : "border-blue-200 bg-blue-50",
+                          B: isCorrect ? "border-emerald-400 bg-emerald-50" : "border-purple-200 bg-purple-50",
+                          C: isCorrect ? "border-emerald-400 bg-emerald-50" : "border-orange-200 bg-orange-50",
+                          D: isCorrect ? "border-emerald-400 bg-emerald-50" : "border-pink-200 bg-pink-50",
+                          E: isCorrect ? "border-emerald-400 bg-emerald-50" : "border-teal-200 bg-teal-50"
+                        };
+                        const labelColors = {
+                          A: isCorrect ? "bg-emerald-500 text-white" : "bg-blue-500 text-white",
+                          B: isCorrect ? "bg-emerald-500 text-white" : "bg-purple-500 text-white",
+                          C: isCorrect ? "bg-emerald-500 text-white" : "bg-orange-500 text-white",
+                          D: isCorrect ? "bg-emerald-500 text-white" : "bg-pink-500 text-white",
+                          E: isCorrect ? "bg-emerald-500 text-white" : "bg-teal-500 text-white"
+                        };
+
+                        return (
+                          <div 
+                            key={opt?.label || idx} 
+                            className={`p-4 rounded-xl border-2 transition-all duration-200 ${optionColors[opt?.label] || "border-gray-200 bg-gray-50"}`}
+                          >
+                            <div className="flex items-start gap-3">
+                              {/* Correct Answer Checkbox */}
+                              <div className="flex items-center">
+                                <input
+                                  type="checkbox"
+                                  checked={isCorrect}
+                                  onChange={() => toggleCorrectAnswer(opt?.label)}
+                                  className="w-5 h-5 text-emerald-600 border-2 border-gray-300 rounded focus:ring-emerald-500 focus:ring-2"
+                                />
+                              </div>
+                              
+                              {/* Option Label */}
+                              <div className={`w-8 h-8 rounded-lg flex items-center justify-center text-sm font-bold ${labelColors[opt?.label] || "bg-gray-500 text-white"}`}>
+                                {opt?.label}
+                              </div>
+                              
+                              {/* Option Text Input */}
+                              <div className="flex-1">
+                                <input
+                                  type="text"
+                                  value={opt?.text || ""}
+                                  onChange={(e) => handleOptionChange(idx, e.target.value)}
+                                  placeholder={`Nhập nội dung cho đáp án ${opt?.label}...`}
+                                  className="w-full px-3 py-2 border-0 bg-transparent text-sm text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-0"
+                                />
+                              </div>
+                            </div>
+                          </div>
+                        );
+                      })}
                     </div>
-                    {errors.options && <p className="mt-1 text-xs text-red-600">{errors.options}</p>}
+                    {errors.options && <p className="mt-2 text-xs text-red-600">{errors.options}</p>}
                     {errors.correct_answers && (
-                      <p className="mt-1 text-xs text-red-600">{errors.correct_answers}</p>
+                      <p className="mt-2 text-xs text-red-600">{errors.correct_answers}</p>
                     )}
                   </div>
 
+                  {/* Explanation */}
                   <div>
-                    <label className="block text-sm font-medium text-black mb-2">Giải thích</label>
+                    <label className="block text-sm font-semibold text-gray-900 mb-2">
+                      Giải thích đáp án đúng
+                    </label>
                     <textarea
                       rows={2}
-                      value={formData.explanation || ""}
-                      onChange={(e) => setField("explanation", e.target.value)}
-                      placeholder="Giải thích đáp án (tùy chọn)…"
-                      className="w-full px-3 py-2 rounded-lg border text-sm border-sky-100 focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-indigo-50 text-black placeholder:text-indigo-400"
+                      value={formData.explanation?.correct || ""}
+                      onChange={(e) => setField("explanation", {
+                        ...formData.explanation,
+                        correct: e.target.value
+                      })}
+                      placeholder="Giải thích tại sao đáp án này đúng..."
+                      className="w-full px-4 py-3 rounded-xl border-2 border-green-200 bg-green-50 text-sm focus:outline-none focus:border-green-400 hover:border-green-300 text-gray-900 placeholder:text-green-400 transition-colors"
                     />
+                  </div>
+
+                  {/* Additional Fields */}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm font-semibold text-gray-900 mb-2">Độ khó</label>
+                      <select
+                        value={formData.difficulty || "easy"}
+                        onChange={(e) => setField("difficulty", e.target.value)}
+                        className="w-full px-4 py-3 rounded-xl border-2 border-indigo-200 bg-indigo-50 text-sm focus:outline-none focus:border-indigo-400 text-gray-900"
+                      >
+                        <option value="easy">Dễ</option>
+                        <option value="medium">Trung bình</option>
+                        <option value="hard">Khó</option>
+                      </select>
+                    </div>
+                    <div>
+                      <label className="block text-sm font-semibold text-gray-900 mb-2">Tags</label>
+                      <input
+                        type="text"
+                        value={Array.isArray(formData.tags) ? formData.tags.join(", ") : ""}
+                        onChange={(e) => setField("tags", e.target.value.split(",").map(t => t.trim()).filter(Boolean))}
+                        placeholder="toeic, part1, photos..."
+                        className="w-full px-4 py-3 rounded-xl border-2 border-yellow-200 bg-yellow-50 text-sm focus:outline-none focus:border-yellow-400 text-gray-900 placeholder:text-yellow-500"
+                      />
+                    </div>
                   </div>
                 </>
               )}
 
-              {/* VOCABULARY */}
+              {/* VOCABULARY - Table Style */}
               {lockedType === "vocabulary" && (
-                <>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div className="bg-gradient-to-br from-teal-50 to-cyan-50 p-6 rounded-2xl border-2 border-teal-200">
+                  <h3 className="text-lg font-bold text-teal-900 mb-4 flex items-center">
+                    <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.746 0 3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+                    </svg>
+                    Thông tin từ vựng
+                  </h3>
+                  
+                  <div className="overflow-hidden rounded-xl border-2 border-white shadow-sm">
+                    <table className="w-full">
+                      <tbody>
+                        {/* Word Row */}
+                        <tr className="border-b border-teal-100">
+                          <td className="w-1/3 px-4 py-4 bg-teal-100 text-sm font-semibold text-teal-900">
+                            Từ vựng <span className="text-red-500">*</span>
+                          </td>
+                          <td className="px-4 py-4 bg-white">
+                            <input
+                              type="text"
+                              value={formData.word || ""}
+                              onChange={(e) => setField("word", e.target.value)}
+                              placeholder="Nhập từ vựng cần học..."
+                              className={`w-full px-3 py-2 rounded-lg border-2 text-sm focus:outline-none transition-colors ${
+                                errors.word 
+                                  ? "border-red-300 bg-red-50 focus:border-red-400" 
+                                  : "border-teal-200 bg-teal-50 focus:border-teal-400 hover:border-teal-300"
+                              } text-gray-900 placeholder:text-teal-400`}
+                            />
+                            {errors.word && <p className="mt-1 text-xs text-red-600">{errors.word}</p>}
+                          </td>
+                        </tr>
+                        
+                        {/* Meaning Row */}
+                        <tr className="border-b border-teal-100">
+                          <td className="w-1/3 px-4 py-4 bg-teal-100 text-sm font-semibold text-teal-900">
+                            Nghĩa <span className="text-red-500">*</span>
+                          </td>
+                          <td className="px-4 py-4 bg-white">
+                            <input
+                              type="text"
+                              value={formData.meaning || ""}
+                              onChange={(e) => setField("meaning", e.target.value)}
+                              placeholder="Nhập nghĩa tiếng Việt..."
+                              className={`w-full px-3 py-2 rounded-lg border-2 text-sm focus:outline-none transition-colors ${
+                                errors.meaning 
+                                  ? "border-red-300 bg-red-50 focus:border-red-400" 
+                                  : "border-teal-200 bg-teal-50 focus:border-teal-400 hover:border-teal-300"
+                              } text-gray-900 placeholder:text-teal-400`}
+                            />
+                            {errors.meaning && <p className="mt-1 text-xs text-red-600">{errors.meaning}</p>}
+                          </td>
+                        </tr>
+                        
+                        {/* Example Row */}
+                        <tr>
+                          <td className="w-1/3 px-4 py-4 bg-teal-100 text-sm font-semibold text-teal-900">
+                            Câu ví dụ
+                          </td>
+                          <td className="px-4 py-4 bg-white">
+                            <textarea
+                              rows={3}
+                              value={formData.example_sentence || ""}
+                              onChange={(e) => setField("example_sentence", e.target.value)}
+                              placeholder="Nhập câu ví dụ sử dụng từ này..."
+                              className="w-full px-3 py-2 rounded-lg border-2 border-teal-200 bg-teal-50 text-sm focus:outline-none focus:border-teal-400 hover:border-teal-300 text-gray-900 placeholder:text-teal-400 transition-colors"
+                            />
+                          </td>
+                        </tr>
+                      </tbody>
+                    </table>
+                  </div>
+                  
+                  {/* Additional Vocabulary Options */}
+                  <div className="mt-4 grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div>
-                      <label className="block text-sm font-medium text-black mb-2">
-                        Từ vựng <span className="text-red-600">*</span>
-                      </label>
-                      <input
-                        type="text"
-                        value={formData.word || ""}
-                        onChange={(e) => setField("word", e.target.value)}
-                        placeholder="Nhập từ vựng…"
-                        className={`w-full px-3 py-2 rounded-lg border text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent ${
-                          errors.word ? "border-red-300" : "border-sky-100"
-                        } bg-indigo-50 text-black placeholder:text-indigo-400`}
-                      />
-                      {errors.word && <p className="mt-1 text-xs text-red-600">{errors.word}</p>}
+                      <label className="block text-sm font-semibold text-teal-900 mb-2">Loại từ</label>
+                      <select
+                        value={formData.word_type || ""}
+                        onChange={(e) => setField("word_type", e.target.value)}
+                        className="w-full px-3 py-2 rounded-lg border-2 border-cyan-200 bg-cyan-50 text-sm focus:outline-none focus:border-cyan-400 text-gray-900"
+                      >
+                        <option value="">Chọn loại từ</option>
+                        <option value="noun">Danh từ (noun)</option>
+                        <option value="verb">Động từ (verb)</option>
+                        <option value="adjective">Tính từ (adjective)</option>
+                        <option value="adverb">Trạng từ (adverb)</option>
+                        <option value="preposition">Giới từ (preposition)</option>
+                        <option value="other">Khác</option>
+                      </select>
                     </div>
-
                     <div>
-                      <label className="block text-sm font-medium text-black mb-2">
-                        Nghĩa <span className="text-red-600">*</span>
-                      </label>
-                      <input
-                        type="text"
-                        value={formData.meaning || ""}
-                        onChange={(e) => setField("meaning", e.target.value)}
-                        placeholder="Nhập nghĩa…"
-                        className={`w-full px-3 py-2 rounded-lg border text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent ${
-                          errors.meaning ? "border-red-300" : "border-sky-100"
-                        } bg-indigo-50 text-black placeholder:text-indigo-400`}
-                      />
-                      {errors.meaning && <p className="mt-1 text-xs text-red-600">{errors.meaning}</p>}
+                      <label className="block text-sm font-semibold text-teal-900 mb-2">Độ khó</label>
+                      <select
+                        value={formData.difficulty || "easy"}
+                        onChange={(e) => setField("difficulty", e.target.value)}
+                        className="w-full px-3 py-2 rounded-lg border-2 border-cyan-200 bg-cyan-50 text-sm focus:outline-none focus:border-cyan-400 text-gray-900"
+                      >
+                        <option value="easy">Dễ</option>
+                        <option value="medium">Trung bình</option>
+                        <option value="hard">Khó</option>
+                      </select>
                     </div>
                   </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-black mb-2">Câu ví dụ</label>
-                    <textarea
-                      rows={2}
-                      value={formData.example_sentence || ""}
-                      onChange={(e) => setField("example_sentence", e.target.value)}
-                      placeholder="Nhập câu ví dụ…"
-                      className="w-full px-3 py-2 rounded-lg border text-sm border-sky-100 focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-indigo-50 text-black placeholder:text-indigo-400"
-                    />
-                  </div>
-                </>
+                </div>
               )}
 
               {/* GRAMMAR */}
@@ -424,36 +554,6 @@ const QuestionModal = ({
                   </div>
                 </>
               )}
-
-              {/* COMMON */}
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-black mb-2">Độ khó</label>
-                  <select
-                    value={formData.difficulty || "medium"}
-                    onChange={(e) => setField("difficulty", e.target.value)}
-                    className="w-full px-3 py-2 rounded-lg border text-sm border-sky-100 focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-indigo-50 text-black"
-                  >
-                    <option value="easy">Dễ</option>
-                    <option value="medium">Trung bình</option>
-                    <option value="hard">Khó</option>
-                  </select>
-                </div>
-
-                {(lockedType === "multiple_choice" || lockedType === "grammar" || lockedType === "vocabulary") && (
-                  <div>
-                    <label className="block text-sm font-medium text-black mb-2">Điểm</label>
-                    <input
-                      type="number"
-                      min="1"
-                      max="10"
-                      value={formData.points ?? 1}
-                      onChange={(e) => setField("points", Number.isNaN(parseInt(e.target.value)) ? 1 : parseInt(e.target.value))}
-                      className="w-full px-3 py-2 rounded-lg border text-sm border-sky-100 focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-indigo-50 text-black"
-                    />
-                  </div>
-                )}
-              </div>
 
               {/* Actions */}
               <div className="flex justify-end gap-3 pt-4 border-t border-sky-100">

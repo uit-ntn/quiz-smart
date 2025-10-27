@@ -544,42 +544,82 @@ const TestDetailModal = ({ isOpen, onClose, testId, onTestUpdated }) => {
                                 )}
                               </div>
 
-                              {/* Multiple choice */}
+                              {/* Multiple choice - List Style */}
                               {test?.test_type === 'multiple_choice' && (
                                 <>
-                                  <p className="font-medium text-slate-900 mb-2">{q.question_text}</p>
-                                  <div className="grid sm:grid-cols-2 gap-2">
+                                  <h4 className="font-semibold text-gray-900 mb-3 text-base">{q.question_text}</h4>
+                                  <div className="space-y-2">
                                     {q.options?.map((op, i) => {
-                                      const correct = q.correct_answers?.includes(op.label);
+                                      const isCorrect = q.correct_answers?.includes(op.label);
+                                      const optionColors = {
+                                        A: isCorrect ? "border-emerald-400 bg-emerald-50 text-emerald-800" : "border-blue-300 bg-blue-50 text-blue-800",
+                                        B: isCorrect ? "border-emerald-400 bg-emerald-50 text-emerald-800" : "border-purple-300 bg-purple-50 text-purple-800",
+                                        C: isCorrect ? "border-emerald-400 bg-emerald-50 text-emerald-800" : "border-orange-300 bg-orange-50 text-orange-800",
+                                        D: isCorrect ? "border-emerald-400 bg-emerald-50 text-emerald-800" : "border-pink-300 bg-pink-50 text-pink-800",
+                                        E: isCorrect ? "border-emerald-400 bg-emerald-50 text-emerald-800" : "border-teal-300 bg-teal-50 text-teal-800"
+                                      };
+                                      const labelColors = {
+                                        A: isCorrect ? "bg-emerald-500 text-white" : "bg-blue-500 text-white",
+                                        B: isCorrect ? "bg-emerald-500 text-white" : "bg-purple-500 text-white",
+                                        C: isCorrect ? "bg-emerald-500 text-white" : "bg-orange-500 text-white",
+                                        D: isCorrect ? "bg-emerald-500 text-white" : "bg-pink-500 text-white",
+                                        E: isCorrect ? "bg-emerald-500 text-white" : "bg-teal-500 text-white"
+                                      };
+
                                       return (
                                         <div
                                           key={i}
-                                          className={`rounded-xl px-3 py-2 text-sm ${
-                                            correct
-                                              ? 'bg-emerald-50 text-emerald-800 ring-1 ring-emerald-200'
-                                              : 'bg-slate-50 text-slate-700'
-                                          }`}
+                                          className={`flex items-start gap-3 p-3 rounded-lg border-2 transition-all ${optionColors[op.label] || "border-gray-300 bg-gray-50 text-gray-800"}`}
                                         >
-                                          <span className="font-semibold">{op.label}:</span> {op.text}
+                                          <span className={`w-6 h-6 rounded-md flex items-center justify-center text-xs font-bold ${labelColors[op.label] || "bg-gray-500 text-white"}`}>
+                                            {op.label}
+                                          </span>
+                                          <span className="flex-1 text-sm font-medium">{op.text}</span>
+                                          {isCorrect && (
+                                            <span className="text-emerald-600">
+                                              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" />
+                                              </svg>
+                                            </span>
+                                          )}
                                         </div>
                                       );
                                     })}
                                   </div>
+                                  {q.explanation?.correct && (
+                                    <div className="mt-3 p-3 bg-green-50 border border-green-200 rounded-lg">
+                                      <p className="text-sm text-green-800">
+                                        <span className="font-semibold">Giải thích:</span> {q.explanation.correct}
+                                      </p>
+                                    </div>
+                                  )}
                                 </>
                               )}
 
-                              {/* Vocabulary */}
+                              {/* Vocabulary - Table Style */}
                               {test?.test_type === 'vocabulary' && (
-                                <>
-                                  <div className="flex flex-wrap items-center gap-3">
-                                    <span className="text-slate-900 font-semibold">{q.word}</span>
-                                    <span className="text-slate-400">→</span>
-                                    <span className="text-slate-800">{q.meaning}</span>
+                                <div className="bg-gradient-to-br from-teal-50 to-cyan-50 p-4 rounded-xl border-2 border-teal-200">
+                                  <div className="overflow-hidden rounded-lg border border-white shadow-sm">
+                                    <table className="w-full">
+                                      <tbody>
+                                        <tr className="border-b border-teal-100">
+                                          <td className="w-20 px-3 py-2 bg-teal-100 text-xs font-semibold text-teal-900">Từ</td>
+                                          <td className="px-3 py-2 bg-white text-sm font-bold text-teal-900">{q.word}</td>
+                                        </tr>
+                                        <tr className="border-b border-teal-100">
+                                          <td className="w-20 px-3 py-2 bg-teal-100 text-xs font-semibold text-teal-900">Nghĩa</td>
+                                          <td className="px-3 py-2 bg-white text-sm text-gray-800">{q.meaning}</td>
+                                        </tr>
+                                        {q.example_sentence && (
+                                          <tr>
+                                            <td className="w-20 px-3 py-2 bg-teal-100 text-xs font-semibold text-teal-900">Ví dụ</td>
+                                            <td className="px-3 py-2 bg-white text-sm text-gray-600 italic">"{q.example_sentence}"</td>
+                                          </tr>
+                                        )}
+                                      </tbody>
+                                    </table>
                                   </div>
-                                  {q.example_sentence && (
-                                    <p className="text-sm text-slate-600 italic mt-2">“{q.example_sentence}”</p>
-                                  )}
-                                </>
+                                </div>
                               )}
 
                               {/* Grammar */}
