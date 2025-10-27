@@ -146,13 +146,20 @@ const TestService = {
     return data.tests || data;
   },
   async getAllMultipleChoiceMainTopics() {
-    const res = await fetch(`${API_BASE_URL}/tests/multiple-choices/main-topics`, { headers: jsonHeaders() });
+    const res = await fetch(`${API_BASE_URL}/tests/multiple-choices/main-topics`, { headers: authHeaders() });
     const data = await handle(res);
     return data.mainTopics || data || [];
   },
+  async getMultipleChoiceSubTopicsByMainTopic(mainTopic) {
+    const res = await fetch(`${API_BASE_URL}/tests/multiple-choices/sub-topics/${encodeURIComponent(mainTopic)}`, {
+      headers: authHeaders(),
+    });
+    const data = await handle(res);
+    return data.subTopics || data || [];
+  },
   async getVocabularySubTopicsByMainTopic(mainTopic) {
     const res = await fetch(addCacheBuster(`${API_BASE_URL}/tests/vocabularies/sub-topics/${encodeURIComponent(mainTopic)}`), {
-      headers: jsonHeaders(),
+      headers: authHeaders(),
     });
     const data = await handle(res);
     return data.subTopics || data || [];
@@ -165,13 +172,13 @@ const TestService = {
     return data.tests || data;
   },
   async getAllGrammarsMainTopics() {
-    const res = await fetch(`${API_BASE_URL}/tests/grammars/main-topics`, { headers: jsonHeaders() });
+    const res = await fetch(`${API_BASE_URL}/tests/grammars/main-topics`, { headers: authHeaders() });
     const data = await handle(res);
     return data.mainTopics || data || [];
   },
   async getGrammarSubTopicsByMainTopic(mainTopic) {
     const res = await fetch(`${API_BASE_URL}/tests/grammars/sub-topics/${encodeURIComponent(mainTopic)}`, {
-      headers: jsonHeaders(),
+      headers: authHeaders(),
     });
     const data = await handle(res);
     return data.subTopics || data || [];
@@ -184,13 +191,13 @@ const TestService = {
     return data.tests || data;
   },
   async getAllVocabulariesMainTopics() {
-    const res = await fetch(addCacheBuster(`${API_BASE_URL}/tests/vocabularies/main-topics`), { headers: jsonHeaders() });
+    const res = await fetch(addCacheBuster(`${API_BASE_URL}/tests/vocabularies/main-topics`), { headers: authHeaders() });
     const data = await handle(res);
     return data.mainTopics || data || [];
   },
   async getVocabularySubTopicsByMainTopic(mainTopic) {
     const res = await fetch(`${API_BASE_URL}/tests/vocabularies/sub-topics/${encodeURIComponent(mainTopic)}`, {
-      headers: jsonHeaders(),
+      headers: authHeaders(),
     });
     const data = await handle(res);
     return data.subTopics || data || [];
