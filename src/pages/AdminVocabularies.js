@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import AdminLayout from '../layout/AdminLayout';
 import vocabularyService from '../services/vocabularyService';
+import testService from '../services/testService';
 import LoadingSpinner from '../components/LoadingSpinner';
 import ErrorMessage from '../components/ErrorMessage';
 
@@ -14,12 +15,11 @@ const AdminVocabularies = () => {
   const [showEditModal, setShowEditModal] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [selectedVocab, setSelectedVocab] = useState(null);
+  const [tests, setTests] = useState({});
   const [formData, setFormData] = useState({
     word: '',
-    phonetic: '',
     meaning: '',
-    example: '',
-    example_meaning: '',
+    example_sentence: '',
     image_url: '',
     audio_url: ''
   });
@@ -38,6 +38,21 @@ const AdminVocabularies = () => {
       setError(null);
       const data = await vocabularyService.getAllVocabularies();
       setVocabularies(data);
+      
+      // Fetch test info for each vocabulary
+      const testIds = [...new Set(data.map(v => v.test_id).filter(Boolean))];
+      const testInfo = {};
+      
+      await Promise.all(testIds.map(async (testId) => {
+        try {
+          const test = await testService.getTestById(testId);
+          testInfo[testId] = test;
+        } catch (err) {
+          console.error(`Error fetching test ${testId}:`, err);
+        }
+      }));
+      
+      setTests(testInfo);
     } catch (err) {
       setError('Không thể tải danh sách từ vựng');
       console.error('Error fetching vocabularies:', err);
@@ -62,10 +77,8 @@ const AdminVocabularies = () => {
   const handleCreateClick = () => {
     setFormData({
       word: '',
-      phonetic: '',
       meaning: '',
-      example: '',
-      example_meaning: '',
+      example_sentence: '',
       image_url: '',
       audio_url: ''
     });
@@ -76,10 +89,8 @@ const AdminVocabularies = () => {
     setSelectedVocab(vocab);
     setFormData({
       word: vocab.word || '',
-      phonetic: vocab.phonetic || '',
       meaning: vocab.meaning || '',
-      example: vocab.example || '',
-      example_meaning: vocab.example_meaning || '',
+      example_sentence: vocab.example_sentence || '',
       image_url: vocab.image_url || '',
       audio_url: vocab.audio_url || ''
     });
@@ -160,18 +171,6 @@ const AdminVocabularies = () => {
           />
         </div>
         
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
-            Phiên âm
-          </label>
-          <input
-            type="text"
-            value={formData.phonetic}
-            onChange={(e) => setFormData({ ...formData, phonetic: e.target.value })}
-            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
-            placeholder="/ˈwɜːrd/"
-          />
-        </div>
       </div>
 
       <div>
@@ -361,13 +360,16 @@ const AdminVocabularies = () => {
                     Từ vựng
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Phiên âm
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Nghĩa
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Ví dụ
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Bài kiểm tra
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Chủ đề
                   </th>
                   <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Thao tác
@@ -377,33 +379,47 @@ const AdminVocabularies = () => {
               <tbody className="divide-y divide-gray-200">
                 {filteredVocabs.length === 0 ? (
                   <tr>
-                    <td colSpan="5" className="px-6 py-12 text-center text-gray-500">
+                    <td colSpan="6" className="px-6 py-12 text-center text-gray-500">
                       {searchTerm ? 'Không tìm thấy từ vựng nào phù hợp' : 'Chưa có từ vựng nào'}
                     </td>
                   </tr>
                 ) : (
-                  filteredVocabs.map((vocab) => (
-                    <tr key={vocab._id} className="hover:bg-gray-50 transition-colors">
-                      <td className="px-6 py-4">
-                        <div className="flex items-center">
-                          <div className="text-sm font-semibold text-gray-900">
-                            {vocab.word}
+                  filteredVocabs.map((vocab) => {
+                    const test = tests[vocab.test_id];
+                    return (
+                      <tr key={vocab._id} className="hover:bg-gray-50 transition-colors">
+                        <td className="px-6 py-4">
+                          <div className="flex items-center">
+                            <div className="text-sm font-semibold text-gray-900">
+                              {vocab.word}
+                            </div>
                           </div>
-                        </div>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-indigo-600">
-                        {vocab.phonetic || '-'}
-                      </td>
-                      <td className="px-6 py-4">
-                        <div className="text-sm text-gray-900 max-w-xs truncate">
-                          {vocab.meaning}
-                        </div>
-                      </td>
-                      <td className="px-6 py-4">
-                        <div className="text-sm text-gray-600 max-w-md truncate">
-                          {vocab.example_sentence || '-'}
-                        </div>
-                      </td>
+                        </td>
+                        <td className="px-6 py-4">
+                          <div className="text-sm text-gray-900 max-w-xs truncate">
+                            {vocab.meaning}
+                          </div>
+                        </td>
+                        <td className="px-6 py-4">
+                          <div className="text-sm text-gray-600 max-w-md truncate">
+                            {vocab.example_sentence || '-'}
+                          </div>
+                        </td>
+                        <td className="px-6 py-4">
+                          <div className="text-sm text-gray-900 max-w-xs truncate">
+                            {test ? test.test_title : vocab.test_id ? 'Đang tải...' : '-'}
+                          </div>
+                        </td>
+                        <td className="px-6 py-4">
+                          <div className="space-y-1">
+                            <div className="text-sm font-medium text-blue-600">
+                              {test ? test.main_topic : vocab.main_topic || '-'}
+                            </div>
+                            <div className="text-xs text-gray-500">
+                              {test ? test.sub_topic : vocab.sub_topic || '-'}
+                            </div>
+                          </div>
+                        </td>
                       <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                         <div className="flex items-center justify-end space-x-2">
                           <button
@@ -427,7 +443,8 @@ const AdminVocabularies = () => {
                         </div>
                       </td>
                     </tr>
-                  ))
+                    );
+                  })
                 )}
               </tbody>
             </table>

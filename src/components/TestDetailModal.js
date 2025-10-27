@@ -402,7 +402,7 @@ const TestDetailModal = ({ isOpen, onClose, testId, onTestUpdated }) => {
                       </div>
                       <p className="text-slate-600">Chưa có câu hỏi nào.</p>
                     </div>
-                  ) : viewMode === 'table' ? (
+                  ) : test?.test_type === 'vocabulary' ? (
                     /* Table View */
                     <div className="overflow-x-auto">
                       <table className="w-full border border-slate-200 rounded-xl overflow-hidden">
@@ -525,16 +525,16 @@ const TestDetailModal = ({ isOpen, onClose, testId, onTestUpdated }) => {
                       </table>
                     </div>
                   ) : (
-                    /* Card View */
-                    <div className="space-y-4">
+                    /* List View for Multiple Choice and Grammar */
+                    <div className="space-y-3">
                       {currentQuestions.map((q, idx) => (
                         <div
                           key={q._id}
-                          className="group rounded-2xl border border-slate-200 p-4 shadow-sm hover:shadow-md transition-shadow"
+                          className="group rounded-xl border border-slate-200 p-3 shadow-sm hover:shadow-md transition-shadow"
                         >
-                          <div className="flex items-start justify-between gap-3">
+                          <div className="flex items-start justify-between gap-2">
                             <div className="flex-1">
-                              <div className="flex items-center gap-2 mb-2">
+                              <div className="flex items-center gap-1 mb-2">
                                 <Badge tone="blue">#{startIndex + idx + 1}</Badge>
                                 {q.difficulty && <Badge tone={difficultyTone(q.difficulty)}>{q.difficulty}</Badge>}
                                 {q.status && (
@@ -544,41 +544,43 @@ const TestDetailModal = ({ isOpen, onClose, testId, onTestUpdated }) => {
                                 )}
                               </div>
 
-                              {/* Multiple choice - List Style */}
+                              {/* Multiple choice - Compact List Style */}
                               {test?.test_type === 'multiple_choice' && (
                                 <>
-                                  <h4 className="font-semibold text-gray-900 mb-3 text-base">{q.question_text}</h4>
-                                  <div className="space-y-2">
+                                  <h4 className="font-medium text-gray-900 mb-2 text-sm">{q.question_text}</h4>
+                                  <div className="space-y-1">
                                     {q.options?.map((op, i) => {
                                       const isCorrect = q.correct_answers?.includes(op.label);
                                       const optionColors = {
-                                        A: isCorrect ? "border-emerald-400 bg-emerald-50 text-emerald-800" : "border-blue-300 bg-blue-50 text-blue-800",
-                                        B: isCorrect ? "border-emerald-400 bg-emerald-50 text-emerald-800" : "border-purple-300 bg-purple-50 text-purple-800",
-                                        C: isCorrect ? "border-emerald-400 bg-emerald-50 text-emerald-800" : "border-orange-300 bg-orange-50 text-orange-800",
-                                        D: isCorrect ? "border-emerald-400 bg-emerald-50 text-emerald-800" : "border-pink-300 bg-pink-50 text-pink-800",
-                                        E: isCorrect ? "border-emerald-400 bg-emerald-50 text-emerald-800" : "border-teal-300 bg-teal-50 text-teal-800"
+                                        A: isCorrect ? "border-emerald-500 bg-emerald-100 text-emerald-900 shadow-lg ring-1 ring-emerald-300" : "border-blue-300 bg-blue-50 text-blue-800",
+                                        B: isCorrect ? "border-emerald-500 bg-emerald-100 text-emerald-900 shadow-lg ring-1 ring-emerald-300" : "border-purple-300 bg-purple-50 text-purple-800",
+                                        C: isCorrect ? "border-emerald-500 bg-emerald-100 text-emerald-900 shadow-lg ring-1 ring-emerald-300" : "border-orange-300 bg-orange-50 text-orange-800",
+                                        D: isCorrect ? "border-emerald-500 bg-emerald-100 text-emerald-900 shadow-lg ring-1 ring-emerald-300" : "border-pink-300 bg-pink-50 text-pink-800",
+                                        E: isCorrect ? "border-emerald-500 bg-emerald-100 text-emerald-900 shadow-lg ring-1 ring-emerald-300" : "border-teal-300 bg-teal-50 text-teal-800"
                                       };
                                       const labelColors = {
-                                        A: isCorrect ? "bg-emerald-500 text-white" : "bg-blue-500 text-white",
-                                        B: isCorrect ? "bg-emerald-500 text-white" : "bg-purple-500 text-white",
-                                        C: isCorrect ? "bg-emerald-500 text-white" : "bg-orange-500 text-white",
-                                        D: isCorrect ? "bg-emerald-500 text-white" : "bg-pink-500 text-white",
-                                        E: isCorrect ? "bg-emerald-500 text-white" : "bg-teal-500 text-white"
+                                        A: isCorrect ? "bg-emerald-600 text-white shadow-sm" : "bg-blue-500 text-white",
+                                        B: isCorrect ? "bg-emerald-600 text-white shadow-sm" : "bg-purple-500 text-white",
+                                        C: isCorrect ? "bg-emerald-600 text-white shadow-sm" : "bg-orange-500 text-white",
+                                        D: isCorrect ? "bg-emerald-600 text-white shadow-sm" : "bg-pink-500 text-white",
+                                        E: isCorrect ? "bg-emerald-600 text-white shadow-sm" : "bg-teal-500 text-white"
                                       };
 
                                       return (
                                         <div
                                           key={i}
-                                          className={`flex items-start gap-3 p-3 rounded-lg border-2 transition-all ${optionColors[op.label] || "border-gray-300 bg-gray-50 text-gray-800"}`}
+                                          className={`flex items-start gap-2 p-2 rounded-md border transition-all ${optionColors[op.label] || "border-gray-300 bg-gray-50 text-gray-800"}`}
                                         >
-                                          <span className={`w-6 h-6 rounded-md flex items-center justify-center text-xs font-bold ${labelColors[op.label] || "bg-gray-500 text-white"}`}>
+                                          <span className={`w-5 h-5 rounded flex items-center justify-center text-xs font-bold ${labelColors[op.label] || "bg-gray-500 text-white"}`}>
                                             {op.label}
                                           </span>
-                                          <span className="flex-1 text-sm font-medium">{op.text}</span>
+                                          <span className={`flex-1 text-xs ${isCorrect ? 'font-bold text-emerald-900' : 'font-medium'}`}>
+                                            {op.text}
+                                          </span>
                                           {isCorrect && (
-                                            <span className="text-emerald-600">
-                                              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" />
+                                            <span className="text-emerald-600 bg-emerald-50 p-0.5 rounded-full">
+                                              <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                                                <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
                                               </svg>
                                             </span>
                                           )}
@@ -586,11 +588,47 @@ const TestDetailModal = ({ isOpen, onClose, testId, onTestUpdated }) => {
                                       );
                                     })}
                                   </div>
-                                  {q.explanation?.correct && (
-                                    <div className="mt-3 p-3 bg-green-50 border border-green-200 rounded-lg">
-                                      <p className="text-sm text-green-800">
-                                        <span className="font-semibold">Giải thích:</span> {q.explanation.correct}
-                                      </p>
+                                  {/* Explanation section - Compact */}
+                                  {(q.explanation?.correct || q.explanation?.incorrect_choices) && (
+                                    <div className="mt-2 space-y-2">
+                                      {/* Correct explanation */}
+                                      {q.explanation?.correct && (
+                                        <div className="p-2 bg-emerald-50 border-l-3 border-emerald-500 rounded-r shadow-sm">
+                                          <div className="flex items-start">
+                                            <svg className="w-4 h-4 text-emerald-600 mt-0.5 mr-2 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                                              <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                                            </svg>
+                                            <div>
+                                              <h5 className="font-semibold text-emerald-800 mb-0.5 text-xs">✓ Đáp án đúng</h5>
+                                              <p className="text-xs text-emerald-700 leading-relaxed">{q.explanation.correct}</p>
+                                            </div>
+                                          </div>
+                                        </div>
+                                      )}
+                                      
+                                      {/* Incorrect explanations */}
+                                      {q.explanation?.incorrect_choices && Object.keys(q.explanation.incorrect_choices).length > 0 && (
+                                        <div className="p-2 bg-amber-50 border-l-3 border-amber-500 rounded-r shadow-sm">
+                                          <div className="flex items-start">
+                                            <svg className="w-4 h-4 text-amber-600 mt-0.5 mr-2 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                                              <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                                            </svg>
+                                            <div className="flex-1">
+                                              <h5 className="font-semibold text-amber-800 mb-1 text-xs">⚠ Tại sao các đáp án khác sai?</h5>
+                                              <div className="space-y-1">
+                                                {Object.entries(q.explanation.incorrect_choices).map(([label, explanation]) => (
+                                                  <div key={label} className="flex items-start bg-white/50 p-1.5 rounded">
+                                                    <span className="inline-flex items-center justify-center w-4 h-4 bg-amber-600 text-white text-xs font-bold rounded mr-2 flex-shrink-0">
+                                                      {label}
+                                                    </span>
+                                                    <p className="text-xs text-amber-800 leading-relaxed">{explanation}</p>
+                                                  </div>
+                                                ))}
+                                              </div>
+                                            </div>
+                                          </div>
+                                        </div>
+                                      )}
                                     </div>
                                   )}
                                 </>

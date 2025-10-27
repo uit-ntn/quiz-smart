@@ -4,7 +4,6 @@ import { useAuth } from '../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import testService from '../services/testService';
 import MultipleChoiceService from '../services/multipleChoiceService';
-import multipleChoiceService from '../services/multipleChoiceService';
 
 /** Ví dụ mẫu cho multiple choice */
 const SAMPLE_QUESTIONS = `What is the capital of France?
@@ -299,9 +298,6 @@ const CreateMultipleChoiceTestModal = ({ show, onClose }) => {
               return acc;
             }, {}) : {}
           },
-          difficulty: testInfo.difficulty,
-          tags: [testInfo.main_topic.toLowerCase(), testInfo.sub_topic.toLowerCase()],
-          status: 'active',
           created_by: user.id,
           updated_by: user.id
         };

@@ -1,5 +1,5 @@
 // =========================
-// 📘 src/services/multipleChoiceService.js (final)
+// 📘 src/services/multipleChoiceService.js
 // =========================
 const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:8000/api';
 
@@ -104,32 +104,6 @@ const MultipleChoiceService = {
     const data = await handle(res);
     return data.question || data || { success: true };
   },
-
-  // =========================
-  // 🧭 Distinct main topics
-  // =========================
-  async getAllMultipleChoicesMainTopics() {
-    const res = await fetch(`${API_BASE_URL}/multiple-choices/main-topics`, {
-      method: 'GET',
-      headers: jsonHeaders(),
-    });
-    const data = await handle(res);
-    // { message, count, mainTopics }
-    return data.mainTopics || data || [];
-  },
-
-  // =========================
-  // 🧭 Distinct sub topics by mainTopic
-  // =========================
-  async getAllMultipleChoicesSubTopicsByMainTopic(mainTopic) {
-    const res = await fetch(
-      `${API_BASE_URL}/multiple-choices/sub-topics/${encodeURIComponent(mainTopic)}`,
-      { method: 'GET', headers: jsonHeaders() }
-    );
-    const data = await handle(res);
-    // { message, count, subTopics }
-    return data.subTopics || data || [];
-  },
 };
 
 export default MultipleChoiceService;
@@ -154,9 +128,6 @@ export default MultipleChoiceService;
       label: String
     }
   },
-  difficulty: String,              // "easy" | "medium" | "hard"
-  tags: [String],
-  status: String,                  // "active" | "draft" | "archived"
   created_by: ObjectId,
   updated_by: ObjectId,
   created_at: Date,

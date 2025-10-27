@@ -529,29 +529,6 @@ const QuestionModal = ({
                       className="w-full px-3 py-2 rounded-lg border text-sm border-sky-100 focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-indigo-50 text-black placeholder:text-indigo-400"
                     />
                   </div>
-
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    <div>
-                      <label className="block text-sm font-medium text-black mb-2">Main Topic</label>
-                      <input
-                        type="text"
-                        value={formData.main_topic || ""}
-                        onChange={(e) => setField("main_topic", e.target.value)}
-                        placeholder="Chủ đề chính…"
-                        className="w-full px-3 py-2 rounded-lg border text-sm border-sky-100 focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-indigo-50 text-black placeholder:text-indigo-400"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-black mb-2">Sub Topic</label>
-                      <input
-                        type="text"
-                        value={formData.sub_topic || ""}
-                        onChange={(e) => setField("sub_topic", e.target.value)}
-                        placeholder="Chủ đề phụ…"
-                        className="w-full px-3 py-2 rounded-lg border text-sm border-sky-100 focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-indigo-50 text-black placeholder:text-indigo-400"
-                      />
-                    </div>
-                  </div>
                 </>
               )}
 

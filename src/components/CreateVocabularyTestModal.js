@@ -174,9 +174,6 @@ const CreateVocabularyTestModal = ({ show, onClose }) => {
         vocabularyService.createVocabulary({
           ...vocab,
           test_id: createdTest._id,
-          main_topic: testInfo.main_topic,
-          sub_topic: testInfo.sub_topic,
-          difficulty: testInfo.difficulty,
         })
       );
 

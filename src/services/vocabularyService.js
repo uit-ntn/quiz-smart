@@ -137,9 +137,6 @@ Vocaburaly Schema sample:
   word: "curriculum",
   meaning: "chương trình học",
   example_sentence: "Our school has introduced a new curriculum.",
-  main_topic: "Vocabulary",
-  sub_topic: "Education",
-  difficulty: "medium",
   created_by: ObjectId("adminId"),
   created_at: ISODate(),
   updated_at: ISODate()

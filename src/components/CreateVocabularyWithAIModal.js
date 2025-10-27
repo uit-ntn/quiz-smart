@@ -9,7 +9,7 @@ const CreateVocabularyWithAIModal = ({ show, onClose }) => {
   const { user } = useAuth();
   const navigate = useNavigate();
 
-  // Steps: 'ai-config' -> 'generating' -> 'test-info' -> 'review' -> 'creating' -> 'success'
+  // Steps: 'ai-config' -> 'generating' -> 'edit-vocabulary' -> 'test-info' -> 'review' -> 'creating' -> 'success'
   const [currentStep, setCurrentStep] = useState('ai-config');
   const [loading, setLoading] = useState(false);
   const [errMsg, setErrMsg] = useState('');
@@ -119,7 +119,7 @@ const CreateVocabularyWithAIModal = ({ show, onClose }) => {
           main_topic: aiConfig.topic,
           sub_topic: aiConfig.category || 'General'
         }));
-        setCurrentStep('test-info');
+        setCurrentStep('edit-vocabulary');
       } else {
         throw new Error(result.message || 'Failed to generate vocabulary');
       }
@@ -134,6 +134,50 @@ const CreateVocabularyWithAIModal = ({ show, onClose }) => {
 
   const handleTestInfoChange = (field, value) => {
     setTestInfo((prev) => ({ ...prev, [field]: value }));
+  };
+
+  // Vocabulary editing functions
+  const handleVocabularyChange = (index, field, value) => {
+    setGeneratedVocabularies(prev => 
+      prev.map((vocab, i) => 
+        i === index ? { ...vocab, [field]: value } : vocab
+      )
+    );
+  };
+
+  const handleAddVocabulary = () => {
+    setGeneratedVocabularies(prev => [
+      ...prev,
+      {
+        word: '',
+        meaning: '',
+        example_sentence: ''
+      }
+    ]);
+  };
+
+  const handleRemoveVocabulary = (index) => {
+    setGeneratedVocabularies(prev => prev.filter((_, i) => i !== index));
+  };
+
+  const handleSaveVocabularies = () => {
+    // Validate vocabularies
+    const invalidVocabs = generatedVocabularies.filter(
+      vocab => !vocab.word?.trim() || !vocab.meaning?.trim()
+    );
+    
+    if (invalidVocabs.length > 0) {
+      setErrMsg('Vui lòng điền đầy đủ từ vựng và nghĩa cho tất cả các từ');
+      return;
+    }
+
+    if (generatedVocabularies.length === 0) {
+      setErrMsg('Cần ít nhất 1 từ vựng để tạo bài test');
+      return;
+    }
+
+    setErrMsg('');
+    setCurrentStep('test-info');
   };
 
   const handleContinueToReview = () => {
@@ -189,9 +233,6 @@ const CreateVocabularyWithAIModal = ({ show, onClose }) => {
         vocabularyService.createVocabulary({
           ...vocab,
           test_id: createdTest._id,
-          main_topic: testInfo.main_topic,
-          sub_topic: testInfo.sub_topic,
-          difficulty: testInfo.difficulty,
         })
       );
 
@@ -243,6 +284,7 @@ const CreateVocabularyWithAIModal = ({ show, onClose }) => {
               <h2 className="text-xl font-semibold text-gray-900">
                 {currentStep === 'ai-config' && 'Cấu Hình AI Tạo Từ Vựng'}
                 {currentStep === 'generating' && 'Đang Tạo Từ Vựng Với AI'}
+                {currentStep === 'edit-vocabulary' && 'Chỉnh Sửa Từ Vựng AI'}
                 {currentStep === 'test-info' && 'Thông Tin Bài Test'}
                 {currentStep === 'review' && 'Xem Lại Thông Tin'}
                 {currentStep === 'creating' && 'Đang Tạo Bài Test'}
@@ -251,6 +293,7 @@ const CreateVocabularyWithAIModal = ({ show, onClose }) => {
               <p className="text-sm text-gray-600">
                 {currentStep === 'ai-config' && 'Cấu hình AI để tạo từ vựng tự động'}
                 {currentStep === 'generating' && 'AI đang tạo từ vựng theo yêu cầu của bạn...'}
+                {currentStep === 'edit-vocabulary' && 'Kiểm tra và chỉnh sửa từ vựng AI đã tạo'}
                 {currentStep === 'test-info' && 'Cấu hình thông tin bài test'}
                 {currentStep === 'review' && 'Kiểm tra lại thông tin trước khi tạo'}
                 {currentStep === 'creating' && 'Đang xử lý...'}
@@ -369,7 +412,113 @@ const CreateVocabularyWithAIModal = ({ show, onClose }) => {
               </div>
             )}
 
-            {/* Step 3: Test Info */}
+            {/* Step 3: Edit Vocabulary */}
+            {currentStep === 'edit-vocabulary' && (
+              <div className="space-y-6">
+                <div className="bg-gradient-to-r from-green-50 to-blue-50 border border-green-200 rounded-xl p-4">
+                  <div className="flex items-start space-x-3">
+                    <div className="w-8 h-8 rounded-lg bg-green-200 flex items-center justify-center flex-shrink-0">
+                      <svg className="w-4 h-4 text-green-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                      </svg>
+                    </div>
+                    <div>
+                      <h3 className="font-medium text-green-900 mb-2">AI đã tạo {generatedVocabularies.length} từ vựng</h3>
+                      <p className="text-sm text-green-800 mb-3">
+                        Hãy kiểm tra và chỉnh sửa từ vựng theo ý muốn. Bạn có thể thêm, xóa hoặc sửa đổi từ vựng trước khi tạo bài test.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Vocabulary List */}
+                <div className="space-y-4 max-h-96 overflow-y-auto">
+                  {generatedVocabularies.map((vocab, index) => (
+                    <div key={index} className="bg-white border border-gray-200 rounded-lg p-4 hover:border-purple-300 transition-colors">
+                      <div className="flex items-start justify-between mb-3">
+                        <span className="inline-flex items-center justify-center w-8 h-8 bg-purple-100 text-purple-700 rounded-full text-sm font-medium">
+                          {index + 1}
+                        </span>
+                        <button
+                          type="button"
+                          onClick={() => handleRemoveVocabulary(index)}
+                          className="p-1 text-red-400 hover:text-red-600 hover:bg-red-50 rounded transition-colors"
+                          aria-label="Xóa từ vựng"
+                        >
+                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                          </svg>
+                        </button>
+                      </div>
+                      
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                          <label className="block text-xs font-medium text-gray-700 mb-1">Từ vựng *</label>
+                          <input
+                            type="text"
+                            value={vocab.word || ''}
+                            onChange={(e) => handleVocabularyChange(index, 'word', e.target.value)}
+                            placeholder="Nhập từ vựng..."
+                            className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-600 focus:border-purple-600"
+                          />
+                        </div>
+                        
+                        <div>
+                          <label className="block text-xs font-medium text-gray-700 mb-1">Nghĩa *</label>
+                          <input
+                            type="text"
+                            value={vocab.meaning || ''}
+                            onChange={(e) => handleVocabularyChange(index, 'meaning', e.target.value)}
+                            placeholder="Nhập nghĩa..."
+                            className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-600 focus:border-purple-600"
+                          />
+                        </div>
+                      </div>
+                      
+                      <div className="mt-3">
+                        <label className="block text-xs font-medium text-gray-700 mb-1">Câu ví dụ</label>
+                        <textarea
+                          value={vocab.example_sentence || ''}
+                          onChange={(e) => handleVocabularyChange(index, 'example_sentence', e.target.value)}
+                          placeholder="Nhập câu ví dụ..."
+                          rows={2}
+                          className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-600 focus:border-purple-600 resize-none"
+                        />
+                      </div>
+                    </div>
+                  ))}
+                </div>
+
+                {/* Add new vocabulary button */}
+                <div className="flex justify-center">
+                  <button
+                    type="button"
+                    onClick={handleAddVocabulary}
+                    className="inline-flex items-center px-4 py-2 text-sm font-medium text-purple-700 bg-purple-50 border border-purple-200 rounded-lg hover:bg-purple-100 focus:outline-none focus:ring-2 focus:ring-purple-600 transition-colors"
+                  >
+                    <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                    </svg>
+                    Thêm từ vựng mới
+                  </button>
+                </div>
+
+                {!!errMsg && (
+                  <div className="bg-red-50 border border-red-200 rounded-xl p-4">
+                    <div className="flex items-start space-x-3">
+                      <div className="w-5 h-5 text-red-400 flex-shrink-0 mt-0.5">
+                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                      </div>
+                      <p className="text-sm text-red-800 whitespace-pre-line">{errMsg}</p>
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* Step 4: Test Info */}
             {currentStep === 'test-info' && (
               <div className="space-y-4">
                 <div>
@@ -471,7 +620,7 @@ const CreateVocabularyWithAIModal = ({ show, onClose }) => {
               </div>
             )}
 
-            {/* Step 4: Review */}
+            {/* Step 5: Review */}
             {currentStep === 'review' && (
               <div className="space-y-6">
                 {/* Summary */}
@@ -567,7 +716,7 @@ const CreateVocabularyWithAIModal = ({ show, onClose }) => {
               </div>
             )}
 
-            {/* Step 5: Creating */}
+            {/* Step 6: Creating */}
             {currentStep === 'creating' && (
               <div className="text-center py-10">
                 <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600 mx-auto mb-4"></div>
@@ -578,7 +727,7 @@ const CreateVocabularyWithAIModal = ({ show, onClose }) => {
               </div>
             )}
 
-            {/* Step 6: Success */}
+            {/* Step 7: Success */}
             {currentStep === 'success' && (
               <div className="text-center py-10">
                 <div className="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
@@ -597,17 +746,27 @@ const CreateVocabularyWithAIModal = ({ show, onClose }) => {
         </div>
 
         {/* Footer */}
-        {(currentStep === 'ai-config' || currentStep === 'test-info' || currentStep === 'review') && (
+        {(currentStep === 'ai-config' || currentStep === 'edit-vocabulary' || currentStep === 'test-info' || currentStep === 'review') && (
           <div className="flex items-center justify-between p-6 border-t border-gray-200 bg-white">
             <div className="flex space-x-3">
-              {currentStep === 'test-info' && (
+              {currentStep === 'edit-vocabulary' && (
                 <button
                   type="button"
                   onClick={handleBackToAIConfig}
                   disabled={loading}
                   className="px-4 py-2 text-sm font-medium text-gray-800 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-600 disabled:opacity-50"
                 >
-                  Quay lại
+                  Tạo lại với AI
+                </button>
+              )}
+              {currentStep === 'test-info' && (
+                <button
+                  type="button"
+                  onClick={() => setCurrentStep('edit-vocabulary')}
+                  disabled={loading}
+                  className="px-4 py-2 text-sm font-medium text-gray-800 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-600 disabled:opacity-50"
+                >
+                  Quay lại chỉnh sửa
                 </button>
               )}
               {currentStep === 'review' && (
@@ -640,6 +799,17 @@ const CreateVocabularyWithAIModal = ({ show, onClose }) => {
                   className="px-4 py-2 text-sm font-medium text-white bg-gradient-to-r from-purple-600 to-pink-600 border border-transparent rounded-md hover:from-purple-700 hover:to-pink-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-600 disabled:opacity-50"
                 >
                   {loading ? 'Đang tạo...' : 'Tạo với AI'}
+                </button>
+              )}
+
+              {currentStep === 'edit-vocabulary' && (
+                <button
+                  type="button"
+                  onClick={handleSaveVocabularies}
+                  disabled={loading}
+                  className="px-4 py-2 text-sm font-medium text-white bg-gradient-to-r from-green-600 to-green-700 border border-transparent rounded-md hover:from-green-700 hover:to-green-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-600 disabled:opacity-50"
+                >
+                  Lưu từ vựng ({generatedVocabularies.length})
                 </button>
               )}
 
