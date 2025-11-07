@@ -91,11 +91,12 @@ const AdminMultipleChoices = () => {
     if (searchTerm) {
       const s = searchTerm.toLowerCase();
       list = list.filter((q) => {
-        const questionText = q.question?.toLowerCase() || '';
+        const questionText = q.question_text?.toLowerCase() || '';
         const optionsText = q.options?.map(op => 
           typeof op === 'string' ? op.toLowerCase() : op?.text?.toLowerCase() || ''
         ).join(' ') || '';
-        return questionText.includes(s) || optionsText.includes(s);
+        const explanationText = q.explanation?.correct?.toLowerCase() || '';
+        return questionText.includes(s) || optionsText.includes(s) || explanationText.includes(s);
       });
     }
     setFilteredQuestions(list);
@@ -115,11 +116,15 @@ const AdminMultipleChoices = () => {
       ? q.options.map(op => typeof op === 'string' ? op : op?.text || '')
       : ["", "", "", ""];
     
+    // Convert correct_answers array to index
+    const correctIndex = q.correct_answers?.[0] 
+      ? ['A', 'B', 'C', 'D'].indexOf(q.correct_answers[0])
+      : 0;
+    
     setFormData({
-      question: q.question || "",
+      question: q.question_text || "",
       options: normalizedOptions,
-      correct_answer:
-        typeof q.correct_answer === "number" ? q.correct_answer : 0,
+      correct_answer: correctIndex >= 0 ? correctIndex : 0,
       explanation: typeof q.explanation === 'object' && q.explanation.correct 
         ? q.explanation.correct 
         : q.explanation || "",
@@ -162,7 +167,20 @@ const AdminMultipleChoices = () => {
     e.preventDefault();
     if (!validateForm()) return;
     try {
-      const created = await multipleChoiceService.createMultipleChoice(formData);
+      // Transform to new schema
+      const payload = {
+        question_text: formData.question,
+        options: formData.options.map((text, idx) => ({
+          label: String.fromCharCode(65 + idx), // A, B, C, D
+          text: text
+        })).filter(opt => opt.text.trim() !== ''), // Only include non-empty options
+        correct_answers: [String.fromCharCode(65 + formData.correct_answer)], // Convert index to letter
+        explanation: {
+          correct: formData.explanation || ""
+        }
+      };
+      
+      const created = await multipleChoiceService.createMultipleChoice(payload);
       setQuestions((prev) => [created, ...prev]);
       setShowCreateModal(false);
       setFormData(initialForm);
@@ -177,9 +195,22 @@ const AdminMultipleChoices = () => {
     if (!selectedQuestion) return;
     if (!validateForm()) return;
     try {
+      // Transform to new schema
+      const payload = {
+        question_text: formData.question,
+        options: formData.options.map((text, idx) => ({
+          label: String.fromCharCode(65 + idx), // A, B, C, D
+          text: text
+        })).filter(opt => opt.text.trim() !== ''), // Only include non-empty options
+        correct_answers: [String.fromCharCode(65 + formData.correct_answer)], // Convert index to letter
+        explanation: {
+          correct: formData.explanation || ""
+        }
+      };
+      
       const updated = await multipleChoiceService.updateMultipleChoice(
         selectedQuestion._id,
-        formData
+        payload
       );
       setQuestions((prev) =>
         prev.map((q) => (q._id === selectedQuestion._id ? updated : q))
@@ -293,11 +324,12 @@ const AdminMultipleChoices = () => {
                 ) : (
                   filteredQuestions.map((q, idx) => {
                     const t = q.test_id ? tests[q.test_id] : null;
-                    const correctIdx = q.correct_answer;
-                    const correct =
-                      typeof correctIdx === "number" && q.options?.[correctIdx]
-                        ? (typeof q.options[correctIdx] === 'string' ? q.options[correctIdx] : q.options[correctIdx]?.text)
-                        : null;
+                    
+                    // Get correct answer from new schema
+                    const correctLetter = q.correct_answers?.[0] || null;
+                    const correctOption = correctLetter 
+                      ? q.options?.find(opt => opt.label === correctLetter)
+                      : null;
 
                     return (
                       <tr key={q._id} className="hover:bg-sky-50/60">
@@ -312,9 +344,9 @@ const AdminMultipleChoices = () => {
                         </td>
 
                         <td className="px-6 py-4 whitespace-nowrap">
-                          {correct ? (
+                          {correctOption ? (
                             <Badge tone="green">
-                              {correctLetter(correctIdx)}. {correct}
+                              {correctLetter}. {correctOption.text}
                             </Badge>
                           ) : (
                             <span className="text-indigo-900/60">—</span>
@@ -442,10 +474,12 @@ const AdminMultipleChoices = () => {
               <div className="p-6 overflow-y-auto max-h-[70vh]">
                 {(() => {
                   const t = tests[selectedQuestion.test_id];
-                  const correctIdx = selectedQuestion.correct_answer;
-                  const correct = typeof correctIdx === "number" && selectedQuestion.options?.[correctIdx] ?
-                    (typeof selectedQuestion.options[correctIdx] === 'string' ? selectedQuestion.options[correctIdx] : selectedQuestion.options[correctIdx]?.text) :
-                    null;
+                  
+                  // Get correct answer from new schema
+                  const correctLetter = selectedQuestion.correct_answers?.[0] || null;
+                  const correctOption = correctLetter 
+                    ? selectedQuestion.options?.find(opt => opt.label === correctLetter)
+                    : null;
 
                   return (
                     <div className="space-y-6">
@@ -485,9 +519,9 @@ const AdminMultipleChoices = () => {
                         <h4 className="font-semibold text-gray-900 mb-3">Các đáp án</h4>
                         <div className="space-y-2">
                           {selectedQuestion.options?.map((op, i) => {
-                            const isCorrect = i === correctIdx;
-                            const optionText = typeof op === 'string' ? op : op?.text;
-                            const optionLabel = typeof op === 'object' ? op?.label : String.fromCharCode(65 + i);
+                            const isCorrect = op.label === correctLetter;
+                            const optionText = op.text;
+                            const optionLabel = op.label;
                             
                             return (
                               <div

@@ -24,11 +24,13 @@ import VocabularyTestReview from '../pages/VocabularyTestReview';
 import VocabularyTestResult from '../pages/VocabularyTestResult';
 import MyTestResults from '../pages/MyTestResults';
 import AdminDashboard from '../pages/AdminDashboard';
-import AdminTests from '../pages/AdminTests';
 import AdminUsers from '../pages/AdminUsers';
 import AdminTestResults from '../pages/AdminTestResults';
 import AdminVocabularies from '../pages/AdminVocabularies';
 import AdminMultipleChoices from '../pages/AdminMultipleChoices';
+import AdminVocabularyTests from '../pages/AdminVocabularyTests';
+import AdminMultipleChoiceTests from '../pages/AdminMultipleChoiceTests';
+import AdminGrammarTests from '../pages/AdminGrammarTests';
 
 
 const AppRoutes = () => {
@@ -75,11 +77,6 @@ const AppRoutes = () => {
           <AdminDashboard />
         </ProtectedRoute>
       } />
-      <Route path="/admin/tests" element={
-        <ProtectedRoute requireAdmin={true}>
-          <AdminTests />
-        </ProtectedRoute>
-      } />
       <Route path="/admin/users" element={
         <ProtectedRoute requireAdmin={true}>
           <AdminUsers />
@@ -98,6 +95,21 @@ const AppRoutes = () => {
       <Route path="/admin/multiple-choices" element={
         <ProtectedRoute requireAdmin={true}>
           <AdminMultipleChoices />
+        </ProtectedRoute>
+      } />
+      <Route path="/admin/vocabulary-tests" element={
+        <ProtectedRoute requireAdmin={true}>
+          <AdminVocabularyTests />
+        </ProtectedRoute>
+      } />
+      <Route path="/admin/multiple-choice-tests" element={
+        <ProtectedRoute requireAdmin={true}>
+          <AdminMultipleChoiceTests />
+        </ProtectedRoute>
+      } />
+      <Route path="/admin/grammar-tests" element={
+        <ProtectedRoute requireAdmin={true}>
+          <AdminGrammarTests />
         </ProtectedRoute>
       } />
       

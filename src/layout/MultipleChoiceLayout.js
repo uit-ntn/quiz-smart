@@ -1,7 +1,9 @@
+// src/layout/MultipleChoiceLayout.jsx
 import React from 'react';
 import Breadcrumb from '../components/Breadcrumb';
 import Footer from '../components/Footer';
 import Header from '../components/Header';
+import CreateMultipleChoiceTestButton from '../components/CreateMultipleChoiceTestButton'; // <-- thêm dòng này
 
 const MultipleChoiceLayout = ({
   children,
@@ -11,13 +13,12 @@ const MultipleChoiceLayout = ({
   icon,
   actions,
   showBackground = true,
-  maxWidth = "7xl" // 7xl, 6xl, 5xl, 4xl, full
+  maxWidth = "7xl"
 }) => {
   return (
     <>
       <Header />
       <div className="min-h-screen relative bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50">
-        {/* Enhanced backgrounds */}
         {showBackground && (
           <>
             <div className="pointer-events-none absolute inset-0 bg-grid-pattern opacity-[0.02]" />
@@ -27,14 +28,12 @@ const MultipleChoiceLayout = ({
         )}
 
         <div className={`relative z-10 max-w-${maxWidth} mx-auto px-4 sm:px-6 lg:px-8 py-6`}>
-          {/* Breadcrumb */}
           {breadcrumbItems.length > 0 && (
             <div className="mb-6">
               <Breadcrumb items={breadcrumbItems} />
             </div>
           )}
 
-          {/* Header Section */}
           {(title || description) && (
             <div className="mb-8">
               <div className="flex items-start justify-between gap-4">
@@ -57,19 +56,17 @@ const MultipleChoiceLayout = ({
                     )}
                   </div>
                 </div>
-                {actions && (
-                  <div className="flex items-center gap-2 flex-shrink-0">
-                    {actions}
-                  </div>
-                )}
+
+                {/* Actions + Create Button */}
+                <div className="flex items-center gap-2 flex-shrink-0">
+                  {actions}
+                  <CreateMultipleChoiceTestButton /> {/* <-- nút mới */}
+                </div>
               </div>
             </div>
           )}
 
-          {/* Main Content */}
-          <div>
-            {children}
-          </div>
+          <div>{children}</div>
         </div>
       </div>
       <Footer />

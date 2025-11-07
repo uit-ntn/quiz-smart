@@ -113,18 +113,33 @@ const TestDetailModal = ({ isOpen, onClose, testId, onTestUpdated }) => {
       setLoading(true);
       setError(null);
       const t = await testService.getTestById(testId);
+      console.log('Test details:', t);
+      console.log('Test ID to fetch questions:', testId);
+      console.log('Test type:', t.test_type);
       setTest(t);
       let qs = [];
       if (t.test_type === 'multiple_choice') {
+        console.log('Fetching multiple choice questions for test:', testId);
+        console.log('API URL will be:', `${process.env.REACT_APP_API_URL || 'http://localhost:8000/api'}/multiple-choices/test/${testId}`);
         qs = await multipleChoiceService.getQuestionsByTestId(testId);
+        console.log('Multiple choice questions response:', qs);
+        console.log('Questions array length:', qs?.length);
+        console.log('Sample question structure:', qs?.[0]);
       } else if (t.test_type === 'vocabulary') {
+        console.log('Fetching vocabulary questions for test:', testId);
         qs = await vocabularyService.getAllVocabulariesByTestId(testId);
+        console.log('Vocabulary questions response:', qs);
       } else if (t.test_type === 'grammar') {
+        console.log('Fetching grammar questions for test:', testId);
         qs = await grammarService.getGrammarsByTestId(testId);
+        console.log('Grammar questions response:', qs);
       }
+      console.log('Final questions array:', qs);
+      console.log('Is array?', Array.isArray(qs));
       setQuestions(Array.isArray(qs) ? qs : []);
       setCurrentPage(1);
     } catch (e) {
+      console.error('Error fetching test details:', e);
       setError(e.message || 'Đã xảy ra lỗi');
     } finally {
       setLoading(false);

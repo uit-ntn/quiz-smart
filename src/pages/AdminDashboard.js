@@ -65,7 +65,7 @@ const AdminDashboard = () => {
         </svg>
       ),
       color: 'from-blue-500 to-blue-600',
-      link: '/admin/tests',
+      link: '/admin/vocabulary-tests',
     },
     {
       title: 'Tổng Users',
@@ -87,7 +87,7 @@ const AdminDashboard = () => {
         </svg>
       ),
       color: 'from-purple-500 to-purple-600',
-      link: '/admin/vocabularies',
+      link: '/admin/vocabulary-tests',
     },
     {
       title: 'Multiple Choice Tests',
@@ -98,7 +98,7 @@ const AdminDashboard = () => {
         </svg>
       ),
       color: 'from-orange-500 to-orange-600',
-      link: '/admin/multiple-choices',
+      link: '/admin/multiple-choice-tests',
     },
   ];
 
@@ -150,7 +150,7 @@ const AdminDashboard = () => {
             <div className="px-6 py-4 border-b border-gray-200 flex items-center justify-between">
               <h2 className="text-lg font-semibold text-gray-900">Tests mới nhất</h2>
               <Link
-                to="/admin/tests"
+                to="/admin/vocabulary-tests"
                 className="text-sm text-indigo-600 hover:text-indigo-700 font-medium"
               >
                 Xem tất cả →
