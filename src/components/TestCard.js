@@ -98,6 +98,51 @@ const TestCard = ({ test, onStartTest, viewMode, className = '' }) => {
           </div>
         </div>
       </div>
+
+      {/* Test footer info */}
+      <div className="px-6 py-3 bg-gradient-to-r from-gray-50 to-blue-50 border-t border-gray-100 rounded-b-2xl">
+        <div className="flex items-center justify-between text-sm">
+          <div className="flex items-center space-x-4">
+            {/* Creator Info */}
+            {test.created_by && (
+              <div className="flex items-center text-gray-700">
+                <svg className="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                </svg>
+                <span className="font-medium">{test.created_by?.full_name || test.created_by?.email || 'Admin'}</span>
+              </div>
+            )}
+            
+            {/* Visibility Badge */}
+            {test.visibility && (
+              <div className="flex items-center">
+                {test.visibility === 'public' ? (
+                  <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800 border border-green-200">
+                    <svg className="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                    Công khai
+                  </span>
+                ) : (
+                  <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-amber-100 text-amber-800 border border-amber-200">
+                    <svg className="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                    </svg>
+                    Riêng tư
+                  </span>
+                )}
+              </div>
+            )}
+          </div>
+          
+          <div className="flex items-center text-gray-600">
+            <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
+            </svg>
+            <span>{test.main_topic} › {test.sub_topic}</span>
+          </div>
+        </div>
+      </div>
     </div>
   );
 };

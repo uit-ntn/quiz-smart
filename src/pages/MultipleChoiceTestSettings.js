@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import TestService from '../services/testService';
+import testService from '../services/testService';
 import MultipleChoiceService from '../services/multipleChoiceService';
 import LoadingSpinner from '../components/LoadingSpinner';
 import ErrorMessage from '../components/ErrorMessage';
@@ -16,7 +16,6 @@ const MultipleChoiceTestSettings = () => {
   const [test, setTest] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [testInfo, setTestInfo] = useState(null);
 
   const [settings, setSettings] = useState({
     testMode: 'flexible',        // 'flexible' | 'question_timer'
@@ -36,26 +35,18 @@ const MultipleChoiceTestSettings = () => {
   };
 
   useEffect(() => {
-    const fetchTestInfo = async () => {
-      try {
-        const data = await TestService.getTestById(testId);
-        setTestInfo(data);
-      } catch (err) {
-        console.error('Error fetching test info:', err);
-      }
-    };
-    fetchTestInfo();
-  }, [testId]);
-
-  useEffect(() => {
     const fetchTestDetails = async () => {
       try {
         setLoading(true);
-        const data = await MultipleChoiceService.getTestById(testId);
-        setTest(data);
+        // Sử dụng testService để lấy test metadata
+        const response = await testService.getTestById(testId);
+        console.log('Fetched test details:', response);
+        // Backend trả về { message, test } hoặc trực tiếp test object
+        const testData = response.test || response;
+        setTest(testData);
         setSettings((prev) => ({
           ...prev,
-          questionTimeLimit: getSafePerQuestionLimit(data)
+          questionTimeLimit: getSafePerQuestionLimit(testData)
         }));
         setError(null);
       } catch (err) {
@@ -65,7 +56,10 @@ const MultipleChoiceTestSettings = () => {
         setLoading(false);
       }
     };
-    fetchTestDetails();
+    
+    if (testId) {
+      fetchTestDetails();
+    }
   }, [testId]);
 
   useEffect(() => {
@@ -89,10 +83,16 @@ const MultipleChoiceTestSettings = () => {
   const handleStartTest = () => {
     try {
       localStorage.setItem(`test_settings_${testId}`, JSON.stringify(settings));
+      console.log('Settings saved to localStorage:', settings);
     } catch (e) {
       console.warn('Cannot access localStorage', e);
     }
-    navigate(`/multiple-choice/test/${testId}/take`, { state: { settings } });
+    
+    const targetPath = `/multiple-choice/test/${testId}/take`;
+    console.log('Navigating to:', targetPath);
+    console.log('With settings:', settings);
+    
+    navigate(targetPath, { state: { settings } });
   };
 
   if (loading) return <LoadingSpinner message="Đang tải thông tin bài kiểm tra..." />;
@@ -149,21 +149,21 @@ const MultipleChoiceTestSettings = () => {
             <aside className="md:col-span-2 p-5 border-b md:border-b-0 md:border-r border-slate-200 bg-white">
               {/* Header mini với icon */}
               <div className="flex items-start gap-3 mb-4 text-black text-capitalize font-semibold text-center">
-                {testInfo?.test_title}
+                {test?.test_title}
               </div>
               {/* Thông tin mô tả dạng definition list */}
               <dl className="space-y-2 text-sm mb-6">
                 <div className="flex gap-2">
                   <dt className="min-w-[92px] text-slate-500">Chủ đề chính</dt>
-                  <dd className="text-slate-900">{testInfo?.main_topic}</dd>
+                  <dd className="text-slate-900">{test?.main_topic}</dd>
                 </div>
                 <div className="flex gap-2">
                   <dt className="min-w-[92px] text-slate-500">Phân mục</dt>
-                  <dd className="text-slate-900">{testInfo?.sub_topic}</dd>
+                  <dd className="text-slate-900">{test?.sub_topic}</dd>
                 </div>
                 <div className="flex gap-2">
                   <dt className="min-w-[92px] text-slate-500">Mô tả</dt>
-                  <dd className="text-slate-900 leading-6">{testInfo?.description}</dd>
+                  <dd className="text-slate-900 leading-6">{test?.description}</dd>
                 </div>
               </dl>
 

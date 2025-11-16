@@ -81,7 +81,7 @@ const TopicCard = ({
               {shownSubs.map((s, i) => (
                 <Link
                   key={s + i}
-                  to={`/multiple-choice/tests/${encodeURIComponent(mainTopic || topic)}/${encodeURIComponent(s)}`}
+                  to={`/vocabulary/tests/${encodeURIComponent(mainTopic || topic)}/${encodeURIComponent(s)}`}
                   onClick={(e) => {
                     e.stopPropagation();
                   }}
