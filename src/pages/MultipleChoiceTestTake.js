@@ -22,6 +22,8 @@ const MultipleChoiceTestTake = () => {
   const [test, setTest] = useState(null);
   const [questions, setQuestions] = useState([]);
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
   // Answers & result state
   const [userAnswers, setUserAnswers] = useState({}); // map: qid -> array of labels
@@ -65,40 +67,83 @@ const MultipleChoiceTestTake = () => {
 
   // Load settings + data
   useEffect(() => {
-    const savedSettings = localStorage.getItem(`test_settings_${testId}`);
-    if (savedSettings) {
-      setSettings(JSON.parse(savedSettings));
-    } else if (location.state?.settings) {
-      setSettings(location.state.settings);
-    }
-    fetchTestData();
+    const loadSettingsAndData = async () => {
+      console.log('Loading settings for testId:', testId);
+      
+      // Load settings first
+      let newSettings = { ...settings };
+      const savedSettings = localStorage.getItem(`test_settings_${testId}`);
+      
+      if (savedSettings) {
+        console.log('Found saved settings:', savedSettings);
+        newSettings = JSON.parse(savedSettings);
+      } else if (location.state?.settings) {
+        console.log('Found settings from navigation state:', location.state.settings);
+        newSettings = location.state.settings;
+      } else {
+        console.log('Using default settings');
+      }
+      
+      setSettings(newSettings);
+      
+      // Then fetch data with the correct settings
+      await fetchTestData(newSettings);
+    };
+    
+    loadSettingsAndData();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [testId]);
 
-  const fetchTestData = async () => {
+  const fetchTestData = async (currentSettings = settings) => {
+    console.log('Fetching test data with settings:', currentSettings);
+    setLoading(true);
+    setError(null);
+    
     try {
-      const [testData, questionsData] = await Promise.all([
-        MultipleChoiceService.getTestById(testId),
+      const [testResponse, questionsData] = await Promise.all([
+        testService.getTestById(testId),
         MultipleChoiceService.getQuestionsByTestId(testId),
       ]);
+      
+      // testService có thể trả về { test: {...} } hoặc trực tiếp test object
+      const testData = testResponse?.test || testResponse;
+      
+      console.log('Fetched test data:', testData);
+      console.log('Fetched questions:', questionsData?.length, 'questions');
+      
+      if (!testData || !questionsData || questionsData.length === 0) {
+        throw new Error('Không thể tải dữ liệu bài test hoặc bài test không có câu hỏi');
+      }
+      
       setTest(testData);
       let processed = [...questionsData];
 
       // shuffle questions/answers
-      if (settings.shuffleQuestions) processed = shuffleArray(processed);
-      if (settings.shuffleAnswers) {
+      if (currentSettings.shuffleQuestions) {
+        console.log('Shuffling questions');
+        processed = shuffleArray(processed);
+      }
+      if (currentSettings.shuffleAnswers) {
+        console.log('Shuffling answers');
         processed = processed.map((q) => ({
           ...q,
           options: shuffleArray([...q.options]),
         }));
       }
+      
       setQuestions(processed);
       setTimeRemaining((testData?.time_limit_minutes || 0) * 60);
-      if (settings.testMode === "question_timer") {
-        setQuestionTimeRemaining(settings.questionTimeLimit || 30);
+      
+      if (currentSettings.testMode === "question_timer") {
+        console.log('Setting question timer to:', currentSettings.questionTimeLimit);
+        setQuestionTimeRemaining(currentSettings.questionTimeLimit || 30);
       }
+      
+      setLoading(false);
     } catch (err) {
       console.error("Error fetching test data:", err);
+      setError(err.message || 'Có lỗi xảy ra khi tải bài test');
+      setLoading(false);
     }
   };
 
@@ -324,10 +369,53 @@ const MultipleChoiceTestTake = () => {
     { bg: "bg-orange-50", border: "border-orange-200", text: "text-orange-700", tick: "text-orange-500", borderSel: "border-orange-300" },
   ];
 
-  if (!currentQuestion || !test) {
+  if (loading) {
     return (
-      <div className="min-h-[60vh] flex items-center justify-center text-gray-600">
-        Đang tải bài kiểm tra...
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-indigo-600 mx-auto mb-4"></div>
+          <p className="text-indigo-600 font-medium">Đang tải bài kiểm tra...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center max-w-md mx-auto p-6">
+          <div className="text-red-500 mb-4">
+            <svg className="w-16 h-16 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z" />
+            </svg>
+          </div>
+          <h3 className="text-xl font-semibold text-red-900 mb-2">Lỗi tải bài test</h3>
+          <p className="text-red-700 mb-4">{error}</p>
+          <div className="space-x-3">
+            <button
+              onClick={() => window.location.reload()}
+              className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700"
+            >
+              Thử lại
+            </button>
+            <button
+              onClick={() => navigate(-1)}
+              className="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700"
+            >
+              Quay lại
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (!currentQuestion || !test || questions.length === 0) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <p className="text-indigo-600 font-medium">Đang tải câu hỏi...</p>
+        </div>
       </div>
     );
   }

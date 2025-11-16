@@ -23,8 +23,9 @@ const Badge = ({ children, tone = "sky" }) => {
 const initialForm = {
   question: "",
   options: ["", "", "", ""],
-  correct_answer: 0,
+  correct_answers: [],
   explanation: "",
+  test_id: "",
 };
 
 const AdminMultipleChoices = () => {
@@ -46,9 +47,11 @@ const AdminMultipleChoices = () => {
 
   // test info cache
   const [tests, setTests] = useState({});
+  const [allTests, setAllTests] = useState([]);
 
   useEffect(() => {
     fetchQuestions();
+    fetchAllTests();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -61,33 +64,78 @@ const AdminMultipleChoices = () => {
     try {
       setLoading(true);
       setError(null);
+      
       const data = await multipleChoiceService.getAllMultipleChoices();
-      setQuestions(Array.isArray(data) ? data : []);
+      console.log('Multiple choice data:', data);
+      
+      // Xử lý dữ liệu - API có thể trả về array hoặc object
+      let questionsArray = [];
+      if (Array.isArray(data)) {
+        questionsArray = data;
+      } else if (data && typeof data === 'object') {
+        // Thử các key phổ biến
+        questionsArray = data.data || data.questions || data.results || data.items || [];
+        
+        // Nếu vẫn không có, log để debug
+        if (questionsArray.length === 0) {
+          console.log('API response structure:', Object.keys(data));
+        }
+      }
+      
+      console.log('Final questions array:', questionsArray.length, 'items');
+      setQuestions(questionsArray);
 
-      // preload test info
-      const ids = [...new Set(data.map((q) => q.test_id).filter(Boolean))];
-      const info = {};
-      await Promise.all(
-        ids.map(async (id) => {
-          try {
-            const t = await testService.getTestById(id);
-            info[id] = t;
-          } catch (e) {
-            console.error("Fetch test failed", id, e);
-          }
-        })
-      );
-      setTests(info);
+      // preload test info if we have questions
+      if (questionsArray.length > 0) {
+        const ids = [...new Set(questionsArray.map((q) => q.test_id).filter(Boolean))];
+        const info = {};
+        await Promise.all(
+          ids.map(async (id) => {
+            try {
+              const t = await testService.getTestById(id);
+              info[id] = t;
+            } catch (e) {
+              console.error("Fetch test failed", id, e);
+            }
+          })
+        );
+        setTests(info);
+      }
     } catch (e) {
-      console.error(e);
-      setError("Không thể tải danh sách câu hỏi");
+      console.error('Error fetching questions:', e);
+      setError("Không thể tải danh sách câu hỏi: " + e.message);
     } finally {
       setLoading(false);
     }
   };
 
+  const fetchAllTests = async () => {
+    try {
+      const data = await testService.getAllTests();
+      console.log('All tests data:', data);
+      
+      let testsArray = [];
+      if (Array.isArray(data)) {
+        testsArray = data;
+      } else if (data && typeof data === 'object') {
+        testsArray = data.data || data.tests || data.results || data.items || [];
+      }
+      
+      // Filter only multiple choice tests
+      const multipleChoiceTests = testsArray.filter(test => 
+        test.test_type === 'multiple_choice' || test.test_type === 'multiple-choice'
+      );
+      
+      setAllTests(multipleChoiceTests);
+    } catch (e) {
+      console.error('Error fetching all tests:', e);
+    }
+  };
+
   const filterQuestions = () => {
     let list = [...questions];
+    console.log('Filtering questions:', list.length, 'items');
+    
     if (searchTerm) {
       const s = searchTerm.toLowerCase();
       list = list.filter((q) => {
@@ -98,7 +146,10 @@ const AdminMultipleChoices = () => {
         const explanationText = q.explanation?.correct?.toLowerCase() || '';
         return questionText.includes(s) || optionsText.includes(s) || explanationText.includes(s);
       });
+      console.log('After search filter:', list.length, 'items');
     }
+    
+    console.log('Final filtered questions:', list);
     setFilteredQuestions(list);
   };
 
@@ -116,18 +167,17 @@ const AdminMultipleChoices = () => {
       ? q.options.map(op => typeof op === 'string' ? op : op?.text || '')
       : ["", "", "", ""];
     
-    // Convert correct_answers array to index
-    const correctIndex = q.correct_answers?.[0] 
-      ? ['A', 'B', 'C', 'D'].indexOf(q.correct_answers[0])
-      : 0;
+    // Convert correct_answers array to boolean array for checkboxes
+    const correctAnswers = q.correct_answers || [];
     
     setFormData({
       question: q.question_text || "",
       options: normalizedOptions,
-      correct_answer: correctIndex >= 0 ? correctIndex : 0,
+      correct_answers: correctAnswers,
       explanation: typeof q.explanation === 'object' && q.explanation.correct 
         ? q.explanation.correct 
         : q.explanation || "",
+      test_id: q.test_id || "",
     });
     setShowEditModal(true);
   };
@@ -148,12 +198,8 @@ const AdminMultipleChoices = () => {
       alert("Vui lòng nhập ít nhất 2 đáp án!");
       return false;
     }
-    if (
-      typeof formData.correct_answer !== "number" ||
-      !formData.options[formData.correct_answer] ||
-      formData.options[formData.correct_answer].trim() === ""
-    ) {
-      alert("Vui lòng chọn đáp án đúng hợp lệ!");
+    if (!formData.correct_answers || formData.correct_answers.length === 0) {
+      alert("Vui lòng chọn ít nhất một đáp án đúng!");
       return false;
     }
     if (!formData.question.trim()) {
@@ -161,7 +207,7 @@ const AdminMultipleChoices = () => {
       return false;
     }
     return true;
-    };
+  };
 
   const handleCreateSubmit = async (e) => {
     e.preventDefault();
@@ -174,10 +220,11 @@ const AdminMultipleChoices = () => {
           label: String.fromCharCode(65 + idx), // A, B, C, D
           text: text
         })).filter(opt => opt.text.trim() !== ''), // Only include non-empty options
-        correct_answers: [String.fromCharCode(65 + formData.correct_answer)], // Convert index to letter
+        correct_answers: formData.correct_answers,
         explanation: {
           correct: formData.explanation || ""
-        }
+        },
+        test_id: formData.test_id
       };
       
       const created = await multipleChoiceService.createMultipleChoice(payload);
@@ -202,10 +249,11 @@ const AdminMultipleChoices = () => {
           label: String.fromCharCode(65 + idx), // A, B, C, D
           text: text
         })).filter(opt => opt.text.trim() !== ''), // Only include non-empty options
-        correct_answers: [String.fromCharCode(65 + formData.correct_answer)], // Convert index to letter
+        correct_answers: formData.correct_answers,
         explanation: {
           correct: formData.explanation || ""
-        }
+        },
+        test_id: formData.test_id
       };
       
       const updated = await multipleChoiceService.updateMultipleChoice(
@@ -258,31 +306,31 @@ const AdminMultipleChoices = () => {
 
   return (
     <AdminLayout>
-      <div className="space-y-6">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6">
         {/* Header */}
-        <div className="flex flex-col md:flex-row md:items-center md:justify-between">
-          <div>
-            <h1 className="text-3xl font-bold text-black">Quản lý Multiple Choice</h1>
-            <p className="text-indigo-900/70 mt-1">Tổng số: {total} câu hỏi</p>
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+          <div className="flex-1 min-w-0">
+            <h1 className="text-xl sm:text-2xl font-bold text-black truncate">Quản lý Multiple Choice</h1>
+            <p className="text-indigo-900/70 mt-1 text-sm sm:text-base">Tổng số: {total} câu hỏi</p>
           </div>
-          <div className="mt-4 md:mt-0 flex gap-3">
+          <div className="flex gap-2 sm:gap-3">
             <button
               onClick={fetchQuestions}
-              className="flex items-center gap-2 px-4 py-2 rounded-lg border border-sky-100 bg-sky-50 text-indigo-900 hover:bg-sky-100"
+              className="flex items-center gap-1 px-3 py-2 rounded-lg border border-sky-100 bg-sky-50 text-indigo-900 hover:bg-sky-100 text-sm"
             >
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
               </svg>
-              Làm mới
+              <span className="hidden sm:inline">Làm mới</span>
             </button>
             <button
               onClick={openCreate}
-              className="flex items-center gap-2 px-4 py-2 rounded-lg bg-indigo-600 text-white hover:bg-indigo-700"
+              className="flex items-center gap-1 px-3 py-2 rounded-lg bg-indigo-600 text-white hover:bg-indigo-700 text-sm"
             >
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
               </svg>
-              Thêm câu hỏi
+              <span>Thêm câu hỏi</span>
             </button>
           </div>
         </div>
@@ -290,16 +338,18 @@ const AdminMultipleChoices = () => {
         {error && <ErrorMessage message={error} />}
 
         {/* Search */}
-        <div className="bg-white rounded-xl shadow-sm border border-sky-100 p-4">
+        <div className="bg-white rounded-lg shadow-sm border border-sky-100 p-4">
           <label className="block text-sm font-medium text-black mb-2">Tìm kiếm</label>
           <input
             type="text"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             placeholder="Tìm theo câu hỏi..."
-            className="w-full px-4 py-2 rounded-lg border border-sky-100 bg-indigo-50 focus:ring-2 focus:ring-indigo-500 focus:border-transparent text-black placeholder:text-indigo-400"
+            className="w-full px-3 py-2 rounded-lg border border-indigo-200 bg-white focus:ring-2 focus:ring-indigo-500 focus:border-transparent text-black placeholder:text-indigo-400 text-sm"
           />
         </div>
+
+
 
         {/* Table */}
         <div className="bg-white rounded-xl shadow-sm border border-sky-100 overflow-hidden">
@@ -341,13 +391,31 @@ const AdminMultipleChoices = () => {
                           <div className="text-black font-medium max-w-md truncate">
                             {q.question_text}
                           </div>
+                          {q.tags && q.tags.length > 0 && (
+                            <div className="flex flex-wrap gap-1 mt-1">
+                              {q.tags.slice(0, 3).map(tag => (
+                                <span key={tag} className="inline-flex px-2 py-0.5 rounded text-xs bg-gray-100 text-gray-600">
+                                  {tag}
+                                </span>
+                              ))}
+                            </div>
+                          )}
                         </td>
 
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          {correctOption ? (
-                            <Badge tone="green">
-                              {correctLetter}. {correctOption.text}
-                            </Badge>
+                        <td className="px-6 py-4">
+                          {q.correct_answers && q.correct_answers.length > 0 ? (
+                            <div className="flex flex-wrap gap-1">
+                              {q.correct_answers.map(letter => {
+                                const option = q.options?.find(opt => opt.label === letter);
+                                return option ? (
+                                  <Badge key={letter} tone="green">
+                                    {letter}. {option.text.length > 30 
+                                      ? option.text.substring(0, 30) + '...' 
+                                      : option.text}
+                                  </Badge>
+                                ) : null;
+                              })}
+                            </div>
                           ) : (
                             <span className="text-indigo-900/60">—</span>
                           )}
@@ -399,6 +467,7 @@ const AdminMultipleChoices = () => {
                 onCancel={() => setShowCreateModal(false)}
                 onSubmit={handleCreateSubmit}
                 buttonText="Tạo mới"
+                allTests={allTests}
               />
             </div>
           </div>
@@ -416,6 +485,7 @@ const AdminMultipleChoices = () => {
                 onCancel={() => setShowEditModal(false)}
                 onSubmit={handleEditSubmit}
                 buttonText="Cập nhật"
+                allTests={allTests}
               />
             </div>
           </div>
@@ -440,7 +510,7 @@ const AdminMultipleChoices = () => {
               <div className="flex gap-3">
                 <button
                   onClick={() => setShowDeleteModal(false)}
-                  className="flex-1 px-4 py-2 rounded-lg border border-sky-100 bg-sky-50 text-indigo-900 hover:bg-sky-100"
+                  className="flex-1 px-4 py-2 rounded-lg border border-indigo-200 bg-white text-indigo-900 hover:bg-indigo-50"
                 >
                   Hủy
                 </button>
@@ -519,7 +589,7 @@ const AdminMultipleChoices = () => {
                         <h4 className="font-semibold text-gray-900 mb-3">Các đáp án</h4>
                         <div className="space-y-2">
                           {selectedQuestion.options?.map((op, i) => {
-                            const isCorrect = op.label === correctLetter;
+                            const isCorrect = selectedQuestion.correct_answers?.includes(op.label);
                             const optionText = op.text;
                             const optionLabel = op.label;
                             
@@ -625,9 +695,29 @@ const QuestionForm = ({
   onCancel,
   onSubmit,
   buttonText,
+  allTests,
 }) => {
   return (
     <form onSubmit={onSubmit} className="space-y-4">
+      <div>
+        <label className="block text-sm font-medium text-black mb-2">
+          Bài kiểm tra <span className="text-rose-600">*</span>
+        </label>
+        <select
+          value={formData.test_id}
+          onChange={(e) => setFormData({ ...formData, test_id: e.target.value })}
+          required
+          className="w-full px-4 py-2 rounded-lg border border-indigo-200 bg-white focus:ring-2 focus:ring-indigo-500 focus:border-transparent text-black"
+        >
+          <option value="">Chọn bài kiểm tra...</option>
+          {allTests.map(test => (
+            <option key={test._id} value={test._id}>
+              {test.test_title} - {test.main_topic}
+            </option>
+          ))}
+        </select>
+      </div>
+
       <div>
         <label className="block text-sm font-medium text-black mb-2">
           Câu hỏi <span className="text-rose-600">*</span>
@@ -637,7 +727,7 @@ const QuestionForm = ({
           onChange={(e) => setFormData({ ...formData, question: e.target.value })}
           required
           rows={3}
-          className="w-full px-4 py-2 rounded-lg border border-sky-100 bg-indigo-50 focus:ring-2 focus:ring-indigo-500 focus:border-transparent text-black placeholder:text-indigo-400"
+          className="w-full px-4 py-2 rounded-lg border border-indigo-200 bg-white focus:ring-2 focus:ring-indigo-500 focus:border-transparent text-black placeholder:text-indigo-400"
           placeholder="Nhập câu hỏi..."
         />
       </div>
@@ -647,27 +737,45 @@ const QuestionForm = ({
           Các đáp án <span className="text-rose-600">*</span>
         </label>
         <div className="space-y-3">
-          {formData.options.map((option, idx) => (
-            <div key={idx} className="flex items-center gap-3">
-              <input
-                type="radio"
-                checked={formData.correct_answer === idx}
-                onChange={() => setFormData({ ...formData, correct_answer: idx })}
-                className="w-5 h-5 text-indigo-600 focus:ring-indigo-500"
-              />
-              <input
-                type="text"
-                value={option}
-                onChange={(e) => handleOptionChange(idx, e.target.value)}
-                required={idx < 2}
-                className="flex-1 px-4 py-2 rounded-lg border border-sky-100 bg-indigo-50 focus:ring-2 focus:ring-indigo-500 focus:border-transparent text-black placeholder:text-indigo-400"
-                placeholder={`Đáp án ${String.fromCharCode(65 + idx)}`}
-              />
-            </div>
-          ))}
+          {formData.options.map((option, idx) => {
+            const optionLabel = String.fromCharCode(65 + idx);
+            const isCorrect = formData.correct_answers.includes(optionLabel);
+            
+            return (
+              <div key={idx} className="flex items-center gap-3">
+                <input
+                  type="checkbox"
+                  checked={isCorrect}
+                  onChange={(e) => {
+                    const newCorrectAnswers = [...formData.correct_answers];
+                    if (e.target.checked) {
+                      if (!newCorrectAnswers.includes(optionLabel)) {
+                        newCorrectAnswers.push(optionLabel);
+                      }
+                    } else {
+                      const index = newCorrectAnswers.indexOf(optionLabel);
+                      if (index > -1) {
+                        newCorrectAnswers.splice(index, 1);
+                      }
+                    }
+                    setFormData({ ...formData, correct_answers: newCorrectAnswers });
+                  }}
+                  className="w-5 h-5 text-indigo-600 focus:ring-indigo-500 rounded"
+                />
+                <input
+                  type="text"
+                  value={option}
+                  onChange={(e) => handleOptionChange(idx, e.target.value)}
+                  required={idx < 2}
+                  className="flex-1 px-4 py-2 rounded-lg border border-indigo-200 bg-white focus:ring-2 focus:ring-indigo-500 focus:border-transparent text-black placeholder:text-indigo-400"
+                  placeholder={`Đáp án ${optionLabel}`}
+                />
+              </div>
+            );
+          })}
         </div>
         <p className="text-xs text-indigo-900/70 mt-2">
-          Chọn radio để đánh dấu đáp án đúng
+          Chọn checkbox để đánh dấu các đáp án đúng (có thể chọn nhiều)
         </p>
       </div>
 
@@ -677,16 +785,18 @@ const QuestionForm = ({
           value={formData.explanation}
           onChange={(e) => setFormData({ ...formData, explanation: e.target.value })}
           rows={3}
-          className="w-full px-4 py-2 rounded-lg border border-sky-100 bg-indigo-50 focus:ring-2 focus:ring-indigo-500 focus:border-transparent text-black placeholder:text-indigo-400"
+          className="w-full px-4 py-2 rounded-lg border border-indigo-200 bg-white focus:ring-2 focus:ring-indigo-500 focus:border-transparent text-black placeholder:text-indigo-400"
           placeholder="Giải thích đáp án đúng (tùy chọn)..."
         />
       </div>
+
+
 
       <div className="flex gap-3 pt-4">
         <button
           type="button"
           onClick={onCancel}
-          className="flex-1 px-4 py-2 rounded-lg border border-sky-100 bg-sky-50 text-indigo-900 hover:bg-sky-100"
+          className="flex-1 px-4 py-2 rounded-lg border border-indigo-200 bg-white text-indigo-900 hover:bg-indigo-50"
         >
           Hủy
         </button>

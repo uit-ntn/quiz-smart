@@ -5,23 +5,24 @@
 /* ===== Base (dark mặc định) ===== */
 @layer base {
   :root {
-    /* Màu line của grid pattern ở chế độ sáng (fallback) */
+    /* Màu line của grid pattern ở chế độ sáng */
     --grid-line-color: rgba(0, 0, 0, 0.08);
-    color-scheme: dark; /* bật hệ màu tối cho form control, v.v. */
+    color-scheme: light; /* bật hệ màu sáng cho form control */
   }
 
   /* Nếu bạn dùng toggle .dark thì biến này sẽ áp dụng ở dark */
   .dark {
     --grid-line-color: rgba(255, 255, 255, 0.06);
+    color-scheme: dark;
   }
 
   html, body, #root {
     @apply min-h-full;
   }
 
-  /* Nên để nền/tone tối ở body khi dùng dark mặc định */
+  /* Background sáng mặc định */
   body {
-    @apply bg-slate-950 text-slate-100 font-sans antialiased;
+    @apply bg-white text-gray-900 font-sans antialiased;
   }
 
   ::selection {
@@ -57,7 +58,7 @@
     height: 8px;
   }
   .scrollbar-thin::-webkit-scrollbar-thumb {
-    background-color: rgba(148, 163, 184, 0.3); /* slate-400/30 */
+    background-color: rgba(0, 0, 0, 0.3);
     border-radius: 9999px;
   }
   .scrollbar-thin::-webkit-scrollbar-track {

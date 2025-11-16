@@ -70,7 +70,6 @@ const TestDetailModal = ({ isOpen, onClose, testId, onTestUpdated }) => {
   // Pagination
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(50); // Cho phép thay đổi
-  const [viewMode, setViewMode] = useState('card'); // 'card' or 'table'
 
   // Question modal
   const [questionModalOpen, setQuestionModalOpen] = useState(false);
@@ -254,40 +253,6 @@ const TestDetailModal = ({ isOpen, onClose, testId, onTestUpdated }) => {
                 </div>
 
                 <div className="flex items-center gap-2">
-                  {/* View Mode Toggle */}
-                  <div className="flex bg-slate-100 rounded-lg p-1">
-                    <button
-                      onClick={() => setViewMode('card')}
-                      className={`px-3 py-1 rounded-md text-xs font-medium transition-colors ${
-                        viewMode === 'card' 
-                          ? 'bg-white text-slate-900 shadow-sm' 
-                          : 'text-slate-600 hover:text-slate-900'
-                      }`}
-                    >
-                      <div className="flex items-center gap-1">
-                        <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
-                        </svg>
-                        Card
-                      </div>
-                    </button>
-                    <button
-                      onClick={() => setViewMode('table')}
-                      className={`px-3 py-1 rounded-md text-xs font-medium transition-colors ${
-                        viewMode === 'table' 
-                          ? 'bg-white text-slate-900 shadow-sm' 
-                          : 'text-slate-600 hover:text-slate-900'
-                      }`}
-                    >
-                      <div className="flex items-center gap-1">
-                        <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 10h18M3 14h18m-9-4v8m5-8v8M7 7V4a1 1 0 011-1h8a1 1 0 011 1v3" />
-                        </svg>
-                        Table
-                      </div>
-                    </button>
-                  </div>
-
                   <button
                     onClick={() => setEditingTest(true)}
                     className="inline-flex items-center gap-2 rounded-xl border border-slate-200 px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50"

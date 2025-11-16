@@ -83,10 +83,16 @@ const MultipleChoiceTestSettings = () => {
   const handleStartTest = () => {
     try {
       localStorage.setItem(`test_settings_${testId}`, JSON.stringify(settings));
+      console.log('Settings saved to localStorage:', settings);
     } catch (e) {
       console.warn('Cannot access localStorage', e);
     }
-    navigate(`/multiple-choice/test/${testId}/take`, { state: { settings } });
+    
+    const targetPath = `/multiple-choice/test/${testId}/take`;
+    console.log('Navigating to:', targetPath);
+    console.log('With settings:', settings);
+    
+    navigate(targetPath, { state: { settings } });
   };
 
   if (loading) return <LoadingSpinner message="Đang tải thông tin bài kiểm tra..." />;

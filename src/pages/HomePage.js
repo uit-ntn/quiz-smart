@@ -1,333 +1,363 @@
-import React from "react";
+import React, { useState } from "react";
 import { Link } from "react-router-dom";
 import MainLayout from "../layout/MainLayout";
 
-/* ---------- tiny atoms ---------- */
-const Eyebrow = ({ children }) => (
-  <span className="inline-flex items-center px-3 py-1 rounded-full text-[10px] font-semibold uppercase tracking-wider bg-slate-100 text-slate-700 border border-slate-200">
-    {children}
-  </span>
-);
-
-const Section = ({ children, className = "" }) => (
-  <section className={`py-14 md:py-20 ${className}`}>{children}</section>
-);
-
-const H2 = ({ children, center = true }) => (
-  <h2
-    className={[
-      "mt-3 text-3xl md:text-4xl font-extrabold text-slate-900",
-      center ? "text-center" : "",
-    ].join(" ")}
-  >
-    {children}
-  </h2>
-);
-
-const Sub = ({ children, center = true, className = "" }) => (
-  <p
-    className={[
-      "mt-3 text-slate-600",
-      center ? "max-w-2xl mx-auto text-center" : "",
-      className,
-    ].join(" ")}
-  >
-    {children}
-  </p>
-);
-
-/* ---------- cards ---------- */
-const Pillar = ({ icon, title, desc }) => (
-  <div className="rounded-2xl bg-white border border-slate-200 p-6 shadow-sm hover:shadow-md transition">
-    <div className="w-11 h-11 rounded-xl bg-slate-900 text-white grid place-items-center">
-      {icon}
-    </div>
-    <h4 className="mt-4 text-lg font-semibold text-slate-900">{title}</h4>
-    <p className="mt-2 text-slate-600">{desc}</p>
-  </div>
-);
-
-const Category = ({ to, title, desc, glyph }) => (
-  <Link
-    to={to}
-    className="group rounded-2xl bg-white border border-slate-200 p-5 shadow-sm hover:shadow-md transition text-left"
-  >
-    <div className="flex items-start gap-4">
-      <div className="w-10 h-10 rounded-lg bg-indigo-600 text-white grid place-items-center shrink-0">
-        {glyph}
-      </div>
-      <div>
-        <h5 className="text-slate-900 font-semibold">{title}</h5>
-        <p className="text-slate-600 text-sm mt-1">{desc}</p>
-        <span className="inline-flex items-center mt-3 text-sm font-medium text-indigo-700">
-          Bắt đầu ngay
-          <svg className="w-4 h-4 ml-1" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-            <path d="M9 5l7 7-7 7" strokeLinecap="round" strokeLinejoin="round" />
-          </svg>
-        </span>
-      </div>
-    </div>
-  </Link>
-);
-
-const Quote = ({ quote, name, role }) => (
-  <div className="rounded-2xl bg-white border border-slate-200 p-6 shadow-sm">
-    <p className="text-slate-800">“{quote}”</p>
-    <div className="mt-4">
-      <p className="text-sm font-semibold text-slate-900">{name}</p>
-      <p className="text-xs text-slate-500">{role}</p>
-    </div>
-  </div>
-);
-
-/* ---------- page ---------- */
 const HomePage = () => {
+  const [activeTab, setActiveTab] = useState('features');
+
   return (
-    <MainLayout maxWidth="7xl">
-      {/* HERO */}
-      <Section className="relative overflow-hidden">
-        <div className="pointer-events-none absolute inset-0">
-          <div className="absolute -top-24 -right-24 w-[26rem] h-[26rem] bg-indigo-200/40 rounded-full blur-3xl" />
-          <div className="absolute -bottom-24 -left-24 w-[28rem] h-[28rem] bg-blue-200/30 rounded-full blur-3xl" />
-          <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,rgba(0,0,0,0.03),transparent_60%)]" />
+    <MainLayout>
+      {/* Hero Section */}
+      <div className="relative overflow-hidden bg-gradient-to-br from-indigo-50 via-white to-purple-50 min-h-screen flex items-center">
+        <div className="absolute inset-0">
+          <div className="absolute top-1/4 left-1/4 w-64 h-64 bg-indigo-300 rounded-full mix-blend-multiply filter blur-xl opacity-70 animate-pulse"></div>
+          <div className="absolute top-1/3 right-1/4 w-72 h-72 bg-purple-300 rounded-full mix-blend-multiply filter blur-xl opacity-70 animate-pulse animation-delay-2000"></div>
+          <div className="absolute bottom-1/4 left-1/3 w-80 h-80 bg-pink-300 rounded-full mix-blend-multiply filter blur-xl opacity-70 animate-pulse animation-delay-4000"></div>
         </div>
-
-        <div className="relative grid lg:grid-cols-2 gap-10 items-center">
-          <div>
-            <Eyebrow>Nền tảng ôn luyện thế hệ mới</Eyebrow>
-            <h1 className="mt-4 text-4xl md:text-6xl font-extrabold leading-tight text-slate-900">
-              Luyện tập theo lộ trình,{" "}
-              <span className="bg-gradient-to-r from-indigo-600 to-blue-600 bg-clip-text text-transparent">
-                đo tiến bộ mỗi ngày
+        
+        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20">
+          <div className="text-center">
+            <div className="mb-8">
+              <span className="inline-flex items-center px-4 py-2 rounded-full text-sm font-medium bg-indigo-100 text-indigo-800 mb-4">
+                🚀 Ra mắt phiên bản 2.0
               </span>
+            </div>
+            
+            <h1 className="text-5xl md:text-7xl font-black text-transparent bg-clip-text bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 mb-6">
+              QuizMaster
             </h1>
-            <p className="mt-5 text-slate-600 text-lg leading-relaxed max-w-xl">
-              QuizSmart cung cấp kho đề bám sát mục tiêu (TOEIC/IELTS/IT), chấm tự động,
-              giải thích chi tiết và dashboard tiến độ rõ ràng.
+            
+            <p className="text-2xl md:text-3xl font-bold text-indigo-900 mb-4">
+              Nền tảng thi trực tuyến thông minh
             </p>
-
-            <div className="mt-7 flex flex-col sm:flex-row gap-3">
+            
+            <p className="text-lg text-indigo-700 max-w-3xl mx-auto mb-12 leading-relaxed">
+              Trải nghiệm làm bài thi hoàn toàn mới với AI hỗ trợ, chấm điểm tức thì, 
+              và phân tích kết quả chi tiết. Hơn 10,000+ câu hỏi được cập nhật liên tục.
+            </p>
+            
+            <div className="flex flex-col sm:flex-row gap-4 justify-center mb-16">
               <Link
                 to="/multiple-choice/topics"
-                className="inline-flex items-center justify-center px-6 py-3 rounded-xl text-white font-semibold bg-slate-900 hover:bg-slate-800 shadow-sm"
+                className="group relative px-8 py-4 bg-gradient-to-r from-indigo-600 to-purple-600 text-white font-bold rounded-2xl text-lg shadow-xl hover:shadow-2xl transform hover:-translate-y-1 transition-all duration-300"
               >
-                Bắt đầu làm bài
+                <span className="relative z-10">Bắt đầu thi ngay</span>
+                <div className="absolute inset-0 bg-gradient-to-r from-purple-600 to-pink-600 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
               </Link>
+              
               <Link
-                to="/about"
-                className="inline-flex items-center justify-center px-6 py-3 rounded-xl text-slate-800 font-semibold bg-white border border-slate-200 hover:bg-slate-50"
+                to="/register"
+                className="px-8 py-4 bg-white text-indigo-600 font-bold rounded-2xl text-lg border-2 border-indigo-200 hover:border-indigo-400 shadow-lg hover:shadow-xl transform hover:-translate-y-1 transition-all duration-300"
               >
-                Tìm hiểu nền tảng
+                Đăng ký miễn phí
               </Link>
             </div>
-
-            {/* mini stats */}
-            <div className="mt-10 grid grid-cols-2 gap-4 max-w-md">
-              <div className="rounded-2xl bg-white border border-slate-200 p-5 shadow-sm">
-                <p className="text-2xl font-extrabold">2,500+</p>
-                <p className="text-slate-600 text-sm">Câu hỏi luyện tập</p>
-              </div>
-              <div className="rounded-2xl bg-white border border-slate-200 p-5 shadow-sm">
-                <p className="text-2xl font-extrabold">1,200+</p>
-                <p className="text-slate-600 text-sm">Người học tích cực</p>
-              </div>
+            
+            {/* Stats */}
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-8 max-w-4xl mx-auto">
+              {[
+                { number: "50K+", label: "Học viên" },
+                { number: "15K+", label: "Câu hỏi" },
+                { number: "98%", label: "Hài lòng" },
+                { number: "24/7", label: "Hỗ trợ" }
+              ].map((stat, index) => (
+                <div key={index} className="text-center">
+                  <div className="text-3xl font-black text-indigo-600 mb-2">{stat.number}</div>
+                  <div className="text-indigo-700 font-medium">{stat.label}</div>
+                </div>
+              ))}
             </div>
           </div>
+        </div>
+      </div>
 
-          {/* mock preview panel */}
-          <div className="relative">
-            <div className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm">
-              <div className="h-56 md:h-72 rounded-2xl bg-gradient-to-br from-indigo-100 via-blue-100 to-purple-100 border border-slate-200 grid place-items-center">
-                <div className="text-center">
-                  <p className="text-sm text-slate-600">Xem nhanh kết quả</p>
-                  <p className="mt-2 text-3xl font-extrabold text-slate-900">78%</p>
-                  <p className="text-xs text-slate-500 mt-1">Tuần này • +6% so với tuần trước</p>
+      {/* Interactive Tabs Section */}
+      <div className="py-20 bg-white">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-16">
+            <h2 className="text-4xl font-black text-indigo-900 mb-4">
+              Tại sao chọn QuizMaster?
+            </h2>
+            <p className="text-xl text-indigo-600 max-w-2xl mx-auto">
+              Khám phá những tính năng độc đáo giúp bạn học tập hiệu quả hơn
+            </p>
+          </div>
+          
+          {/* Tab Navigation */}
+          <div className="flex flex-wrap justify-center mb-12 gap-4">
+            {[
+              { id: 'features', label: '✨ Tính năng', icon: '⚡' },
+              { id: 'ai', label: '🤖 AI Support', icon: '🧠' },
+              { id: 'mobile', label: '📱 Mobile App', icon: '📲' },
+              { id: 'analytics', label: '📊 Phân tích', icon: '📈' }
+            ].map((tab) => (
+              <button
+                key={tab.id}
+                onClick={() => setActiveTab(tab.id)}
+                className={`px-6 py-3 rounded-2xl font-bold text-lg transition-all duration-300 ${
+                  activeTab === tab.id
+                    ? 'bg-gradient-to-r from-indigo-600 to-purple-600 text-white shadow-lg transform scale-105'
+                    : 'bg-indigo-50 text-indigo-700 hover:bg-indigo-100'
+                }`}
+              >
+                {tab.icon} {tab.label}
+              </button>
+            ))}
+          </div>
+          
+          {/* Tab Content */}
+          <div className="bg-gradient-to-br from-indigo-50 to-purple-50 rounded-3xl p-8 md:p-12">
+            {activeTab === 'features' && (
+              <div className="grid md:grid-cols-2 gap-8 items-center">
+                <div>
+                  <h3 className="text-3xl font-black text-indigo-900 mb-6">
+                    🎯 Tính năng vượt trội
+                  </h3>
+                  <div className="space-y-4">
+                    {[
+                      "⚡ Chấm điểm tức thì với độ chính xác 99.9%",
+                      "🎨 Giao diện đẹp mắt, dễ sử dụng",
+                      "🔄 Đồng bộ tiến độ trên mọi thiết bị",
+                      "🏆 Bảng xếp hạng và thành tích"
+                    ].map((feature, index) => (
+                      <div key={index} className="flex items-center text-lg text-indigo-700">
+                        <span className="mr-3">{feature}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+                <div className="bg-white rounded-2xl p-6 shadow-2xl">
+                  <div className="h-64 bg-gradient-to-br from-indigo-400 to-purple-400 rounded-xl flex items-center justify-center">
+                    <span className="text-white text-6xl">⚡</span>
+                  </div>
                 </div>
               </div>
-              <div className="mt-4 grid grid-cols-3 gap-3">
-                {["Tốc độ", "Độ chính xác", "Chuỗi ngày"].map((t, i) => (
-                  <div key={i} className="rounded-xl border border-slate-200 bg-white p-3">
-                    <p className="text-[11px] uppercase tracking-wider text-slate-500">{t}</p>
-                    <p className="mt-1 text-xl font-bold text-slate-900">
-                      {i === 0 ? "1m42s" : i === 1 ? "86%" : "12 ngày"}
-                    </p>
+            )}
+            
+            {activeTab === 'ai' && (
+              <div className="grid md:grid-cols-2 gap-8 items-center">
+                <div>
+                  <h3 className="text-3xl font-black text-indigo-900 mb-6">
+                    🤖 AI thông minh
+                  </h3>
+                  <div className="space-y-4">
+                    {[
+                      "🧠 Gợi ý câu trả lời thông minh",
+                      "📝 Tự động tạo đề thi theo năng lực",
+                      "🎯 Phát hiện điểm yếu và đưa ra lộ trình",
+                      "💬 Chatbot hỗ trợ 24/7"
+                    ].map((feature, index) => (
+                      <div key={index} className="flex items-center text-lg text-indigo-700">
+                        <span className="mr-3">{feature}</span>
+                      </div>
+                    ))}
                   </div>
-                ))}
+                </div>
+                <div className="bg-white rounded-2xl p-6 shadow-2xl">
+                  <div className="h-64 bg-gradient-to-br from-purple-400 to-pink-400 rounded-xl flex items-center justify-center">
+                    <span className="text-white text-6xl">🤖</span>
+                  </div>
+                </div>
               </div>
-            </div>
+            )}
+            
+            {activeTab === 'mobile' && (
+              <div className="grid md:grid-cols-2 gap-8 items-center">
+                <div>
+                  <h3 className="text-3xl font-black text-indigo-900 mb-6">
+                    📱 Ứng dụng di động
+                  </h3>
+                  <div className="space-y-4">
+                    {[
+                      "📲 Tải về miễn phí cho iOS và Android",
+                      "⚡ Tốc độ siêu nhanh, giao diện mượt mà",
+                      "📴 Làm bài offline khi không có mạng",
+                      "🔔 Thông báo nhắc nhở học tập"
+                    ].map((feature, index) => (
+                      <div key={index} className="flex items-center text-lg text-indigo-700">
+                        <span className="mr-3">{feature}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+                <div className="bg-white rounded-2xl p-6 shadow-2xl">
+                  <div className="h-64 bg-gradient-to-br from-pink-400 to-red-400 rounded-xl flex items-center justify-center">
+                    <span className="text-white text-6xl">📱</span>
+                  </div>
+                </div>
+              </div>
+            )}
+            
+            {activeTab === 'analytics' && (
+              <div className="grid md:grid-cols-2 gap-8 items-center">
+                <div>
+                  <h3 className="text-3xl font-black text-indigo-900 mb-6">
+                    📊 Phân tích chi tiết
+                  </h3>
+                  <div className="space-y-4">
+                    {[
+                      "📈 Biểu đồ tiến độ học tập trực quan",
+                      "🎯 Phân tích điểm mạnh, điểm yếu",
+                      "⏱️ Thống kê thời gian làm bài",
+                      "🏅 So sánh với các học viên khác"
+                    ].map((feature, index) => (
+                      <div key={index} className="flex items-center text-lg text-indigo-700">
+                        <span className="mr-3">{feature}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+                <div className="bg-white rounded-2xl p-6 shadow-2xl">
+                  <div className="h-64 bg-gradient-to-br from-green-400 to-blue-400 rounded-xl flex items-center justify-center">
+                    <span className="text-white text-6xl">📊</span>
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
         </div>
-      </Section>
+      </div>
 
-      {/* PILLARS */}
-      <Section>
-        <Eyebrow>Giá trị cốt lõi</Eyebrow>
-        <H2>Học tập có hệ thống</H2>
-        <Sub>
-          Ba trụ cột giúp bạn tiết kiệm thời gian, tập trung đúng nội dung và nhìn rõ tiến bộ.
-        </Sub>
-        <div className="mt-8 grid md:grid-cols-3 gap-5">
-          <Pillar
-            title="Lộ trình cá nhân"
-            desc="Chọn mục tiêu, hệ thống tự gợi ý bài luyện phù hợp để chạm mốc nhanh hơn."
-            icon={
-              <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                <path d="M3 6h18M3 12h12M3 18h6" strokeLinecap="round" strokeLinejoin="round" />
-              </svg>
-            }
-          />
-          <Pillar
-            title="Giải thích dễ hiểu"
-            desc="Mỗi câu hỏi có phân tích rõ ràng, tránh mẹo vặt – hiểu bản chất để nhớ lâu."
-            icon={
-              <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                <path d="M12 20l9-16H3l9 16z" strokeLinecap="round" strokeLinejoin="round" />
-              </svg>
-            }
-          />
-          <Pillar
-            title="Theo dõi chi tiết"
-            desc="Dashboard trực quan: điểm số, thời gian, chủ đề mạnh/yếu để tối ưu kế hoạch."
-            icon={
-              <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                <path d="M3 3v18M21 21H7M7 13l4 4 7-7" strokeLinecap="round" strokeLinejoin="round" />
-              </svg>
-            }
-          />
+      {/* Study Categories */}
+      <div className="py-20 bg-gradient-to-br from-purple-50 to-indigo-50">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-16">
+            <h2 className="text-4xl font-black text-indigo-900 mb-4">
+              🎓 Danh mục học tập
+            </h2>
+            <p className="text-xl text-indigo-600">
+              Chọn lĩnh vực bạn muốn chinh phục
+            </p>
+          </div>
+          
+          <div className="grid md:grid-cols-3 gap-8">
+            {[
+              {
+                icon: "📝",
+                title: "Trắc nghiệm đa dạng",
+                desc: "Hàng nghìn câu hỏi từ cơ bản đến nâng cao",
+                color: "from-blue-500 to-indigo-600",
+                link: "/multiple-choice/topics"
+              },
+              {
+                icon: "📖",
+                title: "Từ vựng thông minh",
+                desc: "Học từ vựng với phương pháp khoa học",
+                color: "from-purple-500 to-pink-600",
+                link: "/vocabulary/topics"
+              },
+              {
+                icon: "⚡",
+                title: "Luyện thi tốc độ",
+                desc: "Rèn luyện kỹ năng làm bài nhanh và chính xác",
+                color: "from-green-500 to-teal-600",
+                link: "/grammar/topics"
+              }
+            ].map((category, index) => (
+              <Link
+                key={index}
+                to={category.link}
+                className="group relative overflow-hidden bg-white rounded-3xl p-8 shadow-xl hover:shadow-2xl transform hover:-translate-y-2 transition-all duration-500"
+              >
+                <div className={`absolute inset-0 bg-gradient-to-br ${category.color} opacity-0 group-hover:opacity-10 transition-opacity duration-500`}></div>
+                <div className="relative">
+                  <div className="text-6xl mb-6">{category.icon}</div>
+                  <h3 className="text-2xl font-black text-indigo-900 mb-4">{category.title}</h3>
+                  <p className="text-indigo-600 mb-6">{category.desc}</p>
+                  <div className="flex items-center text-indigo-700 font-bold">
+                    Khám phá ngay
+                    <svg className="w-5 h-5 ml-2 transform group-hover:translate-x-2 transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7"></path>
+                    </svg>
+                  </div>
+                </div>
+              </Link>
+            ))}
+          </div>
         </div>
-      </Section>
+      </div>
 
-      {/* CATEGORIES */}
-      <Section className="bg-white">
-        <Eyebrow>Luyện theo chuyên mục</Eyebrow>
-        <H2>Chọn nội dung bạn muốn chinh phục</H2>
-        <div className="mt-8 grid md:grid-cols-3 gap-5">
-          <Category
-            to="/multiple-choice/topics"
-            title="Trắc nghiệm"
-            desc="Kho đề phong phú, chấm điểm ngay lập tức, có giải thích kèm theo."
-            glyph={
-              <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                <path d="M5 13l4 4L19 7" strokeLinecap="round" strokeLinejoin="round" />
-              </svg>
-            }
-          />
-          <Category
-            to="/grammar/topics"
-            title="Ngữ pháp"
-            desc="Bài tập điền chỗ trống & tự luận ngắn để củng cố cấu trúc cốt lõi."
-            glyph={
-              <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                <path d="M16 5H8l-2 6h12l-2-6zM6 11v8h12v-8" strokeLinecap="round" strokeLinejoin="round" />
-              </svg>
-            }
-          />
-          <Category
-            to="/vocabulary/topics"
-            title="Từ vựng"
-            desc="Flashcard, điền nghĩa và luyện câu ví dụ để nhớ từ bền vững."
-            glyph={
-              <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                <path d="M3 6h18v12H3zM7 6v12" strokeLinecap="round" strokeLinejoin="round" />
-              </svg>
-            }
-          />
+      {/* Testimonials */}
+      <div className="py-20 bg-white">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-16">
+            <h2 className="text-4xl font-black text-indigo-900 mb-4">
+              💬 Học viên nói gì?
+            </h2>
+            <p className="text-xl text-indigo-600">
+              Hàng nghìn học viên đã tin tựa và thành công
+            </p>
+          </div>
+          
+          <div className="grid md:grid-cols-3 gap-8">
+            {[
+              {
+                name: "Nguyễn Văn A",
+                role: "Sinh viên IT",
+                avatar: "👨‍💻",
+                content: "App tuyệt vời! Giao diện đẹp, câu hỏi chất lượng. Điểm thi của mình tăng 40% chỉ sau 2 tháng sử dụng.",
+                rating: 5
+              },
+              {
+                name: "Trần Thị B",
+                role: "Giáo viên",
+                avatar: "👩‍🏫",
+                content: "Tôi sử dụng QuizMaster để tạo đề thi cho học sinh. Rất tiện lợi và tiết kiệm thời gian.",
+                rating: 5
+              },
+              {
+                name: "Lê Văn C",
+                role: "Học sinh THPT",
+                avatar: "🎓",
+                content: "Ứng dụng mobile rất mượt, có thể ôn tập mọi lúc mọi nơi. Đặc biệt thích tính năng AI gợi ý.",
+                rating: 5
+              }
+            ].map((testimonial, index) => (
+              <div key={index} className="bg-gradient-to-br from-indigo-50 to-purple-50 rounded-3xl p-8 shadow-lg">
+                <div className="flex items-center mb-6">
+                  <div className="text-4xl mr-4">{testimonial.avatar}</div>
+                  <div>
+                    <h4 className="font-bold text-indigo-900">{testimonial.name}</h4>
+                    <p className="text-indigo-600">{testimonial.role}</p>
+                  </div>
+                </div>
+                <p className="text-indigo-700 mb-4 italic">"{testimonial.content}"</p>
+                <div className="flex text-yellow-400">
+                  {[...Array(testimonial.rating)].map((_, i) => (
+                    <span key={i} className="text-2xl">⭐</span>
+                  ))}
+                </div>
+              </div>
+            ))}
+          </div>
         </div>
-      </Section>
+      </div>
 
-      {/* TESTIMONIALS */}
-      <Section>
-        <Eyebrow>Người học đánh giá</Eyebrow>
-        <H2>Hiệu quả được kiểm chứng</H2>
-        <div className="mt-8 grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
-          {[
-            {
-              name: "Minh Thư",
-              role: "Thí sinh TOEIC",
-              quote:
-                "Sau 3 tuần, mình tăng 150 điểm. Phần giải thích cực rõ và dễ nhớ.",
-            },
-            {
-              name: "Văn Hậu",
-              role: "Junior Dev",
-              quote:
-                "Lộ trình Cloud/IT bám sát, làm tới đâu hiểu tới đó, đỡ hoang mang.",
-            },
-            {
-              name: "Ngọc Anh",
-              role: "Sinh viên",
-              quote:
-                "UI sạch sẽ, tốc độ nhanh. Rất dễ duy trì thói quen 20 phút/ngày.",
-            },
-            {
-              name: "Trung Kiên",
-              role: "IELTS learner",
-              quote:
-                "Vocabulary + Grammar combo giúp Reading mình tăng đáng kể.",
-            },
-          ].map((t, i) => (
-            <Quote key={i} {...t} />
-          ))}
-        </div>
-      </Section>
-
-      {/* FAQ */}
-      <Section className="bg-white">
-        <Eyebrow>FAQ</Eyebrow>
-        <H2>Câu hỏi thường gặp</H2>
-        <div className="mt-8 grid md:grid-cols-2 gap-5">
-          {[
-            {
-              q: "QuizSmart có miễn phí không?",
-              a: "Bạn có thể luyện các chủ đề cơ bản miễn phí. Tài khoản Pro mở khóa thêm ngân hàng câu hỏi mở rộng và thống kê nâng cao.",
-            },
-            {
-              q: "Có lộ trình gợi ý cho người mới?",
-              a: "Có. Chọn mục tiêu điểm/level, hệ thống đề xuất lộ trình theo tuần với bài luyện phù hợp.",
-            },
-            {
-              q: "Làm bài trên điện thoại ổn chứ?",
-              a: "UI được tối ưu cho mobile, bạn có thể luyện mọi lúc mọi nơi.",
-            },
-            {
-              q: "Kết quả có được lưu lại?",
-              a: "Tất cả bài làm, thời gian, tỉ lệ đúng/sai được lưu và hiển thị trong dashboard cá nhân.",
-            },
-          ].map((f, i) => (
-            <div key={i} className="rounded-2xl border border-slate-200 bg-white p-5">
-              <h4 className="font-semibold text-slate-900">{f.q}</h4>
-              <p className="mt-1 text-slate-600">{f.a}</p>
-            </div>
-          ))}
-        </div>
-      </Section>
-
-      {/* CTA */}
-      <Section className="relative overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-r from-indigo-100 via-blue-100 to-purple-100" />
-        <div className="relative rounded-3xl border border-slate-200 bg-white/50 backdrop-blur-sm p-8 md:p-10 text-center">
-          <h3 className="text-2xl md:text-3xl font-extrabold text-slate-900">
-            Sẵn sàng tăng tốc hành trình học tập?
-          </h3>
-          <p className="mt-2 text-slate-600">
-            Bắt đầu với một bài test ngắn — nhận phân tích và đề xuất lộ trình ngay.
+      {/* Final CTA */}
+      <div className="py-20 bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600">
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+          <h2 className="text-4xl md:text-5xl font-black text-white mb-6">
+            🚀 Sẵn sàng bứt phá?
+          </h2>
+          <p className="text-xl text-indigo-100 mb-8">
+            Tham gia cùng 50,000+ học viên đang thành công với QuizMaster
           </p>
-          <div className="mt-6 flex flex-col sm:flex-row gap-3 justify-center">
+          <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Link
               to="/multiple-choice/topics"
-              className="px-6 py-3 rounded-xl text-white font-semibold bg-slate-900 hover:bg-slate-800"
+              className="px-8 py-4 bg-white text-indigo-600 font-black rounded-2xl text-lg shadow-2xl hover:shadow-3xl transform hover:-translate-y-1 transition-all duration-300"
             >
-              Làm bài đầu tiên
+              🎯 Bắt đầu ngay hôm nay
             </Link>
             <Link
               to="/register"
-              className="px-6 py-3 rounded-xl text-slate-800 font-semibold bg-white border border-slate-200 hover:bg-slate-50"
+              className="px-8 py-4 bg-transparent text-white font-black rounded-2xl text-lg border-2 border-white hover:bg-white hover:text-indigo-600 transition-all duration-300"
             >
-              Tạo tài khoản miễn phí
+              📝 Đăng ký miễn phí
             </Link>
           </div>
         </div>
-      </Section>
+      </div>
     </MainLayout>
   );
 };
