@@ -231,7 +231,7 @@ const MultipleChoiceListTopic = () => {
                 subTopics={topicData.subTopics}
                 testCount={topicData.testCount}
                 color={["blue", "green", "purple", "orange"][idx % 4]}
-                buttonLabel="Vào xem tất cả"
+                buttonLabel="Hiển thị tất cả phân mục"
                 onOpenModal={() => setModalTopic(topicData.mainTopic)}
               />
             ))}

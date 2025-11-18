@@ -79,9 +79,8 @@ const TopicCard = ({
           <div className="px-5 pb-2">
             <div className="flex flex-wrap gap-2">
               {shownSubs.map((s, i) => (
-                <Link
+                <p
                   key={s + i}
-                  to={`/vocabulary/tests/${encodeURIComponent(mainTopic || topic)}/${encodeURIComponent(s)}`}
                   onClick={(e) => {
                     e.stopPropagation();
                   }}
@@ -93,7 +92,7 @@ const TopicCard = ({
                   title={s}
                 >
                   {s}
-                </Link>
+                </p>
               ))}
               {moreCount > 0 && (
                 <span className="px-3 py-1.5 rounded-lg bg-gray-50 text-gray-600 text-xs border-2 border-gray-200 font-medium">
