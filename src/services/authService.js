@@ -133,7 +133,7 @@ class AuthService {
     // Kiểm tra BE sống
     const ok = await fetch(`${API_BASE_URL}/auth/health`).then(r => r.ok).catch(() => false);
     if (!ok) {
-      throw new Error('Backend chưa chạy (GET /auth/health thất bại). Hãy khởi động BE (port 8000).');
+      throw new Error('Backend server không phản hồi (GET /auth/health thất bại). Vui lòng kiểm tra kết nối mạng hoặc cấu hình backend.');
     }
 
     // Xây dựng URL với returnUrl nếu có
