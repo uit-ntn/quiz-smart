@@ -268,7 +268,7 @@ const HomePage = () => {
               🎯 Bắt đầu ngay hôm nay
             </Link>
             <Link
-              to="/register"
+              to="/login"
               className="px-8 py-4 bg-transparent text-white font-black rounded-2xl text-lg border-2 border-white hover:bg-white hover:text-indigo-600 transition-all duration-300"
             >
               📝 Đăng ký miễn phí
