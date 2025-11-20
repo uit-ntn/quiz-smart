@@ -73,8 +73,8 @@ const HomePage = () => {
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id)}
                 className={`px-6 py-3 rounded-2xl font-bold text-lg transition-all duration-300 ${activeTab === tab.id
-                    ? 'bg-indigo-600 text-white shadow-lg transform scale-105'
-                    : 'bg-gray-100 text-indigo-700 hover:bg-gray-200'
+                  ? 'bg-indigo-600 text-white shadow-lg transform scale-105'
+                  : 'bg-gray-100 text-indigo-700 hover:bg-gray-200'
                   }`}
               >
                 {tab.icon} {tab.label}
@@ -250,7 +250,7 @@ const HomePage = () => {
           </div>
         </div>
       </div>
-      
+
       {/* Final CTA */}
       <div className="py-20 bg-indigo-600">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
@@ -265,7 +265,13 @@ const HomePage = () => {
               to="/multiple-choice/topics"
               className="px-8 py-4 bg-white text-indigo-600 font-black rounded-2xl text-lg shadow-2xl hover:shadow-3xl transform hover:-translate-y-1 transition-all duration-300"
             >
-              🎯 Bắt đầu ngay hôm nay
+              Làm trắc nghiệm ngay
+            </Link>
+            <Link
+              to="/vocabulary/topics"
+              className="px-8 py-4 bg-white text-indigo-600 font-black rounded-2xl text-lg shadow-2xl hover:shadow-3xl transform hover:-translate-y-1 transition-all duration-300"
+            >
+              Học từ vựng ngay
             </Link>
             <Link
               to="/login"
