@@ -296,39 +296,39 @@ const MultipleChoiceTestTake = () => {
 
     const correctAnswers = results.filter((r) => r.isCorrect).length;
     const totalQuestions = results.length;
-    const score =
+    const percentage =
       totalQuestions > 0
         ? Math.round((correctAnswers / totalQuestions) * 100)
         : 0;
 
-    const timeTakenSeconds =
-      totalTime > 0 ? totalTime - timeRemaining : 0;
+    const timeTakenMs =
+      totalTime > 0 ? (totalTime - timeRemaining) * 1000 : 0;
 
     try {
+      // Tạo payload theo đúng model TestResult
       const testResultData = {
         test_id: testId,
-        test_type: "multiple_choice",
+        total_questions: totalQuestions,
+        correct_count: correctAnswers,
+        percentage: percentage,
+        duration_ms: timeTakenMs,
+        end_time: new Date(),
+        device_info: navigator.userAgent || 'Unknown',
         answers: results.map((r) => ({
           question_id: r.questionId,
-          user_answer: Array.isArray(r.userAnswer)
-            ? r.userAnswer.join(", ")
-            : r.userAnswer,
+          question_collection: 'multiple_choices',
+          question_text: questions.find((q) => q._id === r.questionId)?.question_text || '',
           correct_answer: r.correctAnswer,
+          user_answer: r.userAnswer,
           is_correct: r.isCorrect,
-          question_text:
-            questions.find((q) => q._id === r.questionId)?.question_text ||
-            "",
         })),
-        score,
-        correct_answers: correctAnswers,
-        total_questions: totalQuestions,
-        time_taken: timeTakenSeconds,
-        status: "draft",
+        status: 'draft', // Lưu dưới dạng bản nháp trước
       };
 
       const draftResult =
         await testResultService.createTestResult(testResultData);
 
+      // Chuyển đến trang review với thông tin draft result
       navigate(`/multiple-choice/test/${testId}/review`, {
         state: {
           test,
@@ -337,10 +337,15 @@ const MultipleChoiceTestTake = () => {
           results,
           settings,
           draftResultId: draftResult._id || draftResult.id,
+          percentage,
+          correctCount: correctAnswers,
+          totalQuestions,
+          timeTaken: timeTakenMs,
         },
       });
     } catch (err) {
       console.error("Error creating draft result:", err);
+      // Nếu lỗi, vẫn chuyển đến review nhưng không có draftResultId
       navigate(`/multiple-choice/test/${testId}/review`, {
         state: {
           test,
@@ -348,6 +353,10 @@ const MultipleChoiceTestTake = () => {
           userAnswers,
           results,
           settings,
+          percentage,
+          correctCount: correctAnswers,
+          totalQuestions,
+          timeTaken: timeTakenMs,
         },
       });
     }

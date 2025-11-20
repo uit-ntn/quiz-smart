@@ -37,18 +37,32 @@ const MultipleChoiceTestReview = () => {
 
   useEffect(() => {
     if (location.state) {
-      const { test, questions, userAnswers, results, draftResultId } = location.state;
+      const { 
+        test, 
+        questions, 
+        userAnswers, 
+        results, 
+        draftResultId,
+        percentage,
+        correctCount,
+        totalQuestions
+      } = location.state;
+      
       setTest(test);
       setQuestions(questions);
       setUserAnswers(userAnswers);
       setResults(results);
       setDraftResultId(draftResultId);
 
-      // Calculate score - thang 10: số câu đúng / tổng số câu * 10
-      const correctCount = results.filter((r) => r.isCorrect).length;
-      const totalQuestions = results.length;
-      const calculatedScore = ((correctCount / totalQuestions) * 10).toFixed(1);
-      setScore(calculatedScore);
+      // Use percentage from state or calculate from results
+      if (percentage !== undefined) {
+        setScore(percentage);
+      } else {
+        const correctCnt = results.filter((r) => r.isCorrect).length;
+        const totalQ = results.length;
+        const calculatedScore = totalQ > 0 ? Math.round((correctCnt / totalQ) * 100) : 0;
+        setScore(calculatedScore);
+      }
     } else {
       // If no state, redirect back
       navigate(`/multiple-choice/test/${testId}/settings`);
@@ -66,8 +80,11 @@ const MultipleChoiceTestReview = () => {
       setError(null);
       
       // Update status from draft to active
-      await testResultService.updateTestResultStatus(draftResultId, 'active');
+      await testResultService.updateStatusById(draftResultId, 'active');
       setIsSaved(true);
+      
+      // Show success message
+      alert('Đã lưu kết quả thành công!');
     } catch (err) {
       console.error('Error saving result:', err);
       setError('Không thể lưu kết quả. Vui lòng thử lại!');
@@ -77,17 +94,17 @@ const MultipleChoiceTestReview = () => {
   };
 
   const getScoreColor = (score) => {
-    if (score >= 8) return 'success';
-    if (score >= 6.5) return 'warning';
-    if (score >= 5) return 'info';
+    if (score >= 80) return 'success';
+    if (score >= 65) return 'warning';
+    if (score >= 50) return 'info';
     return 'danger';
   };
 
   const getScoreMessage = (score) => {
-    if (score >= 9) return 'Xuất sắc!';
-    if (score >= 8) return 'Tốt lắm!';
-    if (score >= 6.5) return 'Khá tốt!';
-    if (score >= 5) return 'Trung bình';
+    if (score >= 90) return 'Xuất sắc!';
+    if (score >= 80) return 'Tốt lắm!';
+    if (score >= 65) return 'Khá tốt!';
+    if (score >= 50) return 'Trung bình';
     return 'Cần cố gắng hơn';
   };
 
@@ -129,7 +146,7 @@ const MultipleChoiceTestReview = () => {
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z" />
                     </svg>
                   </div>
-                  <h2 className="text-3xl font-bold text-gray-800 mb-2">{score}/10</h2>
+                  <h2 className="text-3xl font-bold text-gray-800 mb-2">{score}%</h2>
                   <h4 className="text-lg font-semibold text-blue-600 mb-4">
                     {getScoreMessage(score)}
                   </h4>
@@ -202,6 +219,68 @@ const MultipleChoiceTestReview = () => {
                         </div>
                       </div>
                     </div>
+                  </div>
+                  
+                  {/* Action Buttons */}
+                  <div className="mt-6 pt-4 border-t border-gray-200">
+                    <div className="flex flex-col sm:flex-row gap-3 justify-center">
+                      {draftResultId && !isSaved && (
+                        <button
+                          onClick={saveResult}
+                          disabled={loading}
+                          className="px-6 py-3 bg-green-600 hover:bg-green-700 disabled:bg-green-400 text-white font-semibold rounded-lg transition-all duration-200 flex items-center justify-center gap-2"
+                        >
+                          {loading ? (
+                            <>
+                              <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                              Đang lưu...
+                            </>
+                          ) : (
+                            <>
+                              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" />
+                              </svg>
+                              Lưu kết quả
+                            </>
+                          )}
+                        </button>
+                      )}
+                      
+                      {isSaved && (
+                        <div className="flex items-center gap-2 text-green-600 font-semibold">
+                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" />
+                          </svg>
+                          Đã lưu kết quả
+                        </div>
+                      )}
+                      
+                      <button
+                        onClick={() => navigate(`/multiple-choice/test/${testId}/settings`)}
+                        className="px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg transition-all duration-200 flex items-center justify-center gap-2"
+                      >
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                        </svg>
+                        Làm lại bài test
+                      </button>
+                      
+                      <button
+                        onClick={() => navigate('/multiple-choice')}
+                        className="px-6 py-3 bg-gray-600 hover:bg-gray-700 text-white font-semibold rounded-lg transition-all duration-200 flex items-center justify-center gap-2"
+                      >
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2H5a2 2 0 00-2-2z" />
+                        </svg>
+                        Về danh sách test
+                      </button>
+                    </div>
+                    
+                    {error && (
+                      <div className="mt-4 p-3 bg-red-50 border border-red-200 rounded-lg text-red-700 text-sm text-center">
+                        {error}
+                      </div>
+                    )}
                   </div>
                 </div>
               </div>
