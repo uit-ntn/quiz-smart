@@ -130,11 +130,9 @@ class AuthService {
       localStorage.setItem('authReturnTo', targetPath);
     }
 
-    // Kiểm tra BE sống
-    const ok = await fetch(`${API_BASE_URL}/auth/health`).then(r => r.ok).catch(() => false);
-    if (!ok) {
-      throw new Error('Backend server không phản hồi (GET /auth/health thất bại). Vui lòng kiểm tra kết nối mạng hoặc cấu hình backend.');
-    }
+    // Bỏ qua việc kiểm tra health endpoint vì có thể bị CORS block
+    // Trực tiếp redirect đến Google OAuth - nếu backend không hoạt động, 
+    // user sẽ thấy lỗi 404 hoặc 500 từ API Gateway
 
     // Xây dựng URL với returnUrl nếu có
     let googleAuthUrl = `${API_BASE_URL}/auth/google`;
