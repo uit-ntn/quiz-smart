@@ -46,7 +46,7 @@ const MultipleChoiceTestTake = () => {
   const [settings, setSettings] = useState({
     testMode: "flexible", // 'flexible' | 'question_timer'
     showTimer: true,
-    checkMode: "after_submit", // (đang không dùng nhiều ở code này)
+    checkMode: "after_submit", // chưa dùng nhiều
     showQuestionNumber: true,
     shuffleQuestions: false,
     shuffleAnswers: false,
@@ -357,10 +357,10 @@ const MultipleChoiceTestTake = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
+      <div className="min-h-screen flex items-center justify-center bg-white">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-indigo-600 mx-auto mb-4"></div>
-          <p className="text-indigo-600 font-medium">
+          <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-indigo-600 mx-auto mb-3" />
+          <p className="text-indigo-600 text-sm font-medium">
             Đang tải bài kiểm tra...
           </p>
         </div>
@@ -370,7 +370,7 @@ const MultipleChoiceTestTake = () => {
 
   if (error) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
+      <div className="min-h-screen flex items-center justify-center bg-white">
         <div className="text-center max-w-md mx-auto p-6">
           <div className="text-red-500 mb-4">
             <svg
@@ -387,20 +387,20 @@ const MultipleChoiceTestTake = () => {
               />
             </svg>
           </div>
-          <h3 className="text-xl font-semibold text-red-900 mb-2">
+          <h3 className="text-lg font-semibold text-red-800 mb-2">
             Lỗi tải bài test
           </h3>
-          <p className="text-red-700 mb-4">{error}</p>
+          <p className="text-sm text-red-600 mb-4">{error}</p>
           <div className="space-x-3">
             <button
               onClick={() => window.location.reload()}
-              className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700"
+              className="px-4 py-2 bg-red-600 text-white rounded-lg text-sm hover:bg-red-700"
             >
               Thử lại
             </button>
             <button
               onClick={() => navigate(-1)}
-              className="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700"
+              className="px-4 py-2 bg-indigo-600 text-white rounded-lg text-sm hover:bg-indigo-700"
             >
               Quay lại
             </button>
@@ -412,12 +412,10 @@ const MultipleChoiceTestTake = () => {
 
   if (!currentQuestion || !test || questions.length === 0) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-center">
-          <p className="text-indigo-600 font-medium">
-            Đang tải câu hỏi...
-          </p>
-        </div>
+      <div className="min-h-screen flex items-center justify-center bg-white">
+        <p className="text-indigo-600 text-sm font-medium">
+          Đang tải câu hỏi...
+        </p>
       </div>
     );
   }
@@ -427,34 +425,40 @@ const MultipleChoiceTestTake = () => {
   const isCurrentLocked = isLocked(qid);
   const currentComputed = showResult[qid];
 
+  const isLastQuestion = currentQuestionIndex === questions.length - 1;
+  const canGoPrev = settings.testMode === "flexible" && currentQuestionIndex > 0;
+  const canGoNext =
+    settings.testMode === "flexible" &&
+    currentQuestionIndex < questions.length - 1;
+
   return (
-    <div className="min-h-screen bg-white">
-      <div className="max-w-6xl mx-auto p-4">
+    <div className="min-h-screen bg-slate-50 pb-24">
+      <div className="max-w-6xl mx-auto px-3 sm:px-4 pt-4 sm:pt-6">
         <div className="grid grid-cols-12 gap-4 lg:gap-6">
           {/* MAIN QUESTION AREA */}
           <div className="col-span-12 lg:col-span-9">
-            <div className="relative border border-gray-200 rounded-lg bg-white p-6 pb-24">
-              <div className="mb-6">
+            <div className="border border-gray-200 rounded-2xl bg-white shadow-sm p-4 sm:p-6">
+              <div className="mb-4 sm:mb-6">
                 <div className="flex items-start gap-3">
                   {settings.showQuestionNumber && (
-                    <div className="bg-blue-600 text-white font-bold w-8 h-8 rounded flex items-center justify-center text-sm">
+                    <div className="bg-blue-600 text-white font-semibold w-8 h-8 rounded-lg flex items-center justify-center text-sm flex-shrink-0">
                       {currentQuestionIndex + 1}
                     </div>
                   )}
                   <div>
-                    <h2 className="text-lg font-medium mb-2">
+                    <h2 className="text-base sm:text-lg font-medium mb-1 text-gray-900">
                       {currentQuestion.question_text}
                     </h2>
-                    <p className="text-sm text-gray-600">
+                    <p className="text-xs sm:text-sm text-gray-600">
                       Chọn đáp án phù hợp{" "}
-                      {isCurrentLocked && "(Đã khóa)"}
+                      {isCurrentLocked && "(câu này đã khóa)"}
                     </p>
                   </div>
                 </div>
               </div>
 
               {/* OPTIONS */}
-              <div className="space-y-3">
+              <div className="space-y-3 sm:space-y-4">
                 {currentQuestion?.options?.map((op) => {
                   const isSelected = selectedForQ.includes(op.label);
                   return (
@@ -463,7 +467,7 @@ const MultipleChoiceTestTake = () => {
                       type="button"
                       onClick={() => toggleAnswer(qid, op.label)}
                       disabled={isCurrentLocked}
-                      className={`w-full text-left flex items-start gap-3 p-4 rounded-lg border transition-colors duration-150 ${
+                      className={`w-full text-left flex items-start gap-3 px-3 py-3 sm:px-4 sm:py-4 rounded-xl border text-sm sm:text-base transition-colors ${
                         isCurrentLocked
                           ? "cursor-not-allowed opacity-60"
                           : "cursor-pointer"
@@ -475,7 +479,7 @@ const MultipleChoiceTestTake = () => {
                     >
                       <div className="flex-shrink-0 mt-0.5">
                         <div
-                          className={`w-6 h-6 rounded-full border-2 flex items-center justify-center ${
+                          className={`w-5 h-5 sm:w-6 sm:h-6 rounded-full border-2 flex items-center justify-center ${
                             isSelected
                               ? "border-blue-500 bg-blue-600"
                               : "border-gray-300 bg-white"
@@ -483,7 +487,7 @@ const MultipleChoiceTestTake = () => {
                         >
                           {isSelected && (
                             <svg
-                              className="w-4 h-4 text-white"
+                              className="w-3.5 h-3.5 text-white"
                               viewBox="0 0 24 24"
                               fill="none"
                               stroke="currentColor"
@@ -500,11 +504,11 @@ const MultipleChoiceTestTake = () => {
                       </div>
                       <div className="flex-1">
                         <div className="flex items-start gap-2">
-                          <span className="inline-flex items-center justify-center w-7 h-7 rounded-md bg-blue-100 text-blue-700 text-sm font-semibold">
+                          <span className="inline-flex items-center justify-center w-7 h-7 rounded-md bg-blue-100 text-blue-700 text-xs sm:text-sm font-semibold flex-shrink-0">
                             {op.label}
                           </span>
                           <p
-                            className={`text-sm leading-relaxed ${
+                            className={`leading-relaxed ${
                               isSelected
                                 ? "text-gray-900 font-medium"
                                 : "text-gray-800"
@@ -518,169 +522,59 @@ const MultipleChoiceTestTake = () => {
                   );
                 })}
               </div>
-
-              {/* STICKY ACTION BAR */}
-              <div className="absolute inset-x-0 bottom-0 border-t border-gray-200 bg-white px-4 py-3 rounded-b-lg">
-                <div className="flex items-center justify-between gap-3">
-                  {settings.testMode === "flexible" && (
-                    <button
-                      type="button"
-                      onClick={handlePrev}
-                      disabled={currentQuestionIndex === 0}
-                      className={`inline-flex items-center gap-1 px-3 py-2 rounded border text-sm ${
-                        currentQuestionIndex === 0
-                          ? "bg-gray-100 text-gray-400 border-gray-200 cursor-not-allowed"
-                          : "bg-gray-600 text-white border-gray-600 hover:bg-gray-700"
-                      }`}
-                    >
-                      <svg
-                        className="w-4 h-4"
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        stroke="currentColor"
-                        strokeWidth="2"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          d="M15 19l-7-7 7-7"
-                        />
-                      </svg>
-                      Câu trước
-                    </button>
-                  )}
-
-                  <div className="ml-auto flex items-center gap-3">
-                    {!currentComputed && selectedForQ.length > 0 && (
-                      <button
-                        type="button"
-                        onClick={handleCheckAnswer}
-                        className="inline-flex items-center gap-1 px-4 py-2 rounded bg-blue-600 text-white text-sm font-medium hover:bg-blue-700"
-                      >
-                        <svg
-                          className="w-4 h-4"
-                          viewBox="0 0 24 24"
-                          fill="none"
-                          stroke="currentColor"
-                          strokeWidth="2"
-                        >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
-                          />
-                        </svg>
-                        Kiểm tra đáp án
-                      </button>
-                    )}
-
-                    {settings.testMode === "flexible" &&
-                      questions &&
-                      currentQuestionIndex < questions.length - 1 && (
-                        <button
-                          type="button"
-                          onClick={handleNext}
-                          className="inline-flex items-center gap-1 px-4 py-2 rounded bg-purple-600 text-white text-sm font-medium hover:bg-purple-700"
-                        >
-                          Câu tiếp theo
-                          <svg
-                            className="w-4 h-4"
-                            viewBox="0 0 24 24"
-                            fill="none"
-                            stroke="currentColor"
-                            strokeWidth="2"
-                          >
-                            <path
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                              d="M9 5l7 7-7 7"
-                            />
-                          </svg>
-                        </button>
-                      )}
-
-                    {(questions &&
-                      currentQuestionIndex === questions.length - 1) && (
-                      <button
-                        type="button"
-                        onClick={handleSubmitTest}
-                        disabled={getAnsweredCount() === 0}
-                        className={`inline-flex items-center gap-1 px-4 py-2 rounded-lg text-sm font-semibold shadow-md ${
-                          getAnsweredCount() === 0
-                            ? "bg-gray-200 text-gray-400 cursor-not-allowed"
-                            : "bg-green-600 text-white hover:bg-green-700"
-                        }`}
-                      >
-                        <svg
-                          className="w-4 h-4"
-                          viewBox="0 0 24 24"
-                          fill="none"
-                          stroke="currentColor"
-                          strokeWidth="2"
-                        >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"
-                          />
-                        </svg>
-                        Nộp bài
-                      </button>
-                    )}
-                  </div>
-                </div>
-              </div>
             </div>
           </div>
 
           {/* SIDEBAR */}
           <div className="col-span-12 lg:col-span-3 flex flex-col">
-            <div className="flex-1 rounded-2xl border border-gray-200 shadow-sm bg-white flex flex-col p-4 space-y-4">
+            <div className="flex-1 rounded-2xl border border-gray-200 shadow-sm bg-white p-4 space-y-4">
               {/* Header */}
-              <div className="flex items-center justify-between">
+              <div className="flex items-center justify-between gap-2">
                 <div>
-                  <h4 className="text-sm font-bold text-indigo-600">
-                    {test?.main_topic} - {test?.sub_topic}
+                  <h4 className="text-xs font-semibold text-indigo-700">
+                    {test?.main_topic} {test?.sub_topic && "·"} {test?.sub_topic}
                   </h4>
                   {settings.showQuestionNumber && (
-                    <p className="text-xs text-gray-600">
+                    <p className="text-xs text-gray-600 mt-0.5">
                       Câu {currentQuestionIndex + 1} / {questions.length}
                     </p>
                   )}
                 </div>
-                {settings.showTimer && (
-                  <div className="px-2 py-1 rounded-lg bg-indigo-100 border border-indigo-200 flex flex-col items-center">
-                    <span className="text-[11px] text-indigo-700 font-semibold">
-                      Thời gian
-                    </span>
-                    <span className="text-sm font-bold text-indigo-800">
-                      {formatTime(timeRemaining)}
-                    </span>
-                  </div>
-                )}
-                {settings.testMode === "question_timer" && (
-                  <div className="px-2 py-1 rounded-lg bg-orange-100 border border-orange-200 flex flex-col items-center ml-2">
-                    <span className="text-[11px] text-orange-700 font-semibold">
-                      Mỗi câu
-                    </span>
-                    <span className="text-sm font-bold text-orange-800">
-                      {formatTime(questionTimeRemaining)}
-                    </span>
-                  </div>
-                )}
+                <div className="flex items-center gap-2">
+                  {settings.showTimer && (
+                    <div className="px-2 py-1 rounded-md bg-indigo-50 border border-indigo-100 flex flex-col items-center">
+                      <span className="text-[10px] text-indigo-700">
+                        Toàn bài
+                      </span>
+                      <span className="text-xs font-semibold text-indigo-800">
+                        {formatTime(timeRemaining)}
+                      </span>
+                    </div>
+                  )}
+                  {settings.testMode === "question_timer" && (
+                    <div className="px-2 py-1 rounded-md bg-orange-50 border border-orange-100 flex flex-col items-center">
+                      <span className="text-[10px] text-orange-700">
+                        Mỗi câu
+                      </span>
+                      <span className="text-xs font-semibold text-orange-800">
+                        {formatTime(questionTimeRemaining)}
+                      </span>
+                    </div>
+                  )}
+                </div>
               </div>
 
               {/* Progress */}
               <div>
-                <div className="flex justify-between text-xs mb-1">
+                <div className="flex justify-between text-[11px] mb-1">
                   <span>Đã trả lời</span>
                   <span className="font-medium">
                     {getAnsweredCount()}/{questions.length}
                   </span>
                 </div>
-                <div className="h-2 bg-gray-200 rounded">
+                <div className="h-1.5 bg-gray-200 rounded-full">
                   <div
-                    className="h-full bg-blue-500 rounded"
+                    className="h-full bg-blue-500 rounded-full"
                     style={{
                       width: `${
                         (getAnsweredCount() /
@@ -688,26 +582,25 @@ const MultipleChoiceTestTake = () => {
                         100
                       }%`,
                     }}
-                  ></div>
+                  />
                 </div>
               </div>
 
               {/* Grid câu hỏi */}
               <div className="flex-1 overflow-auto">
-                <div className="grid grid-cols-5 gap-2">
+                <div className="grid grid-cols-6 sm:grid-cols-5 gap-2">
                   {questions.map((q, idx) => {
                     const isAnswered =
                       (userAnswers[q._id] || []).length > 0;
                     const isCurrent = idx === currentQuestionIndex;
 
                     let cls =
-                      "w-9 h-9 rounded-xl text-xs font-bold flex items-center justify-center transition-all ";
+                      "w-8 h-8 sm:w-9 sm:h-9 rounded-lg text-xs font-semibold flex items-center justify-center transition-all ";
                     if (isCurrent) {
                       cls +=
                         "bg-purple-600 text-white shadow ring-2 ring-purple-300";
                     } else if (isAnswered) {
-                      cls +=
-                        "bg-emerald-500 text-white shadow hover:bg-emerald-600";
+                      cls += "bg-emerald-500 text-white hover:bg-emerald-600";
                     } else {
                       cls +=
                         "bg-gray-100 text-gray-600 border border-gray-300 hover:bg-gray-200";
@@ -736,12 +629,12 @@ const MultipleChoiceTestTake = () => {
                 </div>
               </div>
 
-              {/* Submit button ở sidebar */}
+              {/* Submit nhanh ở sidebar (desktop) */}
               <button
                 type="button"
                 onClick={handleSubmitTest}
                 disabled={getAnsweredCount() === 0}
-                className={`w-full px-4 py-3 rounded font-medium text-sm ${
+                className={`hidden sm:block w-full px-4 py-2.5 rounded-lg text-xs font-medium ${
                   getAnsweredCount() === 0
                     ? "bg-gray-200 text-gray-400 cursor-not-allowed"
                     : "bg-red-600 text-white hover:bg-red-700"
@@ -754,165 +647,159 @@ const MultipleChoiceTestTake = () => {
         </div>
       </div>
 
-      {/* RESULT MODAL */}
+      {/* BOTTOM ACTION BAR – luôn dính dưới màn hình, thân thiện mobile */}
+      <div className="fixed inset-x-0 bottom-0 z-30 border-t border-gray-200 bg-white/95 backdrop-blur-sm">
+        <div className="max-w-6xl mx-auto px-3 sm:px-4 py-2.5">
+          <div className="flex flex-col sm:flex-row gap-2 sm:gap-3">
+            {settings.testMode === "flexible" && (
+              <button
+                type="button"
+                onClick={handlePrev}
+                disabled={!canGoPrev}
+                className={`w-full sm:w-auto px-3 py-2 rounded-lg text-sm border ${
+                  !canGoPrev
+                    ? "bg-gray-100 text-gray-400 border-gray-200 cursor-not-allowed"
+                    : "bg-white text-gray-800 border-gray-300 hover:bg-gray-50"
+                }`}
+              >
+                Câu trước
+              </button>
+            )}
+
+            <div className="flex-1 flex flex-col sm:flex-row gap-2 sm:gap-3">
+              {!currentComputed && selectedForQ.length > 0 && (
+                <button
+                  type="button"
+                  onClick={handleCheckAnswer}
+                  className="flex-1 px-3 py-2 rounded-lg bg-blue-600 text-white text-sm font-semibold hover:bg-blue-700"
+                >
+                  Kiểm tra đáp án
+                </button>
+              )}
+
+              {canGoNext && (
+                <button
+                  type="button"
+                  onClick={handleNext}
+                  className="flex-1 px-3 py-2 rounded-lg bg-purple-600 text-white text-sm font-semibold hover:bg-purple-700"
+                >
+                  Câu tiếp theo
+                </button>
+              )}
+
+              {isLastQuestion && (
+                <button
+                  type="button"
+                  onClick={handleSubmitTest}
+                  disabled={getAnsweredCount() === 0}
+                  className={`flex-1 px-3 py-2 rounded-lg text-sm font-semibold ${
+                    getAnsweredCount() === 0
+                      ? "bg-gray-200 text-gray-400 cursor-not-allowed"
+                      : "bg-green-600 text-white hover:bg-green-700"
+                  }`}
+                >
+                  Nộp bài
+                </button>
+              )}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* RESULT MODAL - đơn giản */}
       {showModal && modalData && (
-        <div className="fixed inset-0 z-50 bg-black bg-opacity-50 flex items-center justify-center p-4">
-          <div className="bg-white rounded border w-full max-w-3xl">
+        <div className="fixed inset-0 z-50 bg-black/40 flex items-center justify-center p-4">
+          <div className="bg-white rounded-lg border border-gray-200 w-full max-w-xl">
             {/* Header */}
-            <div className="p-4 border-b border-gray-200">
-              <div className="flex items-center justify-between">
-                <h3
-                  className={`text-lg font-medium ${
-                    modalData.isCorrect
-                      ? "text-green-700"
-                      : "text-red-700"
+            <div className="p-4 border-b border-gray-200 flex items-center justify-between">
+              <div>
+                <p
+                  className={`text-sm font-semibold ${
+                    modalData.isCorrect ? "text-green-700" : "text-red-700"
                   }`}
                 >
                   {modalData.isCorrect
-                    ? "✓ Chính xác!"
-                    : "✗ Chưa chính xác"}
-                </h3>
-                <button
-                  onClick={handleCloseModal}
-                  className="text-gray-500 hover:text-gray-700"
-                >
-                  ✕
-                </button>
+                    ? "Trả lời chính xác"
+                    : "Trả lời chưa chính xác"}
+                </p>
+                <p className="text-xs text-gray-500 mt-1">
+                  Câu {currentQuestionIndex + 1} / {questions.length}
+                </p>
               </div>
-              <p className="text-sm text-gray-600 mt-2">
-                Câu {currentQuestionIndex + 1}:{" "}
-                {modalData.questionText}
-              </p>
+              <button
+                onClick={handleCloseModal}
+                className="text-xs text-gray-500 hover:text-gray-800"
+              >
+                Đóng
+              </button>
             </div>
 
             {/* Content */}
-            <div className="p-4 max-h-96 overflow-y-auto space-y-4">
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-2">
-                {/* Đáp án đúng */}
-                <div>
-                  <div className="rounded-lg border border-green-200 bg-green-50 p-4">
-                    <div className="flex items-center gap-2 mb-3">
-                      <div className="p-1.5 rounded bg-green-600 text-white">
-                        <svg
-                          className="w-4 h-4"
-                          viewBox="0 0 24 24"
-                          fill="none"
-                          stroke="currentColor"
-                          strokeWidth="2"
-                        >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            d="M5 13l4 4L19 7"
-                          />
-                        </svg>
-                      </div>
-                      <h4 className="text-base font-bold text-green-700">
-                        ✅ Đáp án đúng
-                      </h4>
-                    </div>
-                    <div className="flex flex-wrap gap-2">
-                      {modalData.correctAnswer.map((lbl) => (
-                        <span
-                          key={lbl}
-                          className="inline-flex items-center px-3 py-1.5 rounded-lg text-sm font-bold bg-white border-2 border-emerald-300 text-emerald-700 shadow-sm"
-                        >
-                          <span className="mr-1.5 text-emerald-500">
-                            ●
-                          </span>
-                          {lbl}
-                        </span>
-                      ))}
-                    </div>
+            <div className="p-4 space-y-4 text-sm">
+              {/* Câu hỏi */}
+              <div>
+                <p className="text-gray-900 font-medium mb-1">Câu hỏi</p>
+                <p className="text-gray-800 text-sm">
+                  {modalData.questionText}
+                </p>
+              </div>
+
+              {/* Đáp án đúng & bạn chọn */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                <div className="border border-gray-200 rounded p-3">
+                  <p className="font-semibold text-gray-900 text-xs mb-2">
+                    Đáp án đúng
+                  </p>
+                  <div className="flex flex-wrap gap-2">
+                    {modalData.correctAnswer.map((lbl) => (
+                      <span
+                        key={lbl}
+                        className="inline-flex items-center px-2 py-1 rounded border border-gray-300 text-xs text-gray-800"
+                      >
+                        {lbl}
+                      </span>
+                    ))}
                   </div>
                 </div>
 
-                {/* Bạn đã chọn */}
-                <div>
-                  <div className="rounded-lg border border-blue-200 bg-blue-50 p-4">
-                    <div className="flex items-center gap-2 mb-3">
-                      <div className="p-1.5 rounded bg-blue-600 text-white">
-                        <svg
-                          className="w-4 h-4"
-                          viewBox="0 0 24 24"
-                          fill="none"
-                          stroke="currentColor"
-                          strokeWidth="2"
+                <div className="border border-gray-200 rounded p-3">
+                  <p className="font-semibold text-gray-900 text-xs mb-2">
+                    Bạn đã chọn
+                  </p>
+                  <div className="flex flex-wrap gap-2">
+                    {modalData.selectedAnswers.length > 0 ? (
+                      modalData.selectedAnswers.map((lbl) => (
+                        <span
+                          key={lbl}
+                          className={`inline-flex items-center px-2 py-1 rounded border text-xs ${
+                            modalData.correctAnswer.includes(lbl)
+                              ? "border-green-500 text-green-700"
+                              : "border-red-500 text-red-700"
+                          }`}
                         >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
-                          />
-                        </svg>
-                      </div>
-                      <h4 className="text-base font-bold text-blue-700">
-                        🤔 Bạn đã chọn
-                      </h4>
-                    </div>
-                    <div className="flex flex-wrap gap-2">
-                      {modalData.selectedAnswers.length > 0 ? (
-                        modalData.selectedAnswers.map((lbl) => (
-                          <span
-                            key={lbl}
-                            className={`inline-flex items-center px-3 py-1.5 rounded text-sm font-bold ${
-                              modalData.correctAnswer.includes(lbl)
-                                ? "bg-white border border-green-300 text-green-700"
-                                : "bg-white border border-red-300 text-red-700"
-                            }`}
-                          >
-                            <span
-                              className={`mr-1.5 ${
-                                modalData.correctAnswer.includes(lbl)
-                                  ? "text-emerald-500"
-                                  : "text-red-500"
-                              }`}
-                            >
-                              ●
-                            </span>
-                            {lbl}
-                          </span>
-                        ))
-                      ) : (
-                        <span className="inline-flex items-center px-3 py-1.5 rounded-lg text-sm font-medium bg-gray-100 text-gray-500 border-2 border-gray-200">
-                          Chưa chọn đáp án
+                          {lbl}
                         </span>
-                      )}
-                    </div>
+                      ))
+                    ) : (
+                      <span className="inline-flex items-center px-2 py-1 rounded border border-gray-300 text-xs text-gray-500">
+                        Chưa chọn đáp án
+                      </span>
+                    )}
                   </div>
                 </div>
               </div>
 
-              {/* Giải thích */}
+              {/* Giải thích (nếu có) */}
               {modalData.explanation && (
-                <div className="space-y-4">
+                <div className="space-y-3">
                   {modalData.explanation.correct && (
-                    <div className="rounded-lg border border-green-200 bg-green-50 p-4">
-                      <div className="flex items-center gap-2 mb-3">
-                        <div className="p-1.5 rounded bg-green-600 text-white">
-                          <svg
-                            className="w-4 h-4"
-                            viewBox="0 0 24 24"
-                            fill="none"
-                            stroke="currentColor"
-                            strokeWidth="2"
-                          >
-                            <path
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                              d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"
-                            />
-                          </svg>
-                        </div>
-                        <h4 className="text-base font-bold text-green-700">
-                          💡 Giải thích đáp án đúng
-                        </h4>
-                      </div>
-                      <div className="bg-white rounded p-3">
-                        <p className="text-gray-800 leading-relaxed text-sm">
-                          {modalData.explanation.correct}
-                        </p>
-                      </div>
+                    <div className="border border-gray-200 rounded p-3">
+                      <p className="font-semibold text-gray-900 text-xs mb-1">
+                        Giải thích đáp án đúng
+                      </p>
+                      <p className="text-gray-800 text-xs leading-relaxed">
+                        {modalData.explanation.correct}
+                      </p>
                     </div>
                   )}
 
@@ -920,44 +807,25 @@ const MultipleChoiceTestTake = () => {
                     Object.keys(
                       modalData.explanation.incorrect_choices
                     ).length > 0 && (
-                      <div className="rounded-lg border border-red-200 bg-red-50 p-4">
-                        <div className="flex items-center gap-2 mb-3">
-                          <div className="p-1.5 rounded bg-red-600 text-white">
-                            <svg
-                              className="w-4 h-4"
-                              viewBox="0 0 24 24"
-                              fill="none"
-                              stroke="currentColor"
-                              strokeWidth="2"
-                            >
-                              <path
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                                d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.732-.833-2.5 0L4.314 15.5c-.77.833.192 2.5 1.732 2.5z"
-                              />
-                            </svg>
-                          </div>
-                          <h4 className="text-base font-bold text-red-700">
-                            🚫 Lý do các lựa chọn sai
-                          </h4>
-                        </div>
-                        <div className="space-y-3">
+                      <div className="border border-gray-200 rounded p-3">
+                        <p className="font-semibold text-gray-900 text-xs mb-2">
+                          Lý do các lựa chọn sai
+                        </p>
+                        <div className="space-y-2">
                           {Object.entries(
                             modalData.explanation.incorrect_choices
                           ).map(([choice, explanation]) => (
                             <div
                               key={choice}
-                              className="bg-white rounded-lg p-3 border border-red-100"
+                              className="flex items-start gap-2 text-xs"
                             >
-                              <div className="flex items-start gap-3">
-                                <span className="inline-flex items-center justify-center w-6 h-6 rounded-full bg-red-100 border border-red-200 text-red-700 font-bold text-xs">
-                                  {choice}
-                                </span>
-                                <p className="text-gray-800 leading-relaxed text-sm">
-                                  {explanation ||
-                                    "Không đúng với bối cảnh câu hỏi."}
-                                </p>
-                              </div>
+                              <span className="inline-flex items-center justify-center w-5 h-5 rounded border border-gray-300 text-gray-700 font-semibold">
+                                {choice}
+                              </span>
+                              <p className="text-gray-800 leading-relaxed">
+                                {explanation ||
+                                  "Không đúng với bối cảnh câu hỏi."}
+                              </p>
                             </div>
                           ))}
                         </div>
@@ -967,47 +835,25 @@ const MultipleChoiceTestTake = () => {
               )}
             </div>
 
-            {/* Footer modal */}
-            <div className="p-4 border-t border-gray-200 bg-gray-50">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2 text-xs text-gray-600">
-                  <span>
-                    Câu {currentQuestionIndex + 1} / {questions.length}
-                  </span>
-                  <span className="w-px h-3 bg-gray-300" />
-                  <span
-                    className={
-                      modalData.isCorrect
-                        ? "text-emerald-600 font-medium"
-                        : "text-red-600 font-medium"
-                    }
-                  >
-                    {modalData.isCorrect
-                      ? "Trả lời chính xác"
-                      : "Cần xem lại"}
-                  </span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <button
-                    onClick={handleCloseModal}
-                    className="px-4 py-2 rounded-lg bg-white border border-gray-200 text-gray-700 hover:bg-gray-50 text-sm"
-                  >
-                    Đóng
-                  </button>
-                  {questions &&
-                    currentQuestionIndex < questions.length - 1 && (
-                      <button
-                        onClick={() => {
-                          handleCloseModal();
-                          handleNext();
-                        }}
-                        className="px-4 py-2 rounded-lg bg-purple-600 text-white hover:bg-purple-700 text-sm"
-                      >
-                        Câu tiếp theo
-                      </button>
-                    )}
-                </div>
-              </div>
+            {/* Footer */}
+            <div className="p-4 border-t border-gray-200 flex items-center justify-end gap-2 text-xs">
+              <button
+                onClick={handleCloseModal}
+                className="px-3 py-1.5 rounded border border-gray-300 bg-white text-gray-700 hover:bg-gray-50"
+              >
+                Đóng
+              </button>
+              {questions && currentQuestionIndex < questions.length - 1 && (
+                <button
+                  onClick={() => {
+                    handleCloseModal();
+                    handleNext();
+                  }}
+                  className="px-3 py-1.5 rounded bg-gray-900 text-white hover:bg-black"
+                >
+                  Câu tiếp theo
+                </button>
+              )}
             </div>
           </div>
         </div>
